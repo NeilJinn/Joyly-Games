@@ -1,0 +1,628 @@
+{
+  "id": "core",
+  "title": "Core Trivia",
+  "roundSize": 8,
+  "questions": [
+    {
+      "id": "core-space-001",
+      "category": "space",
+      "tags": [
+        "planets"
+      ],
+      "difficulty": "easy",
+      "question": "Which planet has the tallest known volcano in the Solar System?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Mars"
+        },
+        {
+          "id": "b",
+          "text": "Venus"
+        },
+        {
+          "id": "c",
+          "text": "Jupiter"
+        },
+        {
+          "id": "d",
+          "text": "Mercury"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "Olympus Mons on Mars is about three times taller than Mount Everest.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-space-001-answer.mp3"
+    },
+    {
+      "id": "core-space-002",
+      "category": "space",
+      "tags": [
+        "planets"
+      ],
+      "difficulty": "medium",
+      "question": "Which planet is famous for its large ring system?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Saturn"
+        },
+        {
+          "id": "b",
+          "text": "Mars"
+        },
+        {
+          "id": "c",
+          "text": "Mercury"
+        },
+        {
+          "id": "d",
+          "text": "Earth"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "Saturn's rings are made mostly of ice particles with bits of rock and dust.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-002-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-space-002-answer.mp3"
+    },
+    {
+      "id": "core-science-001",
+      "category": "science",
+      "tags": [
+        "ai"
+      ],
+      "difficulty": "easy",
+      "question": "What does the abbreviation AI usually stand for?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Analog Interface"
+        },
+        {
+          "id": "b",
+          "text": "Artificial Intelligence"
+        },
+        {
+          "id": "c",
+          "text": "Asteroid Index"
+        },
+        {
+          "id": "d",
+          "text": "Audio Input"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Artificial intelligence is the field behind machines that can reason, learn, and generate.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-science-001-answer.mp3"
+    },
+    {
+      "id": "core-science-002",
+      "category": "science",
+      "tags": [
+        "light"
+      ],
+      "difficulty": "medium",
+      "question": "Which color of visible light has the shortest wavelength?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Red"
+        },
+        {
+          "id": "b",
+          "text": "Green"
+        },
+        {
+          "id": "c",
+          "text": "Yellow"
+        },
+        {
+          "id": "d",
+          "text": "Violet"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Violet light sits at the short-wavelength end of the visible spectrum.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-002-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-science-002-answer.mp3"
+    },
+    {
+      "id": "core-science-003",
+      "category": "science",
+      "tags": [
+        "inventions"
+      ],
+      "difficulty": "medium",
+      "question": "What invention is Johannes Gutenberg most famous for in Europe?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Telescope"
+        },
+        {
+          "id": "b",
+          "text": "Printing press"
+        },
+        {
+          "id": "c",
+          "text": "Steam engine"
+        },
+        {
+          "id": "d",
+          "text": "Compass"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Gutenberg's movable-type printing press helped books spread much faster in Europe.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-003-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-science-003-answer.mp3"
+    },
+    {
+      "id": "core-general-001",
+      "category": "general",
+      "tags": [
+        "cards"
+      ],
+      "difficulty": "easy",
+      "question": "In a standard deck of cards, how many queens are there?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "2"
+        },
+        {
+          "id": "b",
+          "text": "4"
+        },
+        {
+          "id": "c",
+          "text": "6"
+        },
+        {
+          "id": "d",
+          "text": "8"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "There is one queen in each suit.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-general-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-general-001-answer.mp3"
+    },
+    {
+      "id": "core-general-002",
+      "category": "general",
+      "tags": [
+        "language"
+      ],
+      "difficulty": "easy",
+      "question": "Which language has the most native speakers worldwide?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "English"
+        },
+        {
+          "id": "b",
+          "text": "Spanish"
+        },
+        {
+          "id": "c",
+          "text": "Mandarin Chinese"
+        },
+        {
+          "id": "d",
+          "text": "Hindi"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "Mandarin Chinese has the largest number of native speakers.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-general-002-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-general-002-answer.mp3"
+    },
+    {
+      "id": "core-history-001",
+      "category": "history",
+      "tags": [
+        "history"
+      ],
+      "difficulty": "easy",
+      "question": "Which ancient civilization built the pyramids at Giza?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Romans"
+        },
+        {
+          "id": "b",
+          "text": "Ancient Egyptians"
+        },
+        {
+          "id": "c",
+          "text": "Vikings"
+        },
+        {
+          "id": "d",
+          "text": "Aztecs"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "The Great Pyramid of Giza was built during Egypt's Old Kingdom.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-history-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-history-001-answer.mp3"
+    },
+    {
+      "id": "core-geography-001",
+      "category": "geography",
+      "tags": [
+        "geography",
+        "oceans"
+      ],
+      "difficulty": "medium",
+      "question": "Which country has the most time zones, including overseas territories?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Russia"
+        },
+        {
+          "id": "b",
+          "text": "United States"
+        },
+        {
+          "id": "c",
+          "text": "France"
+        },
+        {
+          "id": "d",
+          "text": "China"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "France spans many time zones because of territories in the Pacific, Indian Ocean, Caribbean, and elsewhere.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-geography-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-geography-001-answer.mp3"
+    },
+    {
+      "id": "core-nature-001",
+      "category": "nature",
+      "tags": [
+        "animals"
+      ],
+      "difficulty": "easy",
+      "question": "What is the fastest land animal?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Lion"
+        },
+        {
+          "id": "b",
+          "text": "Cheetah"
+        },
+        {
+          "id": "c",
+          "text": "Horse"
+        },
+        {
+          "id": "d",
+          "text": "Kangaroo"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Cheetahs can sprint faster than 100 km/h in short bursts.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-nature-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-nature-001-answer.mp3"
+    },
+    {
+      "id": "core-movies-001",
+      "category": "movies",
+      "tags": [
+        "movies"
+      ],
+      "difficulty": "easy",
+      "question": "In Finding Nemo, what kind of fish is Nemo?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Clownfish"
+        },
+        {
+          "id": "b",
+          "text": "Goldfish"
+        },
+        {
+          "id": "c",
+          "text": "Tuna"
+        },
+        {
+          "id": "d",
+          "text": "Angelfish"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "Nemo and Marlin are clownfish, known for living among sea anemones.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-movies-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-movies-001-answer.mp3"
+    },
+    {
+      "id": "core-sports-001",
+      "category": "sports",
+      "tags": [
+        "sports"
+      ],
+      "difficulty": "easy",
+      "question": "How many players are on the field for one soccer team during normal play?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "9"
+        },
+        {
+          "id": "b",
+          "text": "10"
+        },
+        {
+          "id": "c",
+          "text": "11"
+        },
+        {
+          "id": "d",
+          "text": "12"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "A soccer team fields 11 players, including the goalkeeper.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-sports-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-sports-001-answer.mp3"
+    },
+    {
+      "id": "core-books-001",
+      "category": "general",
+      "tags": [
+        "books"
+      ],
+      "difficulty": "medium",
+      "question": "Who wrote the novel Frankenstein?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Jane Austen"
+        },
+        {
+          "id": "b",
+          "text": "Mary Shelley"
+        },
+        {
+          "id": "c",
+          "text": "Charlotte Bronte"
+        },
+        {
+          "id": "d",
+          "text": "Virginia Woolf"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Mary Shelley published Frankenstein in 1818.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-books-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-books-001-answer.mp3"
+    },
+    {
+      "id": "core-games-001",
+      "category": "general",
+      "tags": [
+        "games"
+      ],
+      "difficulty": "easy",
+      "question": "In chess, which piece can move in an L shape?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Bishop"
+        },
+        {
+          "id": "b",
+          "text": "Rook"
+        },
+        {
+          "id": "c",
+          "text": "Knight"
+        },
+        {
+          "id": "d",
+          "text": "Queen"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "The knight moves two squares in one direction and one square perpendicular to it.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-games-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-games-001-answer.mp3"
+    },
+    {
+      "id": "core-earth-001",
+      "category": "science",
+      "tags": [
+        "earth"
+      ],
+      "difficulty": "easy",
+      "question": "Which ocean is the largest on Earth?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Atlantic"
+        },
+        {
+          "id": "b",
+          "text": "Indian"
+        },
+        {
+          "id": "c",
+          "text": "Pacific"
+        },
+        {
+          "id": "d",
+          "text": "Arctic"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "The Pacific covers more area than all land on Earth combined.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-earth-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-earth-001-answer.mp3"
+    },
+    {
+      "id": "core-earth-002",
+      "category": "science",
+      "tags": [
+        "earth"
+      ],
+      "difficulty": "medium",
+      "question": "What layer of Earth lies directly beneath the crust?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Inner core"
+        },
+        {
+          "id": "b",
+          "text": "Mantle"
+        },
+        {
+          "id": "c",
+          "text": "Outer core"
+        },
+        {
+          "id": "d",
+          "text": "Atmosphere"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "The mantle is the thick layer between Earth's crust and core.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-earth-002-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-earth-002-answer.mp3"
+    },
+    {
+      "id": "core-food-001",
+      "category": "general",
+      "tags": [
+        "food"
+      ],
+      "difficulty": "easy",
+      "question": "What fruit is traditionally used to make guacamole?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Avocado"
+        },
+        {
+          "id": "b",
+          "text": "Banana"
+        },
+        {
+          "id": "c",
+          "text": "Apple"
+        },
+        {
+          "id": "d",
+          "text": "Lime"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "Guacamole is an avocado-based dip that originated in Mexico.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-food-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-food-001-answer.mp3"
+    },
+    {
+      "id": "core-music-001",
+      "category": "general",
+      "tags": [
+        "music"
+      ],
+      "difficulty": "medium",
+      "question": "Which instrument has 88 keys in its standard modern form?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Piano"
+        },
+        {
+          "id": "b",
+          "text": "Violin"
+        },
+        {
+          "id": "c",
+          "text": "Flute"
+        },
+        {
+          "id": "d",
+          "text": "Drum kit"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "A modern full-size piano usually has 52 white keys and 36 black keys.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-music-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-music-001-answer.mp3"
+    },
+    {
+      "id": "core-plants-001",
+      "category": "science",
+      "tags": [
+        "plants"
+      ],
+      "difficulty": "easy",
+      "question": "What is the main gas plants absorb from the air?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Oxygen"
+        },
+        {
+          "id": "b",
+          "text": "Carbon dioxide"
+        },
+        {
+          "id": "c",
+          "text": "Hydrogen"
+        },
+        {
+          "id": "d",
+          "text": "Neon"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Plants use carbon dioxide during photosynthesis.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-plants-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-plants-001-answer.mp3"
+    },
+    {
+      "id": "core-weather-001",
+      "category": "science",
+      "tags": [
+        "weather"
+      ],
+      "difficulty": "easy",
+      "question": "What instrument is used to measure air pressure?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Thermometer"
+        },
+        {
+          "id": "b",
+          "text": "Barometer"
+        },
+        {
+          "id": "c",
+          "text": "Ruler"
+        },
+        {
+          "id": "d",
+          "text": "Anemometer"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "A barometer measures atmospheric pressure, which helps forecast weather changes.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-weather-001-question.mp3",
+      "answerAudio": "/games/cosmic-trivia/audio/core-weather-001-answer.mp3"
+    }
+  ]
+}

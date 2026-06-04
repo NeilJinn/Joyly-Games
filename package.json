@@ -1,0 +1,11 @@
+{
+  "name": "joyly-games-prototype",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "build:trivia": "node scripts/build-cosmic-trivia-pack.js",
+    "validate:cosmic-trivia": "node scripts/validate-cosmic-trivia-pack.js"
+  }
+}

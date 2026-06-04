@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 820" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="lift" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="12" stdDeviation="8" flood-color="#02060b" flood-opacity=".28"/>
+    </filter>
+    <pattern id="paper" width="34" height="34" patternUnits="userSpaceOnUse">
+      <path d="M6 7h1M17 4h1M29 14h1M11 27h1M24 30h1" stroke="#fff8e8" stroke-opacity=".07" stroke-linecap="round"/>
+      <path d="M4 20h1M19 19h1M31 27h1" stroke="#03070c" stroke-opacity=".11" stroke-linecap="round"/>
+    </pattern>
+  </defs>
+  <rect width="1400" height="820" fill="#081523"/>
+  <rect width="1400" height="820" fill="url(#paper)" opacity=".9"/>
+  <circle cx="1110" cy="138" r="102" fill="#f2b74d" opacity=".16"/>
+  <circle cx="250" cy="210" r="170" fill="#57b7b0" opacity=".1"/>
+  <g filter="url(#lift)">
+    <path d="M0 553c182-74 324-33 479-8 161 26 302-92 455-51 131 35 231 90 466 31v295H0Z" fill="#203754"/>
+    <path d="M0 624c184-89 319-37 476-8 165 31 300-68 476-34 151 29 253 64 448 8v230H0Z" fill="#2d5c88"/>
+    <path d="M0 694c220-90 397 37 611-48 221-88 400-56 789 10v164H0Z" fill="#6dbfbd"/>
+    <path d="M0 738c252-83 455 34 673-47 249-92 456-46 727 22v107H0Z" fill="#b9c66b"/>
+    <path d="M0 770c276-69 514 30 760-38 205-56 352-31 640 34v54H0Z" fill="#f4eadb"/>
+  </g>
+  <g filter="url(#lift)" opacity=".95">
+    <path d="M113 180l16-8 12 12 13-6 7 17-12 10 6 15-18 8-12-13-17 7-8-17 13-10Z" fill="#f2b74d"/>
+    <path d="M1160 244l28-14 23 17-9 28-29 4-18-23Z" fill="#ff785f"/>
+    <path d="M1214 152l13-38 30 27-16 17Z" fill="#b7a7cf"/>
+    <path d="M935 158l19-10 18 12-8 20-23 2Z" fill="#6dbfbd"/>
+    <path d="M1004 101l7 18 19-2-15 12 7 18-16-10-15 12 5-18-15-11 19-1Z" fill="#f2b74d"/>
+    <path d="M260 121l42-19 20 35-41 21Z" fill="#ff785f"/>
+    <path d="M386 185l35-28 17 38-31 19Z" fill="#6dbfbd"/>
+  </g>
+</svg>

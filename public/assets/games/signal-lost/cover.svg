@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="8" stdDeviation="5" flood-color="#02060b" flood-opacity=".34"/></filter>
+    <pattern id="g" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M4 8h1M15 5h1M22 19h1M9 21h1" stroke="#fff8e8" stroke-opacity=".08" stroke-linecap="round"/></pattern>
+  </defs>
+  <rect width="720" height="420" fill="#07111c"/>
+  <rect width="720" height="420" fill="url(#g)"/>
+  <g filter="url(#s)">
+    <path d="M0 306c130-70 221 30 344-39 119-66 224-54 376 25v128H0Z" fill="#263653"/>
+    <path d="M0 364c154-68 286 28 435-47 119-60 208-34 285 9v94H0Z" fill="#2d5c88"/>
+    <circle cx="360" cy="184" r="112" fill="none" stroke="#6dbfbd" stroke-width="16"/>
+    <circle cx="360" cy="184" r="58" fill="#f2b74d"/>
+    <path d="M247 94c68-52 156-50 223 0M247 279c68 52 156 50 223 0" fill="none" stroke="#f7ead8" stroke-width="14" stroke-linecap="round"/>
+    <path d="M152 184h80M488 184h80" stroke="#ff785f" stroke-width="18" stroke-linecap="round"/>
+  </g>
+</svg>
