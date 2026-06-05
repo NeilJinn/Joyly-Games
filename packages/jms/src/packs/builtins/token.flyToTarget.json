@@ -1,0 +1,200 @@
+{
+  "id": "token.flyToTarget",
+  "name": "Token Fly To Target",
+  "version": "1.0.0",
+  "category": "token",
+  "description": "Move a token, vote, or score chip from a source element to a target element.",
+  "requiredSlots": [
+    {
+      "id": "sourceElement",
+      "label": "Source element",
+      "type": "element",
+      "required": true,
+      "description": "The token or chip that starts moving."
+    },
+    {
+      "id": "targetElement",
+      "label": "Target element",
+      "type": "element",
+      "required": true,
+      "description": "The destination element or board area."
+    }
+  ],
+  "optionalSlots": [],
+  "timeline": {
+    "duration": 1.88,
+    "blocks": [
+      {
+        "id": "token-flyToTarget.fly",
+        "type": "pathfly",
+        "label": "Fly",
+        "start": 0,
+        "duration": 1.02,
+        "lane": 0,
+        "slot": "sourceElement",
+        "params": {
+          "from": {
+            "x": -160,
+            "y": 180,
+            "scale": 0.82,
+            "opacity": 0
+          },
+          "to": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "opacity": 1
+          },
+          "arc": 120,
+          "bendX": 36,
+          "autoRotate": true,
+          "settleRotate": -6
+        }
+      },
+      {
+        "id": "token-flyToTarget.trail",
+        "type": "trail",
+        "label": "Trail",
+        "start": 0,
+        "duration": 1.02,
+        "lane": 0,
+        "slot": "sourceElement",
+        "params": {
+          "strength": 14,
+          "color": "#8dffce",
+          "size": 4,
+          "cadence": 2
+        }
+      },
+      {
+        "id": "token-flyToTarget.magnet",
+        "type": "magnettotarget",
+        "label": "Magnet",
+        "start": 0.72,
+        "duration": 0.58,
+        "lane": 1,
+        "slot": "sourceElement",
+        "params": {
+          "y": 18,
+          "arc": 20,
+          "bendX": 12,
+          "scale": 0.96,
+          "opacity": 1
+        }
+      },
+      {
+        "id": "token-flyToTarget.flash",
+        "type": "flash",
+        "label": "Flash",
+        "start": 0.84,
+        "duration": 0.14,
+        "lane": 1,
+        "slot": "targetElement",
+        "params": {
+          "strength": 28,
+          "color": "#8dffce",
+          "opacity": 1
+        }
+      },
+      {
+        "id": "token-flyToTarget.land",
+        "type": "settlebounce",
+        "label": "Land",
+        "start": 0.98,
+        "duration": 0.34,
+        "lane": 1,
+        "slot": "targetElement",
+        "params": {
+          "scaleX": 1.06,
+          "scaleY": 0.94
+        }
+      },
+      {
+        "id": "token-flyToTarget.hold",
+        "type": "finalhold",
+        "label": "Hold",
+        "start": 1.42,
+        "duration": 0.34,
+        "lane": 1,
+        "slot": "targetElement",
+        "params": {
+          "opacity": 1,
+          "scale": 1
+        }
+      }
+    ]
+  },
+  "defaultParams": {
+    "color": "#8dffce"
+  },
+  "themeSlots": {
+    "default": {
+      "defaultParams": {
+        "color": "#8dffce"
+      }
+    },
+    "midnight": {
+      "defaultParams": {
+        "color": "#7de2ff"
+      }
+    },
+    "sunset": {
+      "defaultParams": {
+        "color": "#f4c542"
+      }
+    }
+  },
+  "assetSlots": {
+    "tokenImage": {
+      "type": "image",
+      "label": "Token image",
+      "description": "Optional art for the source token or chip.",
+      "required": false
+    },
+    "targetImage": {
+      "type": "image",
+      "label": "Target image",
+      "description": "Optional art for the destination or landing area.",
+      "required": false
+    }
+  },
+  "particleHooks": {
+    "travelTrail": {
+      "type": "trail",
+      "label": "Travel trail",
+      "description": "Optional particles that follow the token in flight."
+    }
+  },
+  "lottieHooks": {},
+  "soundHooks": {
+    "travel": {
+      "key": "sfx.token.flyToTarget",
+      "label": "Travel sound"
+    }
+  },
+  "reducedMotionFallback": {
+    "mode": "simplified",
+    "title": "Token snaps to target gently",
+    "description": "Reduced-motion mode avoids a long flight and keeps the destination clear.",
+    "timeline": {
+    "duration": 0.08,
+      "blocks": [
+        {
+          "id": "token-flyToTarget.reduced",
+          "type": "fade",
+          "label": "Snap",
+          "start": 0,
+          "duration": 0.08,
+          "slot": "sourceElement",
+          "params": {
+            "opacity": 1
+          }
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "source": "m3-library",
+    "previewExample": "JMS.playPack('token.flyToTarget', { sourceElement: tokenEl, targetElement: targetEl, theme: 'sunset' })"
+  }
+}

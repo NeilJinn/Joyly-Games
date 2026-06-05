@@ -1,6 +1,6 @@
 import http from "node:http";
 import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
@@ -18,6 +18,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
+const jmsDir = path.join(__dirname, "packages", "jms");
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "0.0.0.0";
 
@@ -297,15 +298,37 @@ function localAddress() {
   return "localhost";
 }
 
-async function serveStatic(req, res) {
+async function serveStaticDir(req, res, rootDir, {
+  mountPath = "/",
+  defaultPath = "/index.html"
+} = {}) {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const requested = url.pathname === "/" ? "/index.html" : decodeURIComponent(url.pathname);
-  const filePath = path.normalize(path.join(publicDir, requested));
+  let requested = defaultPath;
 
-  if (!filePath.startsWith(publicDir) || !existsSync(filePath)) {
+  if (mountPath === "/") {
+    requested = url.pathname === "/" ? defaultPath : decodeURIComponent(url.pathname);
+  } else if (url.pathname === mountPath || url.pathname === `${mountPath}/`) {
+    requested = defaultPath;
+  } else if (url.pathname.startsWith(`${mountPath}/`)) {
+    requested = decodeURIComponent(url.pathname.slice(mountPath.length));
+  }
+
+  let filePath = path.normalize(path.join(rootDir, requested));
+
+  if (!filePath.startsWith(rootDir) || !existsSync(filePath)) {
     res.writeHead(404);
     res.end("Not found");
     return;
+  }
+
+  if (statSync(filePath).isDirectory()) {
+    const nestedIndexPath = path.join(filePath, "index.html");
+    if (!existsSync(nestedIndexPath)) {
+      res.writeHead(404);
+      res.end("Not found");
+      return;
+    }
+    filePath = nestedIndexPath;
   }
 
   const ext = path.extname(filePath);
@@ -313,16 +336,33 @@ async function serveStatic(req, res) {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
+    ".json": "application/json; charset=utf-8",
     ".svg": "image/svg+xml"
   };
   res.writeHead(200, { "content-type": types[ext] || "application/octet-stream" });
+  if (req.method === "HEAD") {
+    res.end();
+    return;
+  }
   res.end(await readFile(filePath));
+}
+
+async function serveStatic(req, res) {
+  return serveStaticDir(req, res, publicDir);
 }
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   try {
+    if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === "/jms" || url.pathname === "/jms/" || url.pathname.startsWith("/jms/"))) {
+      await serveStaticDir(req, res, jmsDir, {
+        mountPath: "/jms",
+        defaultPath: "/web/index.html"
+      });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/config") {
       sendJson(res, 200, {
         localJoinBase: `http://${localAddress()}:${port}`,

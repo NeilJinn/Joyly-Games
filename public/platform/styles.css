@@ -17,7 +17,7 @@
   --paper-edge: rgba(255, 248, 232, .34);
   --paper-shadow: 0 7px 0 rgba(3, 8, 14, .28), 0 18px 42px rgba(0, 0, 0, .28);
   --shadow: 0 18px 60px rgba(0, 0, 0, .35);
-  --brand-mark: url("/assets/brand/joyly-logo-mark.svg");
+  --brand-mark: url("/assets/brand/joyly-logo.png");
   --hero-paper: url("/assets/brand/paper-hills-dark.svg");
   --cover-cosmic-trivia: url("/assets/games/cosmic-trivia/cover.svg");
   --cover-after-hours: url("/assets/games/after-hours/cover.svg");

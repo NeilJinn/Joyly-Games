@@ -391,7 +391,7 @@ export function renderHostGame(room) {
         <section class="winner-board">
           ${ranked.map((item, index) => html`
             <article class="winner-row ${index === 0 ? "winner" : ""}">
-              <span>${index + 1}</span>
+              <span class="winner-rank">${index + 1}</span>
               ${avatarToken(item.avatar, "large")}
               <strong>${escape(item.nickname)}</strong>
               <em>${trivia?.scores?.[item.id] || 0} pts</em>

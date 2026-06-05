@@ -1,0 +1,183 @@
+{
+  "id": "victory.reveal",
+  "name": "Victory Reveal",
+  "version": "1.0.0",
+  "category": "result",
+  "description": "Reveal the winner, the winning side, or a finished state with a bright finish.",
+  "requiredSlots": [
+    {
+      "id": "targetElement",
+      "label": "Target element",
+      "type": "element",
+      "required": true,
+      "description": "The victory badge, panel, or winner card."
+    }
+  ],
+  "optionalSlots": [],
+  "timeline": {
+    "duration": 2.34,
+    "blocks": [
+      {
+        "id": "victory-reveal.fly",
+        "type": "pathfly",
+        "label": "Rise",
+        "start": 0,
+        "duration": 1.08,
+        "lane": 0,
+        "slot": "targetElement",
+        "params": {
+          "from": {
+            "x": 0,
+            "y": 160,
+            "scale": 0.76,
+            "opacity": 0
+          },
+          "to": {
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "opacity": 1
+          },
+          "arc": 150,
+          "bendX": 0,
+          "autoRotate": false,
+          "settleRotate": 0
+        }
+      },
+      {
+        "id": "victory-reveal.glow",
+        "type": "glow",
+        "label": "Glow",
+        "start": 0.18,
+        "duration": 1.34,
+        "lane": 1,
+        "slot": "targetElement",
+        "params": {
+          "strength": 40,
+          "color": "#8dffce"
+        }
+      },
+      {
+        "id": "victory-reveal.pulse",
+        "type": "stagepulse",
+        "label": "Celebrate",
+        "start": 0.14,
+        "duration": 0.92,
+        "lane": 1,
+        "slot": "targetElement",
+        "params": {
+          "scale": 1.12,
+          "strength": 34,
+          "color": "#8dffce"
+        }
+      },
+      {
+        "id": "victory-reveal.flash",
+        "type": "flash",
+        "label": "Flash",
+        "start": 0.52,
+        "duration": 0.16,
+        "lane": 1,
+        "slot": "targetElement",
+        "params": {
+          "strength": 34,
+          "color": "#ffffff",
+          "opacity": 1
+        }
+      },
+      {
+        "id": "victory-reveal.bounce",
+        "type": "custombounce",
+        "label": "Bounce",
+        "start": 0.86,
+        "duration": 0.4,
+        "lane": 0,
+        "slot": "targetElement",
+        "params": {
+          "scaleX": 1.14,
+          "scaleY": 0.86
+        }
+      },
+      {
+        "id": "victory-reveal.settle",
+        "type": "finalhold",
+        "label": "Hold",
+        "start": 1.56,
+        "duration": 0.42,
+        "lane": 0,
+        "slot": "targetElement",
+        "params": {
+          "opacity": 1,
+          "scale": 1
+        }
+      }
+    ]
+  },
+  "defaultParams": {
+    "color": "#8dffce"
+  },
+  "themeSlots": {
+    "default": {
+      "defaultParams": {
+        "color": "#8dffce"
+      }
+    },
+    "midnight": {
+      "defaultParams": {
+        "color": "#7de2ff"
+      }
+    },
+    "sunset": {
+      "defaultParams": {
+        "color": "#f4c542"
+      }
+    }
+  },
+  "assetSlots": {
+    "badgeImage": {
+      "type": "image",
+      "label": "Badge image",
+      "description": "Optional badge or emblem for the victory state.",
+      "required": false
+    }
+  },
+  "particleHooks": {
+    "victoryBurst": {
+      "type": "burst",
+      "label": "Victory burst",
+      "description": "Optional celebratory particles."
+    }
+  },
+  "lottieHooks": {},
+  "soundHooks": {
+    "victory": {
+      "key": "sfx.victory.reveal",
+      "label": "Victory sound"
+    }
+  },
+  "reducedMotionFallback": {
+    "mode": "simplified",
+    "title": "Victory shown without a dramatic entrance",
+    "description": "Reduced-motion mode keeps the final state visible with a gentle fade and no big flourish.",
+    "timeline": {
+    "duration": 0.08,
+      "blocks": [
+        {
+          "id": "victory-reveal.reduced",
+          "type": "fade",
+          "label": "Fade in",
+          "start": 0,
+          "duration": 0.08,
+          "slot": "targetElement",
+          "params": {
+            "opacity": 1
+          }
+        }
+      ]
+    }
+  },
+  "metadata": {
+    "source": "m3-library",
+    "previewExample": "JMS.playPack('victory.reveal', { targetElement: victoryEl, theme: 'midnight' })"
+  }
+}
