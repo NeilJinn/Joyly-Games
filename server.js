@@ -393,7 +393,13 @@ const server = http.createServer(async (req, res) => {
   try {
     const isJmsRuntimePath = url.pathname.startsWith("/jms/src/");
     const isJmsToolPath = url.pathname === "/jms" || url.pathname === "/jms/" || url.pathname.startsWith("/jms/web");
-    const isVoiceLibraryPath = url.pathname === "/voice-library" || url.pathname === "/voice-library/" || url.pathname.startsWith("/voice-library/");
+    const isVoiceLibraryPath =
+      url.pathname === "/voice" ||
+      url.pathname === "/voice/" ||
+      url.pathname.startsWith("/voice/") ||
+      url.pathname === "/voice-library" ||
+      url.pathname === "/voice-library/" ||
+      url.pathname.startsWith("/voice-library/");
     const isVoiceLibraryApiPath = url.pathname.startsWith("/api/voice-library/");
 
     if ((req.method === "GET" || req.method === "HEAD") && isJmsToolPath && !localOnlyToolsEnabled) {
@@ -415,6 +421,14 @@ const server = http.createServer(async (req, res) => {
       await serveStaticDir(req, res, jmsDir, {
         mountPath: "/jms",
         defaultPath: "/web/index.html"
+      });
+      return;
+    }
+
+    if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === "/voice" || url.pathname === "/voice/" || url.pathname.startsWith("/voice/"))) {
+      await serveStaticDir(req, res, path.join(publicDir, "voice-library"), {
+        mountPath: "/voice",
+        defaultPath: "/index.html"
       });
       return;
     }

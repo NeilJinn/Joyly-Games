@@ -811,9 +811,6 @@ function accountMenu() {
 
 function topbarActions() {
   const waitingForPairedPhone = isDesktopControlledByPairedPhone();
-  const voiceLibraryAction = config.tools?.voiceLibrary
-    ? `<button class="secondary btn-action" data-open-voice-library type="button">${withIcon("music", "Voice library")}</button>`
-    : "";
   const deviceToggle = html`
     <div class="device-toggle" aria-label="Preview device">
       <button class="icon-button btn-tool ${deviceView === "desktop" ? "active btn-selected" : ""}" data-device-view="desktop" type="button" aria-label="Desktop view">${icon("desktop")}</button>
@@ -824,7 +821,6 @@ function topbarActions() {
     return html`
       <nav class="home-actions">
         ${deviceToggle}
-        ${voiceLibraryAction}
         ${roomStatusPill()}
         ${!room && !waitingForPairedPhone ? `<button class="primary btn-play" data-start-setup>${withIcon("play", "Play")}</button>` : ""}
         ${accountMenu()}
@@ -834,7 +830,6 @@ function topbarActions() {
   return html`
     <nav class="home-actions">
       ${deviceToggle}
-      ${voiceLibraryAction}
       <button class="secondary btn-action" data-open-auth>${withIcon("login", "Sign in")}</button>
       <button class="primary btn-play" data-open-auth data-auth-next="setup">${withIcon("play", "Play")}</button>
     </nav>
@@ -981,9 +976,6 @@ function attachChromeHandlers() {
   });
   document.querySelector("#menuCloseRoom")?.addEventListener("click", async () => {
     await closeCurrentRoom();
-  });
-  document.querySelector("[data-open-voice-library]")?.addEventListener("click", () => {
-    location.href = "/voice-library/";
   });
   document.querySelectorAll("[data-close-room]").forEach(button => {
     button.addEventListener("click", async () => {
