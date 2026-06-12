@@ -26,6 +26,7 @@ const jmsDir = path.join(__dirname, "packages", "jms");
 const cosmicTriviaMusicDir = path.join(publicDir, "games", "cosmic-trivia", "audio", "music");
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "0.0.0.0";
+const localOnlyToolsEnabled = process.env.JOYLY_LOCAL_TOOLS === "true" || process.env.NODE_ENV !== "production";
 
 const rooms = new Map();
 const clients = new Map();
@@ -314,6 +315,25 @@ function localAddress() {
   return "localhost";
 }
 
+function requestBaseUrl(req) {
+  const forwardedProto = String(req.headers["x-forwarded-proto"] || "").split(",")[0].trim();
+  const requestHost = String(req.headers.host || "").trim();
+  const proto = forwardedProto || (requestHost.startsWith("localhost") || requestHost.startsWith("127.0.0.1") ? "http" : "https");
+  return `${proto}://${requestHost}`;
+}
+
+function publicJoinBase(req) {
+  const configuredBaseUrl = String(process.env.JOYLY_PUBLIC_BASE_URL || "").trim().replace(/\/+$/, "");
+  if (configuredBaseUrl) return configuredBaseUrl;
+  if (localOnlyToolsEnabled) return `http://${localAddress()}:${port}`;
+  return requestBaseUrl(req);
+}
+
+function notFound(res) {
+  res.writeHead(404);
+  res.end("Not found");
+}
+
 async function serveStaticDir(req, res, rootDir, {
   mountPath = "/",
   defaultPath = "/index.html"
@@ -371,7 +391,27 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   try {
-    if ((req.method === "GET" || req.method === "HEAD") && (url.pathname === "/jms" || url.pathname === "/jms/" || url.pathname.startsWith("/jms/"))) {
+    const isJmsRuntimePath = url.pathname.startsWith("/jms/src/");
+    const isJmsToolPath = url.pathname === "/jms" || url.pathname === "/jms/" || url.pathname.startsWith("/jms/web");
+    const isVoiceLibraryPath = url.pathname === "/voice-library" || url.pathname === "/voice-library/" || url.pathname.startsWith("/voice-library/");
+    const isVoiceLibraryApiPath = url.pathname.startsWith("/api/voice-library/");
+
+    if ((req.method === "GET" || req.method === "HEAD") && isJmsToolPath && !localOnlyToolsEnabled) {
+      notFound(res);
+      return;
+    }
+
+    if ((req.method === "GET" || req.method === "HEAD") && isVoiceLibraryPath && !localOnlyToolsEnabled) {
+      notFound(res);
+      return;
+    }
+
+    if (isVoiceLibraryApiPath && !localOnlyToolsEnabled) {
+      notFound(res);
+      return;
+    }
+
+    if ((req.method === "GET" || req.method === "HEAD") && (isJmsRuntimePath || isJmsToolPath)) {
       await serveStaticDir(req, res, jmsDir, {
         mountPath: "/jms",
         defaultPath: "/web/index.html"
@@ -381,8 +421,12 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && url.pathname === "/api/config") {
       sendJson(res, 200, {
-        localJoinBase: `http://${localAddress()}:${port}`,
-        games
+        localJoinBase: publicJoinBase(req),
+        games,
+        tools: {
+          jmsStudio: localOnlyToolsEnabled,
+          voiceLibrary: localOnlyToolsEnabled
+        }
       });
       return;
     }

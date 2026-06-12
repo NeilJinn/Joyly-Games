@@ -35,7 +35,14 @@ const PLAYER_IDENTITY_KEY = "joylyPlayerIdentity";
 const PHONE_SURFACE_KEY = "joylyPhoneSurface";
 const ACTIVE_ROOM_CODE_KEY = "joylyActiveRoomCode";
 
-let config = { games: [], localJoinBase: location.origin };
+let config = {
+  games: [],
+  localJoinBase: location.origin,
+  tools: {
+    jmsStudio: false,
+    voiceLibrary: false
+  }
+};
 let room = null;
 let player = null;
 let playerIdentity = loadPlayerIdentity();
@@ -804,6 +811,9 @@ function accountMenu() {
 
 function topbarActions() {
   const waitingForPairedPhone = isDesktopControlledByPairedPhone();
+  const voiceLibraryAction = config.tools?.voiceLibrary
+    ? `<button class="secondary btn-action" data-open-voice-library type="button">${withIcon("music", "Voice library")}</button>`
+    : "";
   const deviceToggle = html`
     <div class="device-toggle" aria-label="Preview device">
       <button class="icon-button btn-tool ${deviceView === "desktop" ? "active btn-selected" : ""}" data-device-view="desktop" type="button" aria-label="Desktop view">${icon("desktop")}</button>
@@ -814,7 +824,7 @@ function topbarActions() {
     return html`
       <nav class="home-actions">
         ${deviceToggle}
-        <button class="secondary btn-action" data-open-voice-library type="button">${withIcon("music", "Voice library")}</button>
+        ${voiceLibraryAction}
         ${roomStatusPill()}
         ${!room && !waitingForPairedPhone ? `<button class="primary btn-play" data-start-setup>${withIcon("play", "Play")}</button>` : ""}
         ${accountMenu()}
@@ -824,7 +834,7 @@ function topbarActions() {
   return html`
     <nav class="home-actions">
       ${deviceToggle}
-      <button class="secondary btn-action" data-open-voice-library type="button">${withIcon("music", "Voice library")}</button>
+      ${voiceLibraryAction}
       <button class="secondary btn-action" data-open-auth>${withIcon("login", "Sign in")}</button>
       <button class="primary btn-play" data-open-auth data-auth-next="setup">${withIcon("play", "Play")}</button>
     </nav>
