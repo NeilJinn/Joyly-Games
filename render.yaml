@@ -3,7 +3,7 @@ services:
     name: joyly-games
     runtime: node
     plan: free
-    branch: main
+    branch: jms
     autoDeploy: true
     buildCommand: npm install
     startCommand: npm start
