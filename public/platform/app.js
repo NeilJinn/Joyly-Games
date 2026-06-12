@@ -84,6 +84,8 @@ let triviaRankAnimationActive = false;
 let triviaChoiceAnimationActive = false;
 const gameClients = new Map();
 let globalActionHandlersAttached = false;
+let avatarCatalogLoaded = false;
+let avatarCatalogPromise = null;
 
 const PLAYER_HEARTBEAT_INTERVAL_MS = 30_000;
 
@@ -159,6 +161,18 @@ async function loadConfig() {
 
 async function loadAvatarCatalog() {
   setAvatarCatalog(await api("/api/avatar-catalog"));
+  avatarCatalogLoaded = true;
+}
+
+async function ensureAvatarCatalogLoaded() {
+  if (avatarCatalogLoaded) return;
+  if (!avatarCatalogPromise) {
+    avatarCatalogPromise = loadAvatarCatalog().catch(error => {
+      avatarCatalogPromise = null;
+      throw error;
+    });
+  }
+  await avatarCatalogPromise;
 }
 
 function makeId() {
@@ -1725,7 +1739,8 @@ function updateLobbyCountdownOnly() {
   return true;
 }
 
-function renderLobby() {
+async function renderLobby() {
+  await ensureAvatarCatalogLoaded();
   currentView = "lobby";
   app.innerHTML = hostShell(html`
     <aside class="sidebar">
@@ -1750,6 +1765,7 @@ function renderLobby() {
 }
 
 async function renderPlaying() {
+  await ensureAvatarCatalogLoaded();
   if (
     room?.selectedGame?.id === "cosmic-trivia" &&
     (
@@ -1855,6 +1871,7 @@ async function renderJoin() {
   }
 
   if (!player) {
+    await ensureAvatarCatalogLoaded();
     joinError = "";
     app.innerHTML = html`
       <main class="phone-wrap">
@@ -1944,6 +1961,7 @@ async function renderHostPlayerJoin() {
     }
   }
 
+  await ensureAvatarCatalogLoaded();
   app.innerHTML = html`
     <main class="phone-wrap">
       ${phoneHeader()}
@@ -1978,8 +1996,9 @@ async function renderHostPlayerJoin() {
   });
 }
 
-function renderHostPhoneRoom() {
+async function renderHostPhoneRoom() {
   if (!room) return renderHost();
+  await ensureAvatarCatalogLoaded();
   const launchState = phoneHostLaunchState();
   const activePlayers = room.players.filter(item => item.online !== false);
   const readyPlayers = activePlayers.filter(item => item.ready);
@@ -2145,7 +2164,8 @@ function updatePhoneStatus() {
   return true;
 }
 
-function renderPhone() {
+async function renderPhone() {
+  await ensureAvatarCatalogLoaded();
   startPlayerHeartbeat();
   if (room.status === "playing") return void renderPhoneTrivia();
 
@@ -2243,6 +2263,38 @@ async function renderPhoneTrivia() {
   });
 }
 
+async function restoreSavedRoom() {
+  const savedRoomCode = localStorage.getItem(ACTIVE_ROOM_CODE_KEY);
+  if (!savedRoomCode || room) return null;
+  try {
+    const data = await api(`/api/rooms/${savedRoomCode}`);
+    room = data.room;
+    rememberRoomCode(room);
+    selectedGameId = room.selectedGame?.id || selectedGameId;
+    connect(room.code);
+    recoverPlayerFromRoom(room);
+    return room;
+  } catch {
+    forgetRoomCode();
+    return null;
+  }
+}
+
+async function bootstrapHostSession() {
+  const tasks = [ensureDesktopPairing().catch(() => null), restoreSavedRoom()];
+  if (hostAccount?.email) {
+    tasks.push(loadHostEntitlement().catch(() => null));
+  }
+
+  await Promise.all(tasks);
+
+  if (!room && hostAccount?.email) {
+    await loadActiveHostRoom().catch(() => null);
+  }
+
+  renderHost();
+}
+
 function render() {
   const hostPhonePlayerSurface = route === "host" && isPhoneViewport() && currentPhoneSurface() === "player";
   if (!(player && room && (["join", "pair"].includes(route) || hostPhonePlayerSurface) && ["waiting", "playing"].includes(room.status))) {
@@ -2263,17 +2315,14 @@ function render() {
 }
 
 await loadConfig();
-await loadAvatarCatalog();
 document.documentElement.dataset.deviceView = deviceView;
 if (route !== "join") {
   loadHostAccount();
-  await loadHostEntitlement();
 } else {
   hostAccount = null;
   controllerPaired = false;
   activePairingToken = "";
 }
-await ensureDesktopPairing();
 if (hostCode) {
   await renderHostControlFromUrl();
 } else if (route === "pair") {
@@ -2281,21 +2330,8 @@ if (hostCode) {
 } else if (route === "join") {
   await renderJoin();
 } else {
-  const savedRoomCode = localStorage.getItem(ACTIVE_ROOM_CODE_KEY);
-  if (savedRoomCode && !room) {
-    try {
-      const data = await api(`/api/rooms/${savedRoomCode}`);
-      room = data.room;
-      rememberRoomCode(room);
-      selectedGameId = room.selectedGame?.id || selectedGameId;
-      connect(room.code);
-      recoverPlayerFromRoom(room);
-    } catch {
-      forgetRoomCode();
-    }
-  }
-  await loadActiveHostRoom();
   renderHost();
+  void bootstrapHostSession();
 }
 
 setInterval(() => {

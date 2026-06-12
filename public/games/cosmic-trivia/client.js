@@ -1,12 +1,22 @@
 import { escape, html, withIcon } from "../../platform/shared/ui.js";
 import { avatarToken } from "../../players/client.js";
-import { hydrateTriviaHostPresentation } from "./presentation.js";
 
 const preferenceDrafts = new Map();
 const answerDrafts = new Map();
 const hostRankMemory = new Map();
 const hostSelectionMemory = new Map();
 let countdownTickerStarted = false;
+let triviaPresentationModulePromise = null;
+
+async function loadTriviaPresentationModule() {
+  if (!triviaPresentationModulePromise) {
+    triviaPresentationModulePromise = import("./presentation.js").catch(error => {
+      triviaPresentationModulePromise = null;
+      throw error;
+    });
+  }
+  return triviaPresentationModulePromise;
+}
 
 export function sortedPlayersByScore(room) {
   const scores = room?.gameState?.scores || room?.trivia?.scores || {};
@@ -610,7 +620,9 @@ export function attachPhoneGameHandlers(root, { room, player, api, onRoom }) {
 }
 
 export function attachHostGameHandlers(root, { room, api }) {
-  void hydrateTriviaHostPresentation(root, room);
+  void loadTriviaPresentationModule()
+    .then(module => module.hydrateTriviaHostPresentation(root, room))
+    .catch(() => {});
   ensureCountdownTicker();
   root.querySelector("[data-trivia-restart]")?.addEventListener("click", async () => {
     const data = await api(`/api/rooms/${room.code}/trivia/restart`, { method: "POST" });

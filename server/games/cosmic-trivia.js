@@ -1,4 +1,4 @@
-import { audioForQuestion, getQuestionOptions } from "./cosmic-trivia/content-loader.js";
+import { getQuestionOptions } from "./cosmic-trivia/content-loader.js";
 import { answeredQuestionIds, markQuestionAnswered } from "./cosmic-trivia/question-history.js";
 import { selectRoundQuestions } from "./cosmic-trivia/question-selector.js";
 import { activePlayers, activePlayerIds } from "../players/status.js";
@@ -39,12 +39,6 @@ function currentQuestion(room) {
   const state = stateKey(room);
   const questions = room.gameContent?.questions || [];
   return questions[Math.min(Math.max(state.questionIndex || 0, 0), Math.max(questions.length - 1, 0))] || null;
-}
-
-function nextQuestion(room) {
-  const state = stateKey(room);
-  const questions = room.gameContent?.questions || [];
-  return questions[Math.min((state.questionIndex || 0) + 1, Math.max(questions.length - 1, 0))] || null;
 }
 
 function playerStateMap(room) {
@@ -220,7 +214,6 @@ export function publicCosmicTriviaState(room) {
   if (!room.gameState) return null;
   const state = stateKey(room);
   const question = currentQuestion(room);
-  const next = nextQuestion(room);
   const timing = phaseTiming(room);
   const phaseDurationMs = timing.durationMs || 0;
   const phaseEndsAt = timing.endsAt;
@@ -257,11 +250,7 @@ export function publicCosmicTriviaState(room) {
     },
     questionOptions: room.gameContent?.options || null,
     selectedQuestionIds: room.gameContent?.selection?.map(entry => entry.id) || [],
-    lastResolution: state.lastResolution || null,
-    preloadAudio: {
-      ...audioForQuestion(question),
-      nextQuestionAudio: next?.questionAudio || ""
-    }
+    lastResolution: state.lastResolution || null
   };
 }
 

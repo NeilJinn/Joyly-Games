@@ -724,13 +724,6 @@ async function main() {
       "会被 publicState 暴露并在大屏上自动播放。"
     ],
     [
-      "preloadAudio.nextQuestionAudio",
-      "是，预取而不是播放",
-      "publicState 预加载",
-      "下一题的题干音频路径。",
-      "只是帮前端提前预热，不会替代导演播放逻辑。"
-    ],
-    [
       "public/games/cosmic-trivia/audio/host/phases/",
       "是",
       "固定文件名",

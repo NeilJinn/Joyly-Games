@@ -450,11 +450,14 @@ function playDirectorAudioSequence(roomCode, plan, snapshot) {
 function maybePlayPhaseAudio(roomCode, previousSnapshot, nextSnapshot) {
   if (!nextSnapshot.phase) return;
   startRoomBackgroundMusic(roomCode);
+  const activeQuestionAudio = nextSnapshot.phase === "question-audio"
+    ? nextSnapshot.questionAudio || ""
+    : "";
   const plan = getReactiveAudioPlan(previousSnapshot, nextSnapshot, {
     roomCode,
     playCount: nextSnapshot.playCount || 1,
     questionIndex: nextSnapshot.questionIndex || 0,
-    questionAudio: nextSnapshot.questionAudio || "",
+    questionAudio: activeQuestionAudio,
     isLastQuestion: nextSnapshot.totalQuestions ? nextSnapshot.questionIndex >= nextSnapshot.totalQuestions - 1 : false,
     lastResolution: nextSnapshot.lastResolution || null
   });
