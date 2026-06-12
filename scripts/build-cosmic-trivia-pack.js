@@ -21,7 +21,6 @@ const columns = [
   "correctanswer",
   "fact",
   "questionaudio",
-  "answeraudio",
   "enabled"
 ];
 
@@ -73,7 +72,6 @@ function questionFromRow(row, rowNumber, indexByColumn, errors, seenIds) {
   const correctAnswer = cellText(get("correctAnswer")).toLowerCase();
   const fact = cellText(get("fact"));
   const questionAudio = cellText(get("questionAudio"));
-  const answerAudio = cellText(get("answerAudio"));
 
   const label = `Row ${rowNumber}`;
 
@@ -85,7 +83,6 @@ function questionFromRow(row, rowNumber, indexByColumn, errors, seenIds) {
   if (!answerA || !answerB || !answerC || !answerD) errors.push(`${label} (${id || "missing id"}): all four answers are required`);
   if (!fact) errors.push(`${label} (${id || "missing id"}): fact is required`);
   if (!questionAudio) errors.push(`${label} (${id || "missing id"}): questionAudio is required`);
-  if (!answerAudio) errors.push(`${label} (${id || "missing id"}): answerAudio is required`);
   if (!["a", "b", "c", "d"].includes(correctAnswer)) {
     errors.push(`${label} (${id || "missing id"}): correctAnswer must be a, b, c, or d`);
   }
@@ -117,8 +114,7 @@ function questionFromRow(row, rowNumber, indexByColumn, errors, seenIds) {
     answers,
     correctAnswer,
     fact,
-    questionAudio,
-    answerAudio
+    questionAudio
   };
 }
 

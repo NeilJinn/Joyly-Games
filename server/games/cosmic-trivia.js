@@ -2,6 +2,12 @@ import { audioForQuestion, getQuestionOptions } from "./cosmic-trivia/content-lo
 import { answeredQuestionIds, markQuestionAnswered } from "./cosmic-trivia/question-history.js";
 import { selectRoundQuestions } from "./cosmic-trivia/question-selector.js";
 import { activePlayers, activePlayerIds } from "../players/status.js";
+import {
+  getDirectorMessage,
+  getDirectorNextPhase,
+  getDirectorStep,
+  getDirectorTimerMs
+} from "../../public/games/cosmic-trivia/audio/director-flow.js";
 
 export const cosmicTriviaGame = {
   id: "cosmic-trivia",
@@ -18,22 +24,15 @@ export const cosmicTriviaGame = {
   description: "Fast multiple-choice questions, cheerful music cues, and quick score reveals."
 };
 
-const directorSteps = {
-  "interest-selecting": { next: "preferences-locked", delayMs: 30000, message: "Choose topics on your phone" },
-  "preferences-locked": { next: "deck-loading", delayMs: 5000, message: "Choices locked" },
-  "deck-loading": { next: "question-intro", delayMs: 1800, message: "Loading selected questions" },
-  "question-intro": { next: "question-audio", delayMs: 2400, message: "Question incoming" },
-  "question-audio": { next: "answering", delayMs: 2200, message: "Get ready to answer" },
-  answering: { next: "answer-reveal", delayMs: 20000, message: "Answer on your phone" },
-  "answer-reveal": { next: "answer-audio", delayMs: 9000, message: "Answer reveal" },
-  "answer-audio": { next: "scoring", delayMs: 3000, message: "Answer explanation" },
-  scoring: { next: "next-question", delayMs: 2000, message: "Scoring" },
-  "next-question": { next: "question-intro", delayMs: 1000, message: "Next question" },
-  complete: { next: null, delayMs: null, message: "Final scores" }
-};
-
 function stateKey(room) {
   return room.gameState ||= {};
+}
+
+function testerKey(room) {
+  const state = stateKey(room);
+  return state.tester ||= {
+    selectedPlayerId: null
+  };
 }
 
 function currentQuestion(room) {
@@ -84,6 +83,32 @@ function applyQuestionScoring(room) {
   state.scoredQuestionId = question.id;
 }
 
+function clearTesterTimer(room) {
+  const state = stateKey(room);
+  state.phaseDurationOverrideMs = null;
+  state.phaseEndsAtOverride = null;
+  state.phaseTimerStartedAt = null;
+}
+
+function phaseTiming(room) {
+  const state = stateKey(room);
+  const step = getDirectorStep(state.phase) || null;
+  const baseDurationMs = getDirectorTimerMs(state.phase);
+  const durationMs = state.phaseDurationOverrideMs ?? baseDurationMs;
+  const startedAt = state.phaseTimerStartedAt || state.phaseStartedAt;
+  const endsAt = state.phaseEndsAtOverride || (durationMs != null ? startedAt + durationMs : null);
+  const remainingMs = endsAt != null ? Math.max(0, endsAt - Date.now()) : null;
+
+  return {
+    step,
+    baseDurationMs,
+    durationMs,
+    startedAt,
+    endsAt,
+    remainingMs
+  };
+}
+
 function preferenceCount(room) {
   return Object.values(playerStateMap(room)).filter(player => player.preferencesLocked).length;
 }
@@ -93,7 +118,7 @@ function readyPreferenceCount(room) {
 }
 
 function shouldShowAnswer(state) {
-  return ["answer-reveal", "answer-audio", "scoring", "next-question", "complete"].includes(state.phase);
+  return ["scoring", "next-question", "finale-intro", "complete"].includes(state.phase);
 }
 
 function publicQuestion(question, state) {
@@ -106,13 +131,16 @@ function publicQuestion(question, state) {
     question: question.question,
     answers: question.answers,
     questionAudio: question.questionAudio,
-    answerAudio: question.answerAudio,
     correctAnswer: shouldShowAnswer(state) ? question.correctAnswer : null,
     fact: shouldShowAnswer(state) ? question.fact : ""
   };
 }
 
 export async function createCosmicTriviaState(room) {
+  return createCosmicTriviaStateWithPlayCount(room, Number(room.gameState?.playCount || 0) + 1 || 1);
+}
+
+async function createCosmicTriviaStateWithPlayCount(room, playCount = 1) {
   const scores = {};
   for (const player of room.players.values()) {
     scores[player.id] = 0;
@@ -127,6 +155,7 @@ export async function createCosmicTriviaState(room) {
   };
 
   room.gameState = {
+    playCount,
     questionIndex: 0,
     phase: "interest-selecting",
     phaseStartedAt: Date.now(),
@@ -139,8 +168,14 @@ export async function createCosmicTriviaState(room) {
     roundSize: options.roundSize,
     director: {
       mode: "auto",
-      message: directorSteps["interest-selecting"].message
-    }
+      message: getDirectorMessage("interest-selecting", { playCount, roomCode: room.code })
+    },
+    tester: {
+      selectedPlayerId: null
+    },
+    phaseDurationOverrideMs: null,
+    phaseEndsAtOverride: null,
+    phaseTimerStartedAt: null
   };
 }
 
@@ -149,6 +184,9 @@ export async function ensureCosmicTriviaState(room) {
   const state = stateKey(room);
   state.scores ||= {};
   state.playerStates ||= {};
+  state.tester ||= {
+    selectedPlayerId: null
+  };
   for (const player of room.players.values()) {
     state.scores[player.id] ||= 0;
     playerState(room, player.id);
@@ -183,12 +221,14 @@ export function publicCosmicTriviaState(room) {
   const state = stateKey(room);
   const question = currentQuestion(room);
   const next = nextQuestion(room);
-  const step = directorSteps[state.phase] || directorSteps["interest-selecting"];
-  const phaseDurationMs = step.delayMs || 0;
-  const phaseEndsAt = phaseDurationMs ? state.phaseStartedAt + phaseDurationMs : null;
-  const remainingMs = phaseEndsAt ? Math.max(0, phaseEndsAt - Date.now()) : 0;
+  const timing = phaseTiming(room);
+  const phaseDurationMs = timing.durationMs || 0;
+  const phaseEndsAt = timing.endsAt;
+  const remainingMs = timing.remainingMs || 0;
+  const step = timing.step;
 
   return {
+    playCount: state.playCount || 1,
     questionIndex: state.questionIndex,
     totalQuestions: room.gameContent?.questions?.length || state.roundSize || 0,
     phase: state.phase,
@@ -196,7 +236,13 @@ export function publicCosmicTriviaState(room) {
     phaseDurationMs,
     phaseEndsAt,
     remainingMs,
-    directorMessage: step.message,
+    directorMessage: step?.message ? getDirectorMessage(state.phase, {
+      roomCode: room.code,
+      playCount: state.playCount || 1,
+      questionIndex: state.questionIndex || 0,
+      isLastQuestion: (state.questionIndex || 0) >= (room.gameContent?.questions?.length || state.roundSize || 1) - 1,
+      lastResolution: state.lastResolution || null
+    }) : (state.director?.message || ""),
     currentQuestion: publicQuestion(question, state),
     scores: state.scores || {},
     answersCount: answerCount(room),
@@ -206,8 +252,12 @@ export function publicCosmicTriviaState(room) {
     expectedPreferenceCount: activePlayers(room).length,
     preferencePlayerIds: activePlayerIds(room).filter(playerId => playerState(room, playerId).preferencesLocked),
     playerStates: playerStateMap(room),
+    tester: {
+      selectedPlayerId: state.tester?.selectedPlayerId || null
+    },
     questionOptions: room.gameContent?.options || null,
     selectedQuestionIds: room.gameContent?.selection?.map(entry => entry.id) || [],
+    lastResolution: state.lastResolution || null,
     preloadAudio: {
       ...audioForQuestion(question),
       nextQuestionAudio: next?.questionAudio || ""
@@ -216,43 +266,68 @@ export function publicCosmicTriviaState(room) {
 }
 
 export function directorDelay(room) {
-  const state = stateKey(room);
-  if (state.phase === "answering" && answerCount(room) >= activePlayers(room).length) return 3000;
-  return directorSteps[state.phase]?.delayMs ?? null;
+  const timing = phaseTiming(room);
+  const mode = getDirectorStep(stateKey(room).phase)?.kind || null;
+  if (mode !== "timer") return null;
+  return timing.remainingMs;
 }
 
 export async function advanceCosmicTrivia(room) {
   await ensureCosmicTriviaState(room);
   const state = stateKey(room);
-  const step = directorSteps[state.phase];
-  if (!step?.next) return;
+  const phase = state.phase;
+  const nextPhase = getDirectorNextPhase(phase, {
+    roomCode: room.code,
+    playCount: state.playCount || 1,
+    questionIndex: state.questionIndex || 0,
+    isLastQuestion: (state.questionIndex || 0) >= (room.gameContent?.questions?.length || state.roundSize || 1) - 1,
+    lastResolution: state.lastResolution || null
+  });
+  if (!nextPhase) return;
 
-  if (state.phase === "preferences-locked") {
+  if (phase === "preferences-locked") {
     state.phase = "deck-loading";
     await loadRoundContent(room);
-  } else if (state.phase === "answering") {
-    if (answerCount(room) > 0) {
+  } else if (phase === "answering") {
+    const question = currentQuestion(room);
+    if (question && state.scoredQuestionId !== question.id) {
       applyQuestionScoring(room);
-      await markQuestionAnswered(currentQuestion(room)?.id);
+      await markQuestionAnswered(question.id);
+      const rewardCount = Object.values(state.answers || {}).filter(choice => choice === question.correctAnswer).length;
+      state.lastResolution = {
+        questionId: question.id,
+        correctAnswer: question.correctAnswer,
+        rewardCount,
+        answeredCount: answerCount(room),
+        scoredAt: Date.now()
+      };
     }
-    state.phase = step.next;
-  } else if (state.phase === "next-question") {
-    if (state.questionIndex >= (room.gameContent?.questions?.length || 1) - 1) {
-      state.phase = "complete";
+    state.phase = nextPhase;
+  } else if (phase === "next-question") {
+    if (nextPhase === "finale-intro") {
+      state.phase = nextPhase;
     } else {
       state.questionIndex += 1;
       state.answers = {};
       state.scoredQuestionId = null;
-      state.phase = "question-intro";
+      state.lastResolution = null;
+      state.phase = nextPhase;
     }
   } else {
-    state.phase = step.next;
+    state.phase = nextPhase;
   }
 
   state.phaseStartedAt = Date.now();
+  clearTesterTimer(room);
   state.director = {
     mode: "auto",
-    message: directorSteps[state.phase]?.message || ""
+    message: getDirectorMessage(state.phase, {
+      roomCode: room.code,
+      playCount: state.playCount || 1,
+      questionIndex: state.questionIndex || 0,
+      isLastQuestion: (state.questionIndex || 0) >= (room.gameContent?.questions?.length || state.roundSize || 1) - 1,
+      lastResolution: state.lastResolution || null
+    })
   };
 }
 
@@ -300,9 +375,130 @@ export async function answerCosmicTrivia(room, playerId, choice) {
   const previousChoice = state.answers[playerId];
   state.answers[playerId] = choice;
 
+  if (answerCount(room) >= activePlayers(room).length && !state.phaseEndsAtOverride) {
+    state.phaseTimerStartedAt = Date.now();
+    state.phaseDurationOverrideMs = 1_800;
+    state.phaseEndsAtOverride = state.phaseTimerStartedAt + state.phaseDurationOverrideMs;
+  }
+
   return {
     status: 200,
     allAnswered: answerCount(room) >= activePlayers(room).length
+  };
+}
+
+export async function setCosmicTriviaTesterSelection(room, playerId = null) {
+  await ensureCosmicTriviaState(room);
+  const state = stateKey(room);
+  const tester = testerKey(room);
+  if (playerId) {
+    const player = room.players.get(String(playerId));
+    if (!player) return { status: 404, error: "Player not found" };
+    tester.selectedPlayerId = player.id;
+  } else {
+    tester.selectedPlayerId = null;
+  }
+
+  state.director = {
+    mode: "manual",
+    message: state.director?.message || getDirectorMessage(state.phase, {
+      roomCode: room.code,
+      playCount: state.playCount || 1,
+      questionIndex: state.questionIndex || 0,
+      lastResolution: state.lastResolution || null
+    })
+  };
+
+  return { status: 200 };
+}
+
+export async function setCosmicTriviaTesterTimer(room, seconds = 0) {
+  await ensureCosmicTriviaState(room);
+  const state = stateKey(room);
+  const nextSeconds = Math.max(0, Number(seconds) || 0);
+  state.phaseTimerStartedAt = Date.now();
+  state.phaseDurationOverrideMs = nextSeconds * 1000;
+  state.phaseEndsAtOverride = state.phaseTimerStartedAt + state.phaseDurationOverrideMs;
+  state.director = {
+    mode: "manual",
+    message: state.director?.message || getDirectorMessage(state.phase, {
+      roomCode: room.code,
+      playCount: state.playCount || 1,
+      questionIndex: state.questionIndex || 0,
+      lastResolution: state.lastResolution || null
+    })
+  };
+  return { status: 200 };
+}
+
+export async function addCosmicTriviaTesterScore(room, playerId, points = 0) {
+  await ensureCosmicTriviaState(room);
+  const state = stateKey(room);
+  const selectedPlayerId = String(playerId || testerKey(room).selectedPlayerId || "");
+  const player = room.players.get(selectedPlayerId);
+  const delta = Number(points) || 0;
+  if (!player) return { status: 404, error: "Player not found" };
+  state.scores[player.id] = (state.scores[player.id] || 0) + delta;
+  return {
+    status: 200,
+    score: state.scores[player.id]
+  };
+}
+
+export async function completeCosmicTrivia(room) {
+  await ensureCosmicTriviaState(room);
+  const state = stateKey(room);
+  const question = currentQuestion(room);
+  const shouldFinalizeQuestion = ["answering", "scoring", "next-question"].includes(state.phase) || answerCount(room) > 0;
+
+  if (shouldFinalizeQuestion && question) {
+    applyQuestionScoring(room);
+    if (state.scoredQuestionId === question.id) {
+      await markQuestionAnswered(question.id);
+    }
+  }
+
+  clearTesterTimer(room);
+  state.phase = "complete";
+  state.phaseStartedAt = Date.now();
+  state.director = {
+    mode: "manual",
+    message: getDirectorMessage("complete", {
+      roomCode: room.code,
+      playCount: state.playCount || 1,
+      questionIndex: state.questionIndex || 0,
+      lastResolution: state.lastResolution || null
+    })
+  };
+
+  return { status: 200 };
+}
+
+export async function directorAudioEnded(room, phase = null) {
+  await ensureCosmicTriviaState(room);
+  const state = stateKey(room);
+  if (phase && state.phase !== phase) {
+    return {
+      status: 200,
+      advanced: false,
+      phase: state.phase
+    };
+  }
+
+  const step = getDirectorStep(state.phase);
+  if (!step || step.kind !== "audio-advance") {
+    return {
+      status: 200,
+      advanced: false,
+      phase: state.phase
+    };
+  }
+
+  await advanceCosmicTrivia(room);
+  return {
+    status: 200,
+    advanced: true,
+    phase: state.phase
   };
 }
 
@@ -314,5 +510,10 @@ export const cosmicTriviaRuntime = {
   preferences: setCosmicTriviaPreferences,
   restart: restartCosmicTrivia,
   advance: advanceCosmicTrivia,
-  directorDelay
+  directorDelay,
+  testerSelect: setCosmicTriviaTesterSelection,
+  testerTimer: setCosmicTriviaTesterTimer,
+  testerScore: addCosmicTriviaTesterScore,
+  testerComplete: completeCosmicTrivia,
+  directorAudioEnded
 };

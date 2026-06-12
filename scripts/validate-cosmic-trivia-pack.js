@@ -39,7 +39,6 @@ function validateQuestion(question, index, seenIds, errors) {
   if (!String(question.difficulty || "").trim()) errors.push(`${question.id || prefix}.difficulty is empty`);
   if (!String(question.fact || "").trim()) errors.push(`${question.id || prefix}.fact is empty`);
   if (!String(question.questionAudio || "").trim()) errors.push(`${question.id || prefix}.questionAudio is empty`);
-  if (!String(question.answerAudio || "").trim()) errors.push(`${question.id || prefix}.answerAudio is empty`);
 }
 
 async function main() {

@@ -28,7 +28,6 @@ Excel columns:
 - `correctAnswer`
 - `fact`
 - `questionAudio`
-- `answerAudio`
 - `enabled`
 
 Notes:
@@ -37,3 +36,14 @@ Notes:
 - `correctAnswer` must be `a`, `b`, `c`, or `d`.
 - `enabled=false` keeps a row out of the generated pack.
 - Categories, tags, and difficulties are derived from the spreadsheet content. There is no manifest to maintain.
+
+Audio system files:
+
+- `content/games/cosmic-trivia/AUDIO_SYSTEM.md`
+- `content/games/cosmic-trivia/audio/audio-stage-map.json`
+- `public/games/cosmic-trivia/audio/`
+
+Audio responsibilities:
+
+- `questionAudio` is the per-question prompt voiceover.
+- Host phase voice and shared sound effects live under `public/games/cosmic-trivia/audio/`.

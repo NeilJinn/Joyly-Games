@@ -129,6 +129,10 @@ async function tween(target, patch, options = {}) {
       if ("rotateY" in patch) state.rotateY = Number(patch.rotateY);
       if ("opacity" in patch) state.opacity = Number(patch.opacity);
       if ("glowStrength" in patch) state.glowStrength = Number(patch.glowStrength);
+      if ("origin" in patch) {
+        state.origin = String(patch.origin);
+        element.style.transformOrigin = state.origin;
+      }
       if ("glowColor" in patch) {
         state.glowColor = String(patch.glowColor);
         element.style.setProperty("--jms-glow-color", state.glowColor);
@@ -157,6 +161,7 @@ function applyStatePatch(target, patch = {}) {
     if ("opacity" in patch) state.opacity = Number(patch.opacity);
     if ("glowStrength" in patch) state.glowStrength = Number(patch.glowStrength);
     if ("glowColor" in patch) state.glowColor = String(patch.glowColor);
+    if ("origin" in patch) state.origin = String(patch.origin);
 
     const cssPatch = getCssVarPatch(state, patch);
     for (const [property, value] of Object.entries(cssPatch)) {
@@ -399,6 +404,9 @@ export async function FinalHold(target, patch = {}, options = {}) {
       tween(
         element,
         {
+          x: Number(patch.x ?? ensureMotionState(element).x),
+          y: Number(patch.y ?? ensureMotionState(element).y),
+          z: Number(patch.z ?? ensureMotionState(element).z),
           opacity: Number(patch.opacity ?? 1),
           scale: Number(patch.scale ?? 1),
           scaleX: Number(patch.scaleX ?? 1),
@@ -970,13 +978,21 @@ export async function loadLottie(target, options = {}) {
     renderer: options.renderer ?? "svg",
     loop: options.loop ?? true,
     autoplay: options.autoplay ?? false,
-    animationData: options.animationData
+    animationData: options.animationData,
+    path: options.path
   });
 
   const controller = {
     instance: animation,
     play() {
       animation.play();
+    },
+    seek(progress = 0) {
+      const totalFrames = Number(animation.totalFrames || 0);
+      if (!totalFrames) return controller;
+      const frame = Math.max(0, Math.min(totalFrames, Math.round(totalFrames * Math.max(0, Math.min(1, progress)))));
+      animation.goToAndStop(frame, true);
+      return controller;
     },
     stop() {
       animation.stop();

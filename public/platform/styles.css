@@ -1369,6 +1369,71 @@ select:focus {
   gap: 10px;
 }
 
+.werewolf-lobby-tester {
+  margin-top: 22px;
+  padding: 20px 22px 24px;
+  border-radius: 18px;
+  border: 1px solid rgba(227, 176, 82, .22);
+  background:
+    radial-gradient(circle at top right, rgba(227, 176, 82, .12), transparent 12rem),
+    linear-gradient(180deg, rgba(16, 20, 27, .92), rgba(10, 13, 19, .88));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+.werewolf-lobby-tester-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.werewolf-lobby-tester-head h3 {
+  margin: 8px 0 0;
+  font-size: 22px;
+}
+
+.werewolf-lobby-tester-head p {
+  max-width: 360px;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.werewolf-lobby-role-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.werewolf-lobby-role-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(255, 255, 255, .03);
+}
+
+.werewolf-lobby-role-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.werewolf-lobby-role-meta strong {
+  font-size: 16px;
+}
+
+.werewolf-lobby-role-card select {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(227, 176, 82, .22);
+  background: rgba(8, 12, 18, .88);
+  color: var(--text);
+  padding: 0 14px;
+}
+
 .host-link-card {
   margin-top: 18px;
   padding-top: 16px;

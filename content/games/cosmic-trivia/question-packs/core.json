@@ -31,8 +31,7 @@
       ],
       "correctAnswer": "a",
       "fact": "Olympus Mons on Mars is about three times taller than Mount Everest.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-space-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-space-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-001-question.mp3"
     },
     {
       "id": "core-space-002",
@@ -62,8 +61,7 @@
       ],
       "correctAnswer": "a",
       "fact": "Saturn's rings are made mostly of ice particles with bits of rock and dust.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-space-002-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-space-002-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-002-question.mp3"
     },
     {
       "id": "core-science-001",
@@ -93,8 +91,7 @@
       ],
       "correctAnswer": "b",
       "fact": "Artificial intelligence is the field behind machines that can reason, learn, and generate.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-science-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-science-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-001-question.mp3"
     },
     {
       "id": "core-science-002",
@@ -124,8 +121,7 @@
       ],
       "correctAnswer": "d",
       "fact": "Violet light sits at the short-wavelength end of the visible spectrum.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-science-002-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-science-002-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-002-question.mp3"
     },
     {
       "id": "core-science-003",
@@ -155,8 +151,7 @@
       ],
       "correctAnswer": "b",
       "fact": "Gutenberg's movable-type printing press helped books spread much faster in Europe.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-science-003-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-science-003-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-003-question.mp3"
     },
     {
       "id": "core-general-001",
@@ -186,8 +181,7 @@
       ],
       "correctAnswer": "b",
       "fact": "There is one queen in each suit.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-general-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-general-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-general-001-question.mp3"
     },
     {
       "id": "core-general-002",
@@ -217,8 +211,7 @@
       ],
       "correctAnswer": "c",
       "fact": "Mandarin Chinese has the largest number of native speakers.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-general-002-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-general-002-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-general-002-question.mp3"
     },
     {
       "id": "core-history-001",
@@ -248,8 +241,7 @@
       ],
       "correctAnswer": "b",
       "fact": "The Great Pyramid of Giza was built during Egypt's Old Kingdom.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-history-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-history-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-history-001-question.mp3"
     },
     {
       "id": "core-geography-001",
@@ -280,8 +272,7 @@
       ],
       "correctAnswer": "c",
       "fact": "France spans many time zones because of territories in the Pacific, Indian Ocean, Caribbean, and elsewhere.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-geography-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-geography-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-geography-001-question.mp3"
     },
     {
       "id": "core-nature-001",
@@ -311,8 +302,7 @@
       ],
       "correctAnswer": "b",
       "fact": "Cheetahs can sprint faster than 100 km/h in short bursts.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-nature-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-nature-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-nature-001-question.mp3"
     },
     {
       "id": "core-movies-001",
@@ -342,8 +332,7 @@
       ],
       "correctAnswer": "a",
       "fact": "Nemo and Marlin are clownfish, known for living among sea anemones.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-movies-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-movies-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-movies-001-question.mp3"
     },
     {
       "id": "core-sports-001",
@@ -373,8 +362,7 @@
       ],
       "correctAnswer": "c",
       "fact": "A soccer team fields 11 players, including the goalkeeper.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-sports-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-sports-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-sports-001-question.mp3"
     },
     {
       "id": "core-books-001",
@@ -404,8 +392,7 @@
       ],
       "correctAnswer": "b",
       "fact": "Mary Shelley published Frankenstein in 1818.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-books-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-books-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-books-001-question.mp3"
     },
     {
       "id": "core-games-001",
@@ -435,8 +422,7 @@
       ],
       "correctAnswer": "c",
       "fact": "The knight moves two squares in one direction and one square perpendicular to it.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-games-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-games-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-games-001-question.mp3"
     },
     {
       "id": "core-earth-001",
@@ -466,8 +452,7 @@
       ],
       "correctAnswer": "c",
       "fact": "The Pacific covers more area than all land on Earth combined.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-earth-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-earth-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-earth-001-question.mp3"
     },
     {
       "id": "core-earth-002",
@@ -497,8 +482,7 @@
       ],
       "correctAnswer": "b",
       "fact": "The mantle is the thick layer between Earth's crust and core.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-earth-002-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-earth-002-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-earth-002-question.mp3"
     },
     {
       "id": "core-food-001",
@@ -528,8 +512,7 @@
       ],
       "correctAnswer": "a",
       "fact": "Guacamole is an avocado-based dip that originated in Mexico.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-food-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-food-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-food-001-question.mp3"
     },
     {
       "id": "core-music-001",
@@ -559,8 +542,7 @@
       ],
       "correctAnswer": "a",
       "fact": "A modern full-size piano usually has 52 white keys and 36 black keys.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-music-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-music-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-music-001-question.mp3"
     },
     {
       "id": "core-plants-001",
@@ -590,8 +572,7 @@
       ],
       "correctAnswer": "b",
       "fact": "Plants use carbon dioxide during photosynthesis.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-plants-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-plants-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-plants-001-question.mp3"
     },
     {
       "id": "core-weather-001",
@@ -621,8 +602,7 @@
       ],
       "correctAnswer": "b",
       "fact": "A barometer measures atmospheric pressure, which helps forecast weather changes.",
-      "questionAudio": "/games/cosmic-trivia/audio/core-weather-001-question.mp3",
-      "answerAudio": "/games/cosmic-trivia/audio/core-weather-001-answer.mp3"
+      "questionAudio": "/games/cosmic-trivia/audio/core-weather-001-question.mp3"
     }
   ]
 }

@@ -115,13 +115,12 @@ Each Trivia question is a standalone JSON file with:
 - `answers`
 - `correctAnswer`
 - `questionAudio`
-- `answerAudio`
 
 Question-pack manifests index metadata only. The game uses the manifest to select a weighted round, then loads only the chosen question files. Audio paths are included in the selected game state so the client can load the current question audio and preload the next question's audio.
 
 The Cosmic Trivia Game Director starts only after the host launches the game package. It currently runs these phases automatically:
 
-`deck-selecting` -> `question-intro` -> `question-audio` -> `answering` -> `answer-reveal` -> `answer-audio` -> `scoring` -> `next-question` -> `complete`
+`deck-selecting` -> `question-intro` -> `question-audio` -> `answering` -> `scoring` -> `next-question` -> `complete`
 
 ## Product Direction
 

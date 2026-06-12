@@ -33,6 +33,7 @@ const CONTROLLER_PAIRED_KEY = "joylyControllerPaired";
 const ACTIVE_PAIRING_KEY = "joylyActivePairingToken";
 const PLAYER_IDENTITY_KEY = "joylyPlayerIdentity";
 const PHONE_SURFACE_KEY = "joylyPhoneSurface";
+const ACTIVE_ROOM_CODE_KEY = "joylyActiveRoomCode";
 
 let config = { games: [], localJoinBase: location.origin };
 let room = null;
@@ -70,6 +71,10 @@ let accountMenuOpen = false;
 let pendingRoom = null;
 let playerHeartbeatTimer = null;
 let playerRestoreInFlight = false;
+let deferredPlayingRender = false;
+let deferredPlayingRenderTimer = null;
+let triviaRankAnimationActive = false;
+let triviaChoiceAnimationActive = false;
 const gameClients = new Map();
 let globalActionHandlersAttached = false;
 
@@ -80,6 +85,52 @@ const joinCode = params.get("room");
 const hostCode = params.get("host");
 const pairToken = params.get("pair");
 const route = pairToken ? "pair" : joinCode ? "join" : "host";
+
+window.addEventListener("cosmic-trivia-rank-animation-start", () => {
+  triviaRankAnimationActive = true;
+});
+
+window.addEventListener("cosmic-trivia-rank-animation-end", () => {
+  triviaRankAnimationActive = false;
+});
+
+window.addEventListener("cosmic-trivia-choice-animation-start", () => {
+  triviaChoiceAnimationActive = true;
+});
+
+window.addEventListener("cosmic-trivia-choice-animation-end", () => {
+  triviaChoiceAnimationActive = false;
+});
+
+function maybeResumePlayingRender() {
+  if (!deferredPlayingRender || deferredPlayingRenderTimer) return;
+  if (
+    triviaRankAnimationActive ||
+    triviaChoiceAnimationActive ||
+    document.documentElement.hasAttribute("data-cosmic-trivia-rank-animating") ||
+    document.documentElement.hasAttribute("data-cosmic-trivia-choice-animating")
+  ) {
+    return;
+  }
+
+  deferredPlayingRenderTimer = window.setTimeout(() => {
+    deferredPlayingRenderTimer = null;
+    if (
+      triviaRankAnimationActive ||
+      triviaChoiceAnimationActive ||
+      document.documentElement.hasAttribute("data-cosmic-trivia-rank-animating") ||
+      document.documentElement.hasAttribute("data-cosmic-trivia-choice-animating")
+    ) {
+      maybeResumePlayingRender();
+      return;
+    }
+    deferredPlayingRender = false;
+    if (room?.status === "playing") void renderPlaying();
+  }, 220);
+}
+
+window.addEventListener("cosmic-trivia-rank-animation-end", maybeResumePlayingRender);
+window.addEventListener("cosmic-trivia-choice-animation-end", maybeResumePlayingRender);
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -149,6 +200,14 @@ function recoverPlayerFromRoom(nextRoom = room) {
   player = matched;
   syncPlayerIdentityFromPlayer(matched);
   return matched;
+}
+
+function rememberRoomCode(nextRoom) {
+  if (nextRoom?.code) localStorage.setItem(ACTIVE_ROOM_CODE_KEY, nextRoom.code);
+}
+
+function forgetRoomCode() {
+  localStorage.removeItem(ACTIVE_ROOM_CODE_KEY);
 }
 
 function selectedGame() {
@@ -306,6 +365,7 @@ async function syncHostRoom() {
     const previousStatus = room?.status;
     const changed = !room || room.code !== data.room.code || room.status !== data.room.status || room.players.length !== data.room.players.length;
     room = data.room;
+    rememberRoomCode(room);
     selectedGameId = room.selectedGame?.id || selectedGameId;
     if (!events || previousCode !== room.code) connect(room.code);
     if (changed) activeSurface = "room";
@@ -365,6 +425,7 @@ async function loadActiveHostRoom() {
   if (data.entitlement) hostEntitlement = data.entitlement;
   if (!data.room) return null;
   room = data.room;
+  rememberRoomCode(room);
   selectedGameId = room.selectedGame?.id || selectedGameId;
   connect(room.code);
   recoverPlayerFromRoom(room);
@@ -390,6 +451,7 @@ function connect(code) {
         return;
       }
       room = payload.room;
+      rememberRoomCode(room);
       applyRoomUpdate(previousStatus);
     }
   };
@@ -398,6 +460,7 @@ function connect(code) {
 function applyRoomUpdate(previousStatus) {
   if (room.status === "closed" && route === "host") {
     room = null;
+    forgetRoomCode();
     activeSurface = "home";
     events?.close();
     currentView = "";
@@ -408,6 +471,7 @@ function applyRoomUpdate(previousStatus) {
     room = null;
     player = null;
     phonePlayerEditing = false;
+    forgetRoomCode();
     activeSurface = "setup";
     events?.close();
     currentView = "";
@@ -750,6 +814,7 @@ function topbarActions() {
     return html`
       <nav class="home-actions">
         ${deviceToggle}
+        <button class="secondary btn-action" data-open-voice-library type="button">${withIcon("music", "Voice library")}</button>
         ${roomStatusPill()}
         ${!room && !waitingForPairedPhone ? `<button class="primary btn-play" data-start-setup>${withIcon("play", "Play")}</button>` : ""}
         ${accountMenu()}
@@ -759,6 +824,7 @@ function topbarActions() {
   return html`
     <nav class="home-actions">
       ${deviceToggle}
+      <button class="secondary btn-action" data-open-voice-library type="button">${withIcon("music", "Voice library")}</button>
       <button class="secondary btn-action" data-open-auth>${withIcon("login", "Sign in")}</button>
       <button class="primary btn-play" data-open-auth data-auth-next="setup">${withIcon("play", "Play")}</button>
     </nav>
@@ -906,6 +972,9 @@ function attachChromeHandlers() {
   document.querySelector("#menuCloseRoom")?.addEventListener("click", async () => {
     await closeCurrentRoom();
   });
+  document.querySelector("[data-open-voice-library]")?.addEventListener("click", () => {
+    location.href = "/voice-library/";
+  });
   document.querySelectorAll("[data-close-room]").forEach(button => {
     button.addEventListener("click", async () => {
       await closeCurrentRoom();
@@ -948,6 +1017,7 @@ async function closeCurrentRoom({ nextSurface = "home" } = {}) {
     const code = room.code;
     await api(`/api/rooms/${code}/close`, { method: "POST" });
     room = null;
+    forgetRoomCode();
     if (!isPairedHostPhone()) player = null;
     currentView = "";
     activeSurface = nextSurface;
@@ -1483,6 +1553,41 @@ function lobbyViewModel() {
   return { readyCount, onlineCount, disconnectedCount, totalCount, minPlayers, maxPlayers, canStart, canForceStart, allReady, countdownSeconds, countdownActive, players };
 }
 
+function renderWerewolfTesterPanel() {
+  if (room?.selectedGame?.id !== "fate-werewolf") return "";
+  const setup = room?.gameSetup;
+  const roleOptions = setup?.roleOptions || [];
+  const roleAssignments = setup?.roleAssignments || {};
+  return html`
+    <section class="werewolf-lobby-tester" data-werewolf-lobby-tester>
+      <div class="werewolf-lobby-tester-head">
+        <div>
+          <span class="tag">测试身份</span>
+          <h3>给指定玩家指定身份</h3>
+        </div>
+        <p class="muted">开局前直接指定某位玩家是狼人、神谕者、守护者等；不指定就保持随机发牌。</p>
+      </div>
+      <div class="werewolf-lobby-role-grid">
+        ${room.players.map(item => html`
+          <label class="werewolf-lobby-role-card">
+            <div class="werewolf-lobby-role-meta">
+              ${avatarToken(item.avatar)}
+              <strong>${escape(item.nickname)}</strong>
+            </div>
+            <select data-werewolf-tester-role="${escape(item.id)}">
+              ${roleOptions.map(option => `
+                <option value="${escape(option.id)}" ${String(roleAssignments[item.id] || "") === String(option.id || "") ? "selected" : ""}>
+                  ${escape(option.name)}
+                </option>
+              `).join("")}
+            </select>
+          </label>
+        `).join("")}
+      </div>
+    </section>
+  `;
+}
+
 function lobbyStageMarkup() {
   const {
     readyCount,
@@ -1512,7 +1617,7 @@ function lobbyStageMarkup() {
       </div>
       <div class="host-controls">
         <button class="secondary btn-tool" id="openGamePicker">${withIcon("game", escape(room.selectedGame?.title || "Choose game"))}</button>
-        <button class="secondary btn-tool" id="addTestPlayers">${withIcon("play", "Start test game")}</button>
+        <button class="secondary btn-tool" id="addTestPlayers">${withIcon("users", "Add tester")}</button>
         <button class="ghost danger-button btn-danger" data-close-room>${withIcon("power", "Close")}</button>
         <button class="primary btn-play ${(allReady || canForceStart) ? "" : "btn-disabled"} ${countdownActive ? "btn-selected" : ""}" id="startGame" ${(allReady || canForceStart) && !countdownActive ? "" : "disabled"}>${withIcon("play", startLabel)}</button>
       </div>
@@ -1525,6 +1630,7 @@ function lobbyStageMarkup() {
         ${players || `<div class="empty-stage"><strong>Scan to join</strong><span>${minPlayers}-${maxPlayers} players</span></div>`}
       </div>
     </section>
+    ${renderWerewolfTesterPanel()}
     <button class="secondary compact-copy btn-action" id="copyLink">${withIcon("copy", "Copy link")}</button>
   `;
 }
@@ -1567,46 +1673,53 @@ function attachLobbyStageHandlers() {
       updateLobbyStage();
     }
   });
+  document.querySelectorAll("[data-werewolf-tester-role]").forEach(select => {
+    select.addEventListener("change", async event => {
+      try {
+        lobbyError = "";
+        const playerId = event.currentTarget.dataset.werewolfTesterRole || "";
+        const roleId = event.currentTarget.value || "";
+        const data = await api(`/api/rooms/${room.code}/werewolf/tester/role`, {
+          method: "POST",
+          body: { playerId, roleId }
+        });
+        room = data.room;
+        updateLobbyStage();
+      } catch (error) {
+        lobbyError = error.message;
+        updateLobbyStage();
+      }
+    });
+  });
 }
 
 function updateLobbyStage() {
   if (currentView !== "lobby") return false;
   const stage = document.querySelector("[data-lobby-stage]");
   if (!stage || !room || room.status !== "waiting") return false;
-  const {
-    readyCount,
-    onlineCount,
-    disconnectedCount,
-    minPlayers,
-    maxPlayers,
-    canForceStart,
-    allReady,
-    countdownSeconds,
-    countdownActive,
-    players
-  } = lobbyViewModel();
-  const summary = stage.querySelector("[data-lobby-summary]");
-  if (summary) summary.textContent = lobbySummaryText({ onlineCount, readyCount, disconnectedCount, maxPlayers });
-  const error = stage.querySelector("[data-lobby-error]");
-  if (error) error.textContent = lobbyError || "";
-  const gameButton = stage.querySelector("#openGamePicker");
-  if (gameButton) gameButton.innerHTML = withIcon("game", escape(room.selectedGame?.title || "Choose game"));
+  stage.innerHTML = lobbyStageMarkup();
+  attachLobbyStageHandlers();
+  return true;
+}
+
+function updateLobbyCountdownOnly() {
+  if (currentView !== "lobby") return false;
+  const stage = document.querySelector("[data-lobby-stage]");
+  if (!stage || !room || room.status !== "waiting") return false;
+  const { minPlayers, canForceStart, allReady, countdownSeconds, countdownActive } = lobbyViewModel();
   const startButton = stage.querySelector("#startGame");
-  if (startButton) {
-    const startLabel = countdownActive
-      ? `Starting in ${countdownSeconds}s`
-      : allReady
-        ? "Launch now"
-        : canForceStart
-          ? "Force start · 5s"
-          : `Need ${minPlayers} players`;
-    startButton.disabled = !(allReady || canForceStart) || countdownActive;
-    startButton.classList.toggle("btn-disabled", !(allReady || canForceStart));
-    startButton.classList.toggle("btn-selected", countdownActive);
-    startButton.innerHTML = withIcon("play", startLabel);
-  }
-  const ring = stage.querySelector("[data-stage-ring]");
-  if (ring) ring.innerHTML = players || `<div class="empty-stage"><strong>Scan to join</strong><span>${minPlayers}-${maxPlayers} players</span></div>`;
+  if (!startButton) return false;
+  const startLabel = countdownActive
+    ? `Starting in ${countdownSeconds}s`
+    : allReady
+      ? "Launch now"
+      : canForceStart
+        ? "Force start · 5s"
+        : `Need ${minPlayers} players`;
+  startButton.disabled = !(allReady || canForceStart) || countdownActive;
+  startButton.classList.toggle("btn-disabled", !(allReady || canForceStart));
+  startButton.classList.toggle("btn-selected", countdownActive);
+  startButton.innerHTML = withIcon("play", startLabel);
   return true;
 }
 
@@ -1635,10 +1748,26 @@ function renderLobby() {
 }
 
 async function renderPlaying() {
+  if (
+    room?.selectedGame?.id === "cosmic-trivia" &&
+    (
+      triviaRankAnimationActive ||
+      triviaChoiceAnimationActive ||
+      document.documentElement.hasAttribute("data-cosmic-trivia-rank-animating") ||
+      document.documentElement.hasAttribute("data-cosmic-trivia-choice-animating")
+    )
+  ) {
+    if (!deferredPlayingRender) {
+      deferredPlayingRender = true;
+    }
+    return;
+  }
+
   const client = await loadGameClient(room.selectedGame);
   app.innerHTML = hostShell(client.renderHostGame(room));
   attachChromeHandlers();
   attachPickerHandlers();
+  client.attachHostGameHandlers?.(app, { room, api });
 }
 
 async function renderHostControlFromUrl() {
@@ -1646,6 +1775,7 @@ async function renderHostControlFromUrl() {
     const data = await api(`/api/rooms/${hostCode}`);
     room = data.room;
     hostAccount = room.host;
+    rememberRoomCode(room);
     selectedGameId = room.selectedGame?.id || selectedGameId;
     connect(room.code);
     recoverPlayerFromRoom(room);
@@ -2149,6 +2279,19 @@ if (hostCode) {
 } else if (route === "join") {
   await renderJoin();
 } else {
+  const savedRoomCode = localStorage.getItem(ACTIVE_ROOM_CODE_KEY);
+  if (savedRoomCode && !room) {
+    try {
+      const data = await api(`/api/rooms/${savedRoomCode}`);
+      room = data.room;
+      rememberRoomCode(room);
+      selectedGameId = room.selectedGame?.id || selectedGameId;
+      connect(room.code);
+      recoverPlayerFromRoom(room);
+    } catch {
+      forgetRoomCode();
+    }
+  }
   await loadActiveHostRoom();
   renderHost();
 }
@@ -2162,7 +2305,7 @@ setInterval(() => {
   if (isInteractionLocked()) return;
   if (room?.launchCountdown?.endsAt && room.status === "waiting") {
     if (currentView === "lobby") {
-      updateLobbyStage();
+      updateLobbyCountdownOnly();
     } else if ((route === "join" || route === "pair") && player) {
       if (!updatePhoneStatus()) render();
     } else {

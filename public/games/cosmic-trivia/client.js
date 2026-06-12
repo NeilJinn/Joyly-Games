@@ -1,35 +1,117 @@
 import { escape, html, withIcon } from "../../platform/shared/ui.js";
 import { avatarToken } from "../../players/client.js";
+import { hydrateTriviaHostPresentation } from "./presentation.js";
 
 const preferenceDrafts = new Map();
 const answerDrafts = new Map();
-const topicBubbleMemory = new Map();
 const hostRankMemory = new Map();
+const hostSelectionMemory = new Map();
+let countdownTickerStarted = false;
 
 export function sortedPlayersByScore(room) {
   const scores = room?.gameState?.scores || room?.trivia?.scores || {};
-  return [...(room?.players || [])].sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0));
+  return sortedPlayersByScoreWithOrder(room, scores);
+}
+
+function sortedPlayersByScoreWithOrder(room, scores, previousOrder = null) {
+  return [...(room?.players || [])].sort((a, b) => {
+    const scoreDiff = (scores[b.id] || 0) - (scores[a.id] || 0);
+    if (scoreDiff) return scoreDiff;
+
+    if (previousOrder?.has(a.id) && previousOrder?.has(b.id)) {
+      return (previousOrder.get(a.id) || 0) - (previousOrder.get(b.id) || 0);
+    }
+    if (previousOrder?.has(a.id)) return -1;
+    if (previousOrder?.has(b.id)) return 1;
+
+    const joinedDiff = Number(a.joinedAt || 0) - Number(b.joinedAt || 0);
+    if (joinedDiff) return joinedDiff;
+    return String(a.id).localeCompare(String(b.id));
+  });
 }
 
 function phaseSeconds(trivia) {
   return Math.max(0, Math.ceil((trivia?.phaseEndsAt - Date.now()) / 1000) || 0);
 }
 
-function phaseProgress(trivia) {
-  if (!trivia?.phaseDurationMs || !trivia?.phaseStartedAt) return 0;
-  const elapsed = Date.now() - trivia.phaseStartedAt;
-  return Math.min(100, Math.max(0, (elapsed / trivia.phaseDurationMs) * 100));
+function countdownUrgency(trivia) {
+  const seconds = phaseSeconds(trivia);
+  if (seconds <= 5) return "danger";
+  if (seconds <= 10) return "warning";
+  return "normal";
 }
 
-function directorCountdown(trivia) {
+function formatPhaseLabel(phase) {
+  if (!phase) return "Ready";
+  return String(phase).replace(/-/g, " ");
+}
+
+function stageTimerTag(label, trivia) {
+  if (!["interest-selecting", "answering"].includes(trivia?.phase) || !trivia?.phaseEndsAt) {
+    return html`
+      <span class="tag stage-bar">
+        <span class="stage-bar-label">${escape(label)}</span>
+      </span>
+    `;
+  }
   const seconds = phaseSeconds(trivia);
-  if (!seconds) return "";
+  const duration = Number(trivia?.phaseDurationMs || 0);
+  const remaining = Math.max(0, trivia.phaseEndsAt - Date.now());
+  const progress = duration > 0 ? Math.max(0, Math.min(1, 1 - remaining / duration)) : 0;
   return html`
-    <div class="director-countdown">
-      <span>${seconds}s</span>
-      <div><i style="width:${phaseProgress(trivia)}%"></i></div>
-    </div>
+    <span
+      class="tag director-countdown countdown-${countdownUrgency(trivia)}"
+      data-director-countdown
+      data-countdown-remaining="${trivia?.phaseEndsAt || 0}"
+      data-countdown-duration="${duration}"
+      style="--timer-progress:${progress}"
+      aria-label="Time left ${seconds} seconds"
+    >
+      <span class="director-countdown-fill" aria-hidden="true"></span>
+      <span class="director-countdown-glow-track" aria-hidden="true">
+        <span class="director-countdown-glow"></span>
+      </span>
+      <span class="stage-bar-label director-countdown-label">${escape(label)}</span>
+      <strong class="director-countdown-value">${seconds}s</strong>
+    </span>
   `;
+}
+
+function refreshCountdownFills() {
+  for (const countdown of document.querySelectorAll("[data-director-countdown]")) {
+    const remainingAt = Number(countdown.dataset.countdownRemaining || 0);
+    const durationMs = Number(countdown.dataset.countdownDuration || 0);
+    const remainingMs = Math.max(0, remainingAt - Date.now());
+    const seconds = Math.max(0, Math.ceil(remainingMs / 1000));
+    const progress = durationMs > 0 ? Math.max(0, Math.min(1, 1 - remainingMs / durationMs)) : 0;
+    countdown.style.setProperty("--timer-progress", String(progress));
+    countdown.classList.toggle("countdown-warning", seconds <= 10 && seconds > 5);
+    countdown.classList.toggle("countdown-danger", seconds <= 5);
+    countdown.classList.toggle("countdown-normal", seconds > 10);
+    const value = countdown.querySelector(".director-countdown-value");
+    if (value) value.textContent = `${seconds}s`;
+    if (seconds <= 10 && seconds > 0 && countdown.dataset.countdownMotionSecond !== String(seconds)) {
+      countdown.dataset.countdownMotionSecond = String(seconds);
+      countdown.dispatchEvent(new CustomEvent("cosmic-trivia-countdown-tick", {
+        bubbles: true,
+        detail: {
+          seconds,
+          urgency: seconds <= 5 ? "danger" : "warning",
+          targetSelector: ".director-countdown-glow"
+        }
+      }));
+    }
+  }
+}
+
+function ensureCountdownTicker() {
+  if (countdownTickerStarted) return;
+  countdownTickerStarted = true;
+  const tick = () => {
+    refreshCountdownFills();
+    window.requestAnimationFrame(tick);
+  };
+  tick();
 }
 
 const categoryLabels = {
@@ -67,173 +149,6 @@ const tagLabels = {
 
 function labelFor(kind, value) {
   return (kind === "category" ? categoryLabels : tagLabels)[value] || value;
-}
-
-function hashBubble(value) {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) hash = ((hash << 5) - hash + value.charCodeAt(i)) >>> 0;
-  return hash;
-}
-
-function bubbleBox(kind, label) {
-  const length = label.length;
-  const width = kind === "category"
-    ? Math.min(268, Math.max(126, 104 + length * 9))
-    : Math.min(228, Math.max(110, 88 + length * 7));
-  const height = width;
-  return { width, height };
-}
-
-function bubbleLabel(kind, value) {
-  return escape(labelFor(kind, value));
-}
-
-function bubbleEntries(room, trivia) {
-  if (!trivia || !["interest-selecting", "preferences-locked"].includes(trivia.phase)) {
-    topicBubbleMemory.delete(room.code);
-    return [];
-  }
-
-  const fieldOptions = [
-    ...(trivia.questionOptions?.categories || []).map(value => ({ kind: "category", value })),
-    ...(trivia.questionOptions?.tags || []).map(value => ({ kind: "tag", value }))
-  ];
-  if (!fieldOptions.length) {
-    topicBubbleMemory.delete(room.code);
-    return [];
-  }
-
-  const entries = new Map(fieldOptions.map(option => {
-    const key = `${option.kind}:${option.value}`;
-    return [key, {
-      key,
-      kind: option.kind,
-      value: option.value,
-      label: labelFor(option.kind, option.value),
-      count: 0
-    }];
-  }));
-
-  for (const player of room.players || []) {
-    const state = trivia.playerStates?.[player.id];
-    const preferences = state?.preferences || { categories: [], tags: [] };
-    for (const value of preferences.categories || []) {
-      const entry = entries.get(`category:${value}`);
-      if (entry) entry.count += 1;
-    }
-    for (const value of preferences.tags || []) {
-      const entry = entries.get(`tag:${value}`);
-      if (entry) entry.count += 1;
-    }
-  }
-
-  const previousMemory = topicBubbleMemory.get(room.code) || new Map();
-  const selected = [...entries.values()];
-  const nextMemory = new Map();
-  selected.forEach(entry => {
-    const previous = previousMemory.get(entry.key) || 0;
-    nextMemory.set(entry.key, entry.count);
-    entry.growing = entry.count > previous;
-    entry.selected = entry.count > 0;
-  });
-
-  topicBubbleMemory.set(room.code, nextMemory);
-
-  const fieldWidth = 1080;
-  const fieldHeight = 460;
-  const margin = 18;
-  const paddedWidth = fieldWidth - margin * 2;
-  const paddedHeight = fieldHeight - margin * 2;
-  const cells = [];
-  const cols = Math.max(4, Math.ceil(Math.sqrt(selected.length * 1.3)));
-  const rows = Math.max(3, Math.ceil(selected.length / cols));
-  for (let row = 0; row < rows; row += 1) {
-    for (let col = 0; col < cols; col += 1) {
-      cells.push({
-        x: margin + ((col + 0.5) / cols) * paddedWidth,
-        y: margin + ((row + 0.5) / rows) * paddedHeight
-      });
-    }
-  }
-
-  const occupied = new Set();
-  const bubbles = selected
-    .map(entry => {
-      const seed = hashBubble(`${room.code}:${entry.key}`);
-      const box = bubbleBox(entry.kind, entry.label);
-      const sizeBoost = entry.count > 0 ? 1 + Math.min(1.2, entry.count * (entry.kind === "category" ? 0.28 : 0.22)) : 1;
-      const size = Math.min(520, Math.round(box.width * sizeBoost));
-      const startIndex = seed % cells.length;
-      let cellIndex = startIndex;
-      while (occupied.has(cellIndex)) cellIndex = (cellIndex + 1) % cells.length;
-      occupied.add(cellIndex);
-      const anchor = cells[cellIndex];
-      const jitterX = (((seed >> 5) % 19) - 9) * 1.6;
-      const jitterY = (((seed >> 11) % 19) - 9) * 1.2;
-      return {
-        ...entry,
-        seed,
-        x: anchor.x + jitterX,
-        y: anchor.y + jitterY,
-        width: size,
-        height: Math.max(42, Math.round(size * 0.58)),
-        rotate: ((seed >> 15) % 5) - 2,
-        z: (seed >> 20) % 4,
-        delay: ((seed >> 9) % 9) / 10
-      };
-    });
-
-  for (let pass = 0; pass < 18; pass += 1) {
-    for (let i = 0; i < bubbles.length; i += 1) {
-      for (let j = i + 1; j < bubbles.length; j += 1) {
-        const a = bubbles[i];
-        const b = bubbles[j];
-        const dx = b.x - a.x;
-        const dy = b.y - a.y;
-        const minDist = (a.width + b.width) / 2 + 18;
-        const distance = Math.max(1, Math.hypot(dx, dy));
-        const overlap = minDist - distance;
-        if (overlap <= 0) continue;
-
-        const push = overlap * 0.14;
-        const nx = dx / distance;
-        const ny = dy / distance;
-        a.x -= nx * push;
-        a.y -= ny * push;
-        b.x += nx * push;
-        b.y += ny * push;
-      }
-    }
-
-    for (const bubble of bubbles) {
-      const halfW = bubble.width / 2;
-      const halfH = bubble.height / 2;
-      bubble.x = Math.max(margin + halfW, Math.min(fieldWidth - margin - halfW, bubble.x));
-      bubble.y = Math.max(margin + halfH, Math.min(fieldHeight - margin - halfH, bubble.y));
-    }
-  }
-
-  for (const bubble of bubbles) {
-    let crowd = 0;
-    for (const other of bubbles) {
-      if (other === bubble) continue;
-      const dx = Math.abs(other.x - bubble.x);
-      const dy = Math.abs(other.y - bubble.y);
-      const limit = (bubble.width + other.width) / 2 + 20;
-      if (Math.hypot(dx, dy) < limit) crowd += 1;
-    }
-    const bump = bubble.growing ? 0.28 : 0;
-    bubble.scale = bubble.selected
-      ? Math.min(2.2, 1.08 + bubble.count * 0.34 + bump)
-      : 0.86;
-    bubble.float = 7 + ((bubble.seed >> 7) % 7) * 0.55;
-    bubble.drift = 0.4 + ((bubble.seed >> 17) % 7) / 14;
-  }
-
-  return bubbles.map(bubble => ({
-    ...bubble,
-    style: `--x:${(bubble.x / fieldWidth) * 100}%;--y:${(bubble.y / fieldHeight) * 100}%;--size:${bubble.width}px;--rotate:${bubble.rotate}deg;--z:${bubble.z};--delay:${bubble.delay}s;--scale:${bubble.scale};--float:${bubble.float}s;--drift:${bubble.drift};`
-  }));
 }
 
 function preferenceProgress(room, trivia) {
@@ -300,17 +215,18 @@ function preferenceLabelsForPlayer(trivia, playerId) {
 
 function buildRankSnapshot(room, trivia) {
   const scores = trivia?.scores || {};
-  const ranked = sortedPlayersByScore(room);
-  const signature = ranked.map(player => `${player.id}:${scores[player.id] || 0}`).join("|");
   const previous = hostRankMemory.get(room.code);
+  const previousOrder = previous?.order || null;
+  const ranked = sortedPlayersByScoreWithOrder(room, scores, previousOrder);
+  const signature = ranked.map(player => `${player.id}:${scores[player.id] || 0}`).join("|");
   const animate = Boolean(previous && previous.signature !== signature);
-  const previousOrder = previous?.order || new Map();
+  const previousOrderMap = previous?.order || new Map();
   const previousScores = previous?.scores || {};
   const deltas = new Map();
 
   if (animate) {
     ranked.forEach((player, index) => {
-      const previousIndex = previousOrder.get(player.id);
+      const previousIndex = previousOrderMap.get(player.id);
       const previousScore = previousScores[player.id] || 0;
       const currentScore = scores[player.id] || 0;
       deltas.set(player.id, {
@@ -329,16 +245,78 @@ function buildRankSnapshot(room, trivia) {
   return { ranked, deltas, animate };
 }
 
+function buildSelectionSnapshot(room, trivia) {
+  const phase = trivia?.phase || "";
+  const questionId = trivia?.currentQuestion?.id || "";
+  const selectedIds = new Set(trivia?.answeredPlayerIds || []);
+  const previous = hostSelectionMemory.get(room.code) || { questionId: "", selectedIds: new Set() };
+  const animateIds = new Set();
+
+  if (phase === "answering" && questionId) {
+    if (previous.questionId !== questionId) {
+      previous.questionId = questionId;
+      previous.selectedIds = new Set();
+    }
+    for (const playerId of selectedIds) {
+      if (!previous.selectedIds.has(playerId)) animateIds.add(playerId);
+    }
+    previous.selectedIds = new Set(selectedIds);
+    hostSelectionMemory.set(room.code, previous);
+  } else if (["scoring", "next-question", "finale-intro", "complete"].includes(phase)) {
+    hostSelectionMemory.delete(room.code);
+  }
+
+  return { animateIds, selectedIds };
+}
+
+function renderTesterPanel(room, trivia, ranked) {
+  const selectedPlayerId = trivia?.tester?.selectedPlayerId || "";
+  const selectedPlayer = ranked.find(player => player.id === selectedPlayerId) || null;
+  return html`
+    <section class="tester-panel" data-trivia-tester-panel>
+      <div class="tester-panel-head">
+        <div>
+          <span class="tag">Tester mode</span>
+          <h2>Director tools</h2>
+          <p class="muted">${selectedPlayer ? `Selected: ${escape(selectedPlayer.nickname)}` : "Pick a player from the score list."}</p>
+        </div>
+        <button type="button" class="ghost tester-clear" data-trivia-tester-select="">${withIcon("close", "Clear")}</button>
+      </div>
+      <div class="tester-group">
+        <strong>Countdown</strong>
+        <div class="tester-actions">
+          ${[3, 5, 10].map(seconds => html`
+            <button type="button" class="ghost tester-button" data-trivia-tester-timer="${seconds}">${seconds}s</button>
+          `).join("")}
+        </div>
+      </div>
+      <div class="tester-group">
+        <strong>Score selected</strong>
+        <div class="tester-actions">
+          ${[50, 100, 250].map(points => html`
+            <button type="button" class="ghost tester-button" data-trivia-tester-score="${points}" ${selectedPlayer ? "" : "disabled"}>+${points}</button>
+          `).join("")}
+        </div>
+      </div>
+      <div class="tester-group">
+        <strong>Finish</strong>
+        <button type="button" class="danger tester-finish" data-trivia-tester-complete>${withIcon("trophy", "End game")}</button>
+      </div>
+    </section>
+  `;
+}
+
 function renderHostPrep(room, trivia) {
   const isSelecting = trivia?.phase === "interest-selecting";
   return html`
-    <section class="question-card prep-card">
+    <section class="question-card prep-card" data-jms-prep-card>
       <div class="prep-stage-copy">
-        <span class="tag">${isSelecting ? "Topic vote" : trivia?.directorMessage || "Preparing round"}</span>
-        ${directorCountdown(trivia)}
+        <div class="prep-stage-copy-row">
+          ${stageTimerTag(isSelecting ? "Selection" : trivia?.directorMessage || "Preparing round", trivia)}
+        </div>
       </div>
-      <h1>${isSelecting ? "Choose keywords on your phone" : "Loading this round"}</h1>
-      <p class="fact-line">${isSelecting ? "Pick a few topics you like. Once choices are locked, the big screen will load the round." : "Questions and audio cues are being prepared from the selected topics."}</p>
+      <h1>${isSelecting ? "Pick your choices on your phone" : "Loading this round"}</h1>
+      <p class="fact-line">${isSelecting ? "Lock a few choices on your phone. Once they're set, the round will load." : "Questions and audio cues are being prepared."}</p>
     </section>
   `;
 }
@@ -347,11 +325,19 @@ export function renderHostGame(room) {
   const trivia = room.gameState || room.trivia;
   const isPrep = ["interest-selecting", "preferences-locked", "deck-loading"].includes(trivia?.phase);
   const { ranked, deltas, animate } = buildRankSnapshot(room, trivia);
+  const { animateIds, selectedIds } = buildSelectionSnapshot(room, trivia);
   const currentQuestion = (trivia?.questionIndex ?? 0) + 1;
   const answered = trivia?.answeredPlayerIds || [];
   const question = trivia?.currentQuestion;
-  const isReveal = ["answer-reveal", "answer-audio", "scoring", "next-question", "complete"].includes(trivia?.phase);
+  const isAnswering = trivia?.phase === "answering";
+  const isQuestionLeadIn = trivia?.phase === "question-intro";
+  const isFinaleLeadIn = trivia?.phase === "finale-intro";
+  const isReveal = ["scoring", "next-question", "finale-intro", "complete"].includes(trivia?.phase);
   const isComplete = trivia?.phase === "complete";
+  const selectedPlayerId = trivia?.tester?.selectedPlayerId || "";
+  const hasTesterPlayers = ranked.some(player => player.virtual);
+  const stageLabel = isComplete ? "Finished" : `Stage · ${formatPhaseLabel(trivia?.phase)}`;
+  const stageValue = trivia?.phase === "answering" ? ` · ${phaseSeconds(trivia)}s` : "";
 
   return html`
     <aside class="sidebar game-shared-panel">
@@ -364,49 +350,76 @@ export function renderHostGame(room) {
       ` : ""}
       <div class="score-list">
         ${ranked.map((item, index) => html`
-          <div class="score-row ${animate && (deltas.get(item.id)?.move || 0) > 0 ? "rank-up" : animate && (deltas.get(item.id)?.move || 0) < 0 ? "rank-down" : ""}">
-            <span>${index + 1}</span>
-            ${avatarToken(item.avatar)}
-            <div class="score-body">
-              <strong>${escape(item.nickname)}</strong>
-              <span class="score-subline">${isPrep ? "Choosing" : (animate && (deltas.get(item.id)?.move || 0) > 0 ? "Moved up" : animate && (deltas.get(item.id)?.move || 0) < 0 ? "Moved down" : "Holding position")}</span>
-            </div>
-            <div class="score-meta">
-              <em class="${animate && (deltas.get(item.id)?.scoreDelta || 0) ? "score-pulse" : ""}">${trivia?.scores?.[item.id] || 0}</em>
-              ${animate && (deltas.get(item.id)?.scoreDelta || 0) ? html`<span class="rank-delta ${deltas.get(item.id).scoreDelta > 0 ? "positive" : "negative"}">${deltas.get(item.id).scoreDelta > 0 ? `+${deltas.get(item.id).scoreDelta}` : deltas.get(item.id).scoreDelta}</span>` : ""}
-            </div>
+            <div class="score-row ${selectedPlayerId === item.id ? "selected" : ""} ${isAnswering && selectedIds.has(item.id) ? "choice-selected" : ""} ${isAnswering && animateIds.has(item.id) ? "choice-selected-animate" : ""} ${isAnswering && !selectedIds.has(item.id) ? "choice-pending" : ""} ${isReveal ? "choice-revealed" : ""} ${animate && (deltas.get(item.id)?.move || 0) > 0 ? "promoted" : ""} ${animate && (deltas.get(item.id)?.move || 0) < 0 ? "demoted" : ""}" data-player-id="${escape(item.id)}" data-trivia-tester-select="${escape(item.id)}" data-jms-score-row="${escape(item.id)}" data-jms-rank-index="${index}">
+              <div class="choice-lock-effect" data-jms-choice-lock-effect aria-hidden="true">
+                <div class="choice-lock-fill" data-jms-choice-lock-fill></div>
+                <div class="choice-lock-stamp" data-jms-choice-lock-stamp>Selected</div>
+              </div>
+              <span>${index + 1}</span>
+              ${avatarToken(item.avatar)}
+              <div class="score-body">
+                <strong>${escape(item.nickname)}</strong>
+                <span class="score-subline">${isAnswering ? (selectedIds.has(item.id) ? "Selected" : "Not selected") : isReveal ? "Revealing" : isPrep ? "Choosing" : (animate && (deltas.get(item.id)?.move || 0) > 0 ? "Promoted" : animate && (deltas.get(item.id)?.move || 0) < 0 ? "Dropped" : "Holding position")}</span>
+              </div>
+              <div class="score-meta">
+                <em data-jms-score-value="${escape(item.id)}">${trivia?.scores?.[item.id] || 0}</em>
+                ${animate && (deltas.get(item.id)?.move || 0) > 0 ? html`
+                  <div
+                    class="rank-arrow-lottie positive"
+                    data-jms-rank-arrow
+                    aria-hidden="true"
+                  ></div>
+                ` : ""}
+              </div>
           </div>
-        `).join("")}
+          `).join("")}
       </div>
+      ${hasTesterPlayers ? renderTesterPanel(room, trivia, ranked) : ""}
     </aside>
-    <main class="main trivia-stage">
+    <main class="main trivia-stage" data-jms-trivia-stage>
+      <div class="trivia-jms-layer" aria-hidden="true">
+        <canvas class="trivia-jms-particles" data-jms-particles></canvas>
+        <div class="trivia-jms-victory-badge" data-jms-victory-badge></div>
+        <div class="trivia-jms-victory-lottie" data-jms-victory-lottie></div>
+      </div>
       <div class="section-title trivia-head">
         <div>
           <h2>${isComplete ? "Final Scores" : `Question ${currentQuestion} / ${trivia?.totalQuestions || 6}`}</h2>
-          <p class="muted">${isComplete ? "Cosmic Trivia complete" : isPrep ? `${trivia?.directorMessage || "Preparing"} · ${preferenceProgress(room, trivia)} topic picks locked` : `${trivia?.directorMessage || "Director running"} · ${answered.length}/${trivia?.expectedAnswerCount || room.players.length} answers locked`}</p>
+          <p class="muted">${isComplete ? "Cosmic Trivia complete" : trivia?.directorMessage || "Director running"}</p>
         </div>
-        <div class="director-chip">${withIcon(isComplete ? "trophy" : "play", isComplete ? "Finished" : `${trivia?.phase || "director"} · ${phaseSeconds(trivia)}s`)}</div>
+        <div class="director-chip">${withIcon(isComplete ? "trophy" : "play", `${stageLabel}${stageValue}`)}</div>
       </div>
       ${isComplete ? html`
-        <section class="winner-board">
+        <section class="winner-board" data-jms-winner-board>
           ${ranked.map((item, index) => html`
-            <article class="winner-row ${index === 0 ? "winner" : ""}">
+            <article class="winner-row ${index === 0 ? "winner" : ""}" data-jms-winner-row="${index === 0 ? "winner" : "placed"}">
               <span class="winner-rank">${index + 1}</span>
               ${avatarToken(item.avatar, "large")}
               <strong>${escape(item.nickname)}</strong>
               <em>${trivia?.scores?.[item.id] || 0} pts</em>
             </article>
           `).join("")}
-          <button class="primary replay-button" type="button" onclick="fetch('/api/rooms/${escape(room.code)}/trivia/restart',{method:'POST'}).then(()=>location.reload())">${withIcon("play", "Play again")}</button>
+          <button class="primary replay-button" data-trivia-restart type="button">${withIcon("play", "Play again")}</button>
         </section>
-      ` : isPrep ? renderHostPrep(room, trivia) : html`
-        <section class="question-card">
-          <span class="tag">${isReveal ? "Answer reveal" : trivia?.phase === "answering" ? "Choose on your phone" : trivia?.directorMessage || "Get ready"}</span>
-          ${directorCountdown(trivia)}
+      ` : isPrep ? renderHostPrep(room, trivia) : isQuestionLeadIn ? html`
+        <section class="question-card prep-card" data-jms-question-card data-jms-question-id="${escape(question?.id || "")}">
+          ${stageTimerTag(trivia?.directorMessage || "Next question", trivia)}
+          <h1>${escape(trivia?.directorMessage || `Question ${currentQuestion} is on the way`)}</h1>
+          <p class="fact-line">The question card will appear when the intro voice ends.</p>
+        </section>
+      ` : isFinaleLeadIn ? html`
+        <section class="question-card prep-card" data-jms-question-card>
+          ${stageTimerTag(trivia?.directorMessage || "Final leaderboard", trivia)}
+          <h1>Final leaderboard incoming</h1>
+          <p class="fact-line">The final ranking will appear when the closing voice ends.</p>
+        </section>
+      ` : html`
+        <section class="question-card" data-jms-question-card data-jms-question-id="${escape(question?.id || "")}">
+          ${stageTimerTag(isReveal ? "Answer reveal" : isAnswering ? "Choose on your phone" : trivia?.directorMessage || "Get ready", trivia)}
           <h1>${escape(question?.question || trivia?.directorMessage || "Loading question...")}</h1>
           <div class="choice-grid">
             ${(question?.answers || []).map((choice, index) => html`
-              <div class="choice-tile ${isReveal && choice.id === question.correctAnswer ? "correct" : ""}">
+              <div class="choice-tile ${isReveal && choice.id === question.correctAnswer ? "correct" : ""}" data-jms-choice="${escape(choice.id)}" data-choice-id="${escape(choice.id)}">
                 <span>${String.fromCharCode(65 + index)}</span>
                 <strong>${escape(choice.text)}</strong>
               </div>
@@ -430,7 +443,9 @@ export function renderPhoneGame(room, player, chrome = {}) {
   const score = trivia?.scores?.[activePlayer.id] || 0;
   const question = trivia?.currentQuestion;
   const isAnswering = trivia?.phase === "answering";
-  const isReveal = ["answer-reveal", "answer-audio", "scoring", "next-question"].includes(trivia?.phase);
+  const isQuestionLeadIn = trivia?.phase === "question-intro";
+  const isFinaleLeadIn = trivia?.phase === "finale-intro";
+  const isReveal = ["scoring", "next-question", "finale-intro", "complete"].includes(trivia?.phase);
   const isComplete = trivia?.phase === "complete";
   const isSelecting = trivia?.phase === "interest-selecting";
   const isPreparing = ["preferences-locked", "deck-loading"].includes(trivia?.phase);
@@ -454,7 +469,7 @@ export function renderPhoneGame(room, player, chrome = {}) {
             </div>
           </div>
         </div>
-        ${directorCountdown(trivia)}
+        ${stageTimerTag(isSelecting ? "Choosing" : isAnswering ? "Answering" : "Time left", trivia)}
         ${isComplete ? html`
           <div class="phone-trivia-panel">
             <p class="muted">Game complete. Look at the big screen for the final ranking.</p>
@@ -462,9 +477,9 @@ export function renderPhoneGame(room, player, chrome = {}) {
         ` : isSelecting ? html`
           <div class="phone-trivia-panel">
             <div class="phone-trivia-question">
-              <span class="tag">Topic vote</span>
-              <h2>Pick your topics</h2>
-              <p class="muted">${preferencesLocked ? "Choices locked. Waiting for the round." : "Choose a few topics you want in this round."}</p>
+              <span class="tag">Selection</span>
+              <h2>Pick your choices</h2>
+              <p class="muted">${preferencesLocked ? "Choices locked. Waiting for the round." : "Choose a few choices you want in this round."}</p>
             </div>
             <form class="preference-picker" data-preference-form>
               <div class="preference-group">
@@ -484,12 +499,28 @@ export function renderPhoneGame(room, player, chrome = {}) {
               <button class="primary" type="submit" ${preferencesLocked ? "disabled" : ""}>${withIcon("check", preferencesLocked ? "Locked" : "Lock choices")}</button>
             </form>
           </div>
+        ` : isQuestionLeadIn ? html`
+          <div class="phone-trivia-panel">
+            <div class="phone-trivia-question">
+              <span class="tag">Question ${(trivia?.questionIndex || 0) + 1}/${trivia?.totalQuestions || 6}</span>
+              <h2>${escape(trivia?.directorMessage || "The next question is on the way.")}</h2>
+              <p class="muted">Wait for the question card to appear when the intro voice ends.</p>
+            </div>
+          </div>
         ` : isPreparing ? html`
           <div class="phone-trivia-panel">
             <div class="phone-trivia-question">
               <span class="tag">Round setup</span>
               <h2>Choices locked</h2>
               <p class="muted">The director is loading the selected questions.</p>
+            </div>
+          </div>
+        ` : isFinaleLeadIn ? html`
+          <div class="phone-trivia-panel">
+            <div class="phone-trivia-question">
+              <span class="tag">Final leaderboard</span>
+              <h2>The ranking is almost here.</h2>
+              <p class="muted">The closing voice will finish before the leaderboard appears.</p>
             </div>
           </div>
         ` : isReveal ? html`
@@ -511,7 +542,7 @@ export function renderPhoneGame(room, player, chrome = {}) {
             </div>
             <div class="phone-choice-grid">
               ${(question?.answers || []).map((choice, index) => html`
-                <button class="answer-button ${currentAnswer === choice.id ? "selected" : ""}" data-answer="${escape(choice.id)}" ${currentAnswer && currentAnswer !== choice.id ? "disabled" : !isAnswering ? "disabled" : ""}>
+                <button class="answer-button ${currentAnswer === choice.id ? "selected" : ""}" data-answer="${escape(choice.id)}" ${!isAnswering ? "disabled" : ""}>
                   <span>${String.fromCharCode(65 + index)}</span>
                   <strong>${escape(choice.text)}</strong>
                 </button>
@@ -578,10 +609,50 @@ export function attachPhoneGameHandlers(root, { room, player, api, onRoom }) {
   });
 }
 
+export function attachHostGameHandlers(root, { room, api }) {
+  void hydrateTriviaHostPresentation(root, room);
+  ensureCountdownTicker();
+  root.querySelector("[data-trivia-restart]")?.addEventListener("click", async () => {
+    const data = await api(`/api/rooms/${room.code}/trivia/restart`, { method: "POST" });
+    if (data.room) Object.assign(room, data.room);
+  });
+  root.querySelectorAll("[data-trivia-tester-select]").forEach(button => {
+    button.addEventListener("click", async event => {
+      const playerId = event.currentTarget.dataset.triviaTesterSelect;
+      await api(`/api/rooms/${room.code}/trivia/tester/selection`, {
+        method: "POST",
+        body: { playerId }
+      });
+    });
+  });
+  root.querySelectorAll("[data-trivia-tester-timer]").forEach(button => {
+    button.addEventListener("click", async event => {
+      const seconds = Number(event.currentTarget.dataset.triviaTesterTimer || 0);
+      await api(`/api/rooms/${room.code}/trivia/tester/timer`, {
+        method: "POST",
+        body: { seconds }
+      });
+    });
+  });
+  root.querySelectorAll("[data-trivia-tester-score]").forEach(button => {
+    button.addEventListener("click", async event => {
+      const points = Number(event.currentTarget.dataset.triviaTesterScore || 0);
+      await api(`/api/rooms/${room.code}/trivia/tester/score`, {
+        method: "POST",
+        body: { points }
+      });
+    });
+  });
+  root.querySelector("[data-trivia-tester-complete]")?.addEventListener("click", async () => {
+    await api(`/api/rooms/${room.code}/trivia/tester/complete`, { method: "POST" });
+  });
+}
+
 export const cosmicTriviaClient = {
   id: "cosmic-trivia",
   renderHostGame,
   renderPhoneGame,
+  attachHostGameHandlers,
   attachPhoneGameHandlers
 };
 

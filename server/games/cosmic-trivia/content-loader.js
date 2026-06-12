@@ -52,7 +52,6 @@ export async function loadQuestionsById(questionIds, packId = defaultPackId) {
 export function audioForQuestion(question) {
   if (!question) return {};
   return {
-    questionAudio: question.questionAudio || "",
-    answerAudio: question.answerAudio || ""
+    questionAudio: question.questionAudio || ""
   };
 }

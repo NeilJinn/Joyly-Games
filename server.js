@@ -1,11 +1,15 @@
 import http from "node:http";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import { existsSync, statSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { findGame, games, playableGames } from "./server/platform/game-catalog.js";
 import { runtimeFor } from "./server/games/registry.js";
+import { getVoiceLibraryCatalog } from "./server/voice-library/catalog.js";
+import { regenerateTaggedVoiceLibraryAudio } from "./server/voice-library/regenerate.js";
+import { joinVoiceSegments, splitVoiceText } from "./server/voice-library/text.js";
+import { loadVoiceLibraryReviewState, saveVoiceLibraryReviewState } from "./server/voice-library/review-state.js";
 import { getAvatarCatalog } from "./server/players/avatar-catalog.js";
 import { normalizePlayerProfile, testPlayers } from "./server/players/player-info.js";
 import {
@@ -19,6 +23,7 @@ import {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
 const jmsDir = path.join(__dirname, "packages", "jms");
+const cosmicTriviaMusicDir = path.join(publicDir, "games", "cosmic-trivia", "audio", "music");
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "0.0.0.0";
 
@@ -29,8 +34,8 @@ const directorTimers = new Map();
 const launchTimers = new Map();
 const hostEntitlements = new Map();
 const pairings = new Map();
-const PLAYER_DISCONNECT_WINDOW_MS = 90_000;
-const PLAYER_RECONNECT_WINDOW_MS = 3 * 60_000;
+const PLAYER_DISCONNECT_WINDOW_MS = 200_000;
+const PLAYER_RECONNECT_WINDOW_MS = 400_000;
 const PLAYER_SWEEP_INTERVAL_MS = 15_000;
 
 function makeId() {
@@ -71,7 +76,8 @@ function accountKey(email) {
 }
 
 function roomView(room) {
-  const gameState = room.status === "playing" ? runtimeFor(room.selectedGame?.id).publicState(room) : null;
+  const runtime = runtimeFor(room.selectedGame?.id);
+  const gameState = room.status === "playing" ? runtime.publicState(room) : null;
   return {
     code: room.code,
     host: room.host,
@@ -81,6 +87,7 @@ function roomView(room) {
     paymentMode: room.paymentMode,
     entitlement: room.entitlement,
     launchCountdown: room.launchCountdown || null,
+    gameSetup: room.status === "waiting" ? runtime.setupState?.(room) || null : null,
     gameState,
     createdAt: room.createdAt
   };
@@ -157,6 +164,17 @@ function getBody(req) {
   });
 }
 
+async function listCosmicTriviaMusicSources() {
+  if (!existsSync(cosmicTriviaMusicDir)) return [];
+  const entries = await readdir(cosmicTriviaMusicDir, { withFileTypes: true });
+  return entries
+    .filter(entry => entry.isFile())
+    .map(entry => entry.name)
+    .filter(name => /\.(mp3|m4a|wav|aac|ogg|webm)$/i.test(name))
+    .sort((a, b) => a.localeCompare(b))
+    .map(fileName => `/games/cosmic-trivia/audio/music/${fileName}`);
+}
+
 function broadcast(code) {
   const room = rooms.get(code);
   if (!room) return;
@@ -187,7 +205,7 @@ function scheduleDirector(code) {
   if (!room || room.status !== "playing") return;
   const runtime = runtimeFor(room.selectedGame?.id);
   const delay = runtime.directorDelay?.(room);
-  if (!delay) return;
+  if (delay == null) return;
 
   const timer = setTimeout(async () => {
     const activeRoom = rooms.get(code);
@@ -195,7 +213,7 @@ function scheduleDirector(code) {
     await runtime.advance(activeRoom);
     broadcast(code);
     scheduleDirector(code);
-  }, delay);
+  }, Math.max(0, delay));
   directorTimers.set(code, timer);
 }
 
@@ -260,14 +278,14 @@ function scheduleForcedLaunch(code, delayMs = 5000) {
 
 function addTestPlayers(room) {
   const game = room.selectedGame || playableGames()[0];
-  const needed = Math.max(0, game.minPlayers - room.players.size);
   const availableSlots = Math.max(0, game.maxPlayers - room.players.size);
-  const count = Math.min(needed, availableSlots);
   const existingNames = new Set([...room.players.values()].map(player => player.nickname));
   const added = [];
 
+  if (!availableSlots) return added;
+
   for (const template of testPlayers) {
-    if (added.length >= count) break;
+    if (added.length >= 1) break;
     if (existingNames.has(template.nickname)) continue;
     const player = {
       id: makeId(),
@@ -283,8 +301,6 @@ function addTestPlayers(room) {
     existingNames.add(player.nickname);
     added.push(player);
   }
-
-  for (const player of room.players.values()) player.ready = true;
   return added;
 }
 
@@ -373,6 +389,128 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === "GET" && url.pathname === "/api/avatar-catalog") {
       sendJson(res, 200, getAvatarCatalog());
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/voice-library/catalog") {
+      sendJson(res, 200, getVoiceLibraryCatalog());
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/games/cosmic-trivia/music-library") {
+      sendJson(res, 200, {
+        sources: await listCosmicTriviaMusicSources()
+      });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/voice-library/state") {
+      const reviewState = await loadVoiceLibraryReviewState();
+      sendJson(res, 200, reviewState);
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/voice-library/state") {
+      const body = await getBody(req);
+      const reviewState = body.reviewState || body.state || body || {};
+      const saved = await saveVoiceLibraryReviewState(reviewState);
+      sendJson(res, 200, saved);
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/voice-library/regenerate") {
+      const body = await getBody(req);
+      const reviewState = body.reviewState || body.state || await loadVoiceLibraryReviewState();
+      if (body.reviewState || body.state) {
+        await saveVoiceLibraryReviewState(reviewState);
+      }
+      const catalog = getVoiceLibraryCatalog();
+      const apiKey = String(body.apiKey || process.env.ELEVENLABS_API_KEY || "").trim();
+      if (!apiKey) {
+        return sendJson(res, 409, { error: "Missing ELEVENLABS_API_KEY" });
+      }
+      const voiceIdOverride = String(body.voiceIdOverride || body.voiceId || "").trim();
+      const baseUrl = String(process.env.ELEVENLABS_BASE_URL || "https://api.elevenlabs.io").replace(/\/+$/, "");
+      const modelId = String(process.env.ELEVENLABS_MODEL_ID || "eleven_v3").trim();
+      const outputFormat = String(process.env.ELEVENLABS_OUTPUT_FORMAT || "mp3_44100_128").trim();
+      const result = await regenerateTaggedVoiceLibraryAudio({
+        catalog,
+        reviewState,
+        apiKey,
+        baseUrl,
+        modelId,
+        outputFormat,
+        voiceIdOverride
+      });
+      for (const item of result.generated || []) {
+        if (item.kind !== "candidate") continue;
+        const candidate = reviewState.candidates?.[item.id];
+        if (!candidate) continue;
+        for (const candidateId of Object.keys(reviewState.candidates || {})) {
+          if (candidateId !== item.id && candidateId.startsWith(`${item.id}:`)) {
+            delete reviewState.candidates[candidateId];
+          }
+        }
+        candidate.status = "pending";
+        candidate.tags = (candidate.tags || []).filter(tag => tag !== "regenerate");
+        candidate.transcriptSegments = Array.isArray(item.segments) && item.segments.length
+          ? item.segments.map(segment => String(segment || "").trim()).filter(Boolean)
+          : splitVoiceText(candidate.transcript || "");
+        candidate.transcript = joinVoiceSegments(candidate.transcriptSegments);
+        candidate.generatedAudioPaths = Array.isArray(item.segmentFiles) ? item.segmentFiles.map(segment => segment.outputPath).filter(Boolean) : [];
+        candidate.generatedFiles = Array.isArray(item.segmentFiles) ? item.segmentFiles.map(segment => ({
+          index: segment.index,
+          text: segment.text,
+          outputPath: segment.outputPath
+        })) : [];
+        candidate.updatedAt = Date.now();
+
+        for (const segment of item.segmentFiles || []) {
+          if (!segment || segment.index <= 0) continue;
+          const segmentFileName = path.basename(segment.outputPath);
+          const segmentId = `${item.id}:${segmentFileName}`;
+          reviewState.candidates[segmentId] = {
+            id: segmentId,
+            groupId: candidate.groupId || item.groupId || null,
+            projectId: candidate.projectId || null,
+            kind: candidate.kind || "director-candidate",
+            title: segment.text || segmentFileName.replace(/\.mp3$/, ""),
+            label: segment.text || `Segment ${segment.index + 1}`,
+            audioPath: `/games/cosmic-trivia/audio/host/phases/${segmentFileName}`,
+            filePath: segment.outputPath,
+            text: segment.text || "",
+            modelId: candidate.modelId || modelId,
+            voiceId: candidate.voiceId || null,
+            voiceSettings: candidate.voiceSettings || null,
+            fileName: segmentFileName,
+            updatedAt: Date.now(),
+            durationSeconds: null,
+            status: "pending",
+            tags: [],
+            notes: [],
+            transcript: segment.text || "",
+            transcriptSegments: [segment.text || ""]
+          };
+        }
+      }
+      for (const item of result.skipped || []) {
+        if (item.reason === "test-sample") {
+          const candidate = reviewState.candidates?.[item.id];
+          if (!candidate) continue;
+          candidate.notes = [...(candidate.notes || []), {
+            id: makeId(),
+            text: "Skipped during batch regeneration because this looks like a test sample.",
+            createdAt: Date.now()
+          }];
+          candidate.updatedAt = Date.now();
+        }
+      }
+      await saveVoiceLibraryReviewState(reviewState);
+      sendJson(res, 200, {
+        generated: result.generated || [],
+        skipped: result.skipped || [],
+        reviewState
+      });
       return;
     }
 
@@ -501,7 +639,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (req.method === "GET" && url.pathname.startsWith("/api/rooms/")) {
+    if (req.method === "GET" && url.pathname.match(/^\/api\/rooms\/\d+$/)) {
       const code = url.pathname.split("/")[3];
       const room = rooms.get(code);
       if (!room) return sendJson(res, 404, { error: "Room not found" });
@@ -647,6 +785,7 @@ const server = http.createServer(async (req, res) => {
       if (!room) return sendJson(res, 404, { error: "Room not found" });
       if (room.status !== "waiting") return sendJson(res, 409, { error: "Test players can only be added before the game starts" });
       const added = addTestPlayers(room);
+      if (!added.length) return sendJson(res, 409, { error: "No tester slots left" });
       broadcast(code);
       sendJson(res, 200, { added, room: roomView(room) });
       return;
@@ -774,6 +913,24 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/director\/audio-ended$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.directorAudioEnded) return sendJson(res, 404, { error: "This game does not support director audio events" });
+      const result = await runtime.directorAudioEnded(room, String(body.phase || ""));
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      if (result.advanced) {
+        scheduleDirector(code);
+      }
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/restart$/)) {
       const code = url.pathname.split("/")[3];
       const room = rooms.get(code);
@@ -790,6 +947,67 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/tester\/selection$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.testerSelect) return sendJson(res, 404, { error: "Tester mode is not available" });
+      const result = await runtime.testerSelect(room, body.playerId || null);
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/tester\/timer$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.testerTimer) return sendJson(res, 404, { error: "Tester mode is not available" });
+      const result = await runtime.testerTimer(room, body.seconds);
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      scheduleDirector(code);
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/tester\/score$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.testerScore) return sendJson(res, 404, { error: "Tester mode is not available" });
+      const result = await runtime.testerScore(room, body.playerId || null, body.points);
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/tester\/complete$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.testerComplete) return sendJson(res, 404, { error: "Tester mode is not available" });
+      const result = await runtime.testerComplete(room);
+      if (result?.status && result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      clearDirector(code);
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/next$/)) {
       const code = url.pathname.split("/")[3];
       const room = rooms.get(code);
@@ -801,6 +1019,88 @@ const server = http.createServer(async (req, res) => {
 
       broadcast(code);
       sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname.match(/^\/api\/rooms\/\d+\/werewolf\/private\/[^/]+$/)) {
+      const [, , , code, , , playerId] = url.pathname.split("/");
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.privateState) return sendJson(res, 404, { error: "This game does not expose private state" });
+      const privateState = runtime.privateState(room, playerId);
+      if (!privateState) return sendJson(res, 404, { error: "Private state not found" });
+      sendJson(res, 200, { privateState });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/werewolf\/action$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.action) return sendJson(res, 404, { error: "This game does not support actions" });
+      const playerId = String(body.playerId || "");
+      const result = await runtime.action(room, playerId, body);
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      const actedPlayer = room.players.get(playerId);
+      if (actedPlayer) touchPlayer(actedPlayer);
+      if (result.allSubmitted) {
+        await runtime.advance(room);
+        scheduleDirector(code);
+      }
+      broadcast(code);
+      sendJson(res, 200, {
+        room: roomView(room),
+        privateState: result.private || runtime.privateState?.(room, playerId) || null
+      });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/werewolf\/tester\/role$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "waiting") return sendJson(res, 409, { error: "Tester roles can only be changed before the game starts" });
+      if (room.selectedGame?.id !== "fate-werewolf") return sendJson(res, 409, { error: "Tester roles are only available for Fate Werewolf" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.testerRole) return sendJson(res, 404, { error: "This game does not support tester role setup" });
+      const result = await runtime.testerRole(room, String(body.playerId || ""), String(body.roleId || ""));
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      broadcast(code);
+      sendJson(res, 200, { room: roomView(room) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/werewolf\/restart$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.restart) return sendJson(res, 404, { error: "This game cannot restart" });
+      clearDirector(code);
+      await runtime.restart(room);
+      scheduleDirector(code);
+      broadcast(code);
+      sendJson(res, 200, { room: roomView(room) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/werewolf\/next$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const runtime = runtimeFor(room.selectedGame?.id);
+      await runtime.advance(room);
+      scheduleDirector(code);
+      broadcast(code);
+      sendJson(res, 200, { room: roomView(room) });
       return;
     }
 

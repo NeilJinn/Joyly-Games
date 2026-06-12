@@ -13,6 +13,21 @@ const cosmicTriviaGame = {
   description: "Fast multiple-choice questions, cheerful music cues, and quick score reveals."
 };
 
+const fateWerewolfGame = {
+  id: "fate-werewolf",
+  title: "Fate Werewolf",
+  genre: "Social deduction ritual",
+  price: 8,
+  credits: 3,
+  players: "5-8",
+  minPlayers: 5,
+  maxPlayers: 8,
+  mood: "Occult moonlit drama",
+  status: "playable",
+  clientModule: "/games/fate-werewolf/client.js",
+  description: "Moonlit deduction with private roles, ritual staging, and room-for-fate architecture."
+};
+
 const comingSoonGames = [
   {
     id: "after-hours",
@@ -68,7 +83,7 @@ const comingSoonGames = [
   }
 ];
 
-export const games = [cosmicTriviaGame, ...comingSoonGames];
+export const games = [fateWerewolfGame, cosmicTriviaGame, ...comingSoonGames];
 
 export function findGame(gameId) {
   return games.find(item => item.id === gameId) || cosmicTriviaGame;

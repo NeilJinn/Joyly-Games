@@ -24,7 +24,10 @@ import {
   Set,
   fromTo,
   RevealSequence,
-  Stagger
+  Stagger,
+  setPngLayer,
+  loadLottie,
+  playLottie
 } from "../runtime/runtime.js";
 import { motionPackRegistry } from "./motion-pack-registry.js";
 import { normalizeMotionPack } from "./motion-pack-schema.js";
@@ -195,6 +198,48 @@ function resolveElementTarget(value) {
   return null;
 }
 
+function resolveMediaTarget(value, slots, options = {}) {
+  if (value == null) return null;
+  if (typeof value === "string") {
+    if (slots?.[value] != null) {
+      return resolveElementTarget(slots[value]);
+    }
+    if (options?.[value] != null) {
+      return resolveElementTarget(options[value]);
+    }
+  }
+  return resolveElementTarget(value);
+}
+
+function primeCueAssets(context) {
+  const assets = isPlainObject(context.options?.assets) ? context.options.assets : {};
+  const assetTargets = isPlainObject(context.options?.assetTargets) ? context.options.assetTargets : {};
+
+  for (const [assetId, assetValue] of Object.entries(assets)) {
+    const target = resolveMediaTarget(assetTargets[assetId] ?? assetId, context.slots, context.options);
+    const src = typeof assetValue === "string" ? assetValue : readString(assetValue?.src, "");
+    if (!target || !src) continue;
+    setPngLayer(target, src, typeof assetValue === "string" ? {} : assetValue);
+  }
+}
+
+function primeCueLotties(context) {
+  const lotties = isPlainObject(context.options?.lottie) ? context.options.lottie : {};
+  const lottieTargets = isPlainObject(context.options?.lottieTargets) ? context.options.lottieTargets : {};
+
+  for (const [hookId, config] of Object.entries(lotties)) {
+    if (!isPlainObject(config)) continue;
+    const target = resolveMediaTarget(config.target ?? lottieTargets[hookId] ?? hookId, context.slots, context.options);
+    if (!target) continue;
+
+    void loadLottie(target, config).then(controller => {
+      if (controller && config.autoplay !== false) {
+        playLottie(controller);
+      }
+    }).catch(() => {});
+  }
+}
+
 function getElementCenter(element) {
   if (!element || typeof element.getBoundingClientRect !== "function") {
     return { x: 0, y: 0 };
@@ -337,7 +382,8 @@ async function runCueBlock(block, context) {
   const params = {
     ...clone(context.cue.defaultParams || {}),
     ...clone(context.theme?.defaultParams || {}),
-    ...normalizeBlockParams(block)
+    ...normalizeBlockParams(block),
+    ...(isPlainObject(context.options?.params) ? clone(context.options.params) : {})
   };
   const duration = Number(block.duration ?? params.duration ?? 0.6);
   const options = {
@@ -383,7 +429,19 @@ async function runCueBlock(block, context) {
     case "stagepulse":
       return runner(target, { scale: params.scale ?? 1.08, strength: params.strength ?? 28, color: params.color ?? "#7de2ff" }, options);
     case "finalhold":
-      return runner(target, { opacity: params.opacity ?? 1, scale: params.scale ?? 1, scaleX: params.scaleX ?? 1, scaleY: params.scaleY ?? 1, rotate: params.rotate ?? 0, rotateY: params.rotateY ?? 0, strength: params.strength ?? 0, color: params.color ?? "#7de2ff" }, options);
+      return runner(target, {
+        x: params.x ?? 0,
+        y: params.y ?? 0,
+        z: params.z ?? 0,
+        opacity: params.opacity ?? 1,
+        scale: params.scale ?? 1,
+        scaleX: params.scaleX ?? 1,
+        scaleY: params.scaleY ?? 1,
+        rotate: params.rotate ?? 0,
+        rotateY: params.rotateY ?? 0,
+        strength: params.strength ?? 0,
+        color: params.color ?? "#7de2ff"
+      }, options);
     case "impact":
       return runner(target, {
         magnitude: params.magnitude ?? 12,
@@ -531,6 +589,8 @@ function createPlaybackController({ cue, options, slots, themeName, theme }) {
     settleFinished = resolve;
 
     const context = { cue, options, slots, themeName, theme };
+    primeCueAssets(context);
+    primeCueLotties(context);
     const blocks = cue.timeline?.blocks || [];
 
     if (gsap && typeof gsap.timeline === "function") {
