@@ -66,41 +66,16 @@ describe("roomStore", () => {
       code: "123456",
       status: "waiting",
       players: [],
-      selectedGameId: null,
-      hostEmail: "host@test.com",
+      host: { name: "Host", email: "host@test.com" },
+      selectedGame: null,
+      paymentMode: "free",
+      entitlement: { type: "free" },
+      launchCountdown: null,
+      gameSetup: null,
+      gameState: null,
+      createdAt: 0,
     });
     expect(useRoomStore.getState().room?.code).toBe("123456");
-  });
-
-  it("addPlayer appends a new player", () => {
-    useRoomStore.getState().setRoom({
-      code: "123456",
-      status: "waiting",
-      players: [],
-      selectedGameId: null,
-      hostEmail: null,
-    });
-    useRoomStore.getState().addPlayer({
-      id: "p1",
-      nickname: "Alice",
-      avatarKey: "cat",
-      ready: false,
-      connected: true,
-    });
-    expect(useRoomStore.getState().room?.players).toHaveLength(1);
-    expect(useRoomStore.getState().room?.players[0].nickname).toBe("Alice");
-  });
-
-  it("setPlayerReady updates the player's ready flag", () => {
-    useRoomStore.getState().setRoom({
-      code: "123456",
-      status: "waiting",
-      players: [{ id: "p1", nickname: "Alice", avatarKey: "cat", ready: false, connected: true }],
-      selectedGameId: null,
-      hostEmail: null,
-    });
-    useRoomStore.getState().setPlayerReady("p1", true);
-    expect(useRoomStore.getState().room?.players[0].ready).toBe(true);
   });
 });
 

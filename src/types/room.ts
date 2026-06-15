@@ -1,17 +1,44 @@
-export type RoomStatus = "waiting" | "playing" | "complete";
+import type { GameConfig } from "./config";
+
+export type RoomStatus = "waiting" | "playing" | "complete" | "closed";
+
+export interface Avatar {
+  [key: string]: unknown;
+}
 
 export interface Player {
   id: string;
   nickname: string;
-  avatarKey: string;
+  avatar: Avatar | null;
+  online: boolean;
   ready: boolean;
-  connected: boolean;
+  lastSeen?: number;
+}
+
+export interface RoomEntitlement {
+  type: string;
+  minutes?: number;
+  expiresAt?: number;
+  purchased?: number;
+  spent?: number;
+  remaining?: number;
+}
+
+export interface RoomHost {
+  name: string;
+  email: string;
 }
 
 export interface Room {
   code: string;
-  status: RoomStatus;
+  host: RoomHost;
   players: Player[];
-  selectedGameId: string | null;
-  hostEmail: string | null;
+  status: RoomStatus;
+  selectedGame: GameConfig | null;
+  paymentMode: string;
+  entitlement: RoomEntitlement;
+  launchCountdown: number | null;
+  gameSetup: unknown;
+  gameState: unknown;
+  createdAt: number;
 }

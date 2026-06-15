@@ -1,9 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useSSEStore } from "../stores/sseStore";
 import { useRoomStore } from "../stores/roomStore";
-import { useGameStore } from "../stores/gameStore";
-import type { Room, Player } from "../types/room";
-import type { GamePhase, Question, ScoreEntry } from "../types/game";
+import type { Room } from "../types/room";
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000];
 
@@ -11,13 +9,6 @@ export function useSSE(roomCode: string | null) {
   const setStatus = useSSEStore((s) => s.setStatus);
   const recordEvent = useSSEStore((s) => s.recordEvent);
   const setRoom = useRoomStore((s) => s.setRoom);
-  const addPlayer = useRoomStore((s) => s.addPlayer);
-  const removePlayer = useRoomStore((s) => s.removePlayer);
-  const setPlayerReady = useRoomStore((s) => s.setPlayerReady);
-  const setPhase = useGameStore((s) => s.setPhase);
-  const setQuestion = useGameStore((s) => s.setQuestion);
-  const setScores = useGameStore((s) => s.setScores);
-  const recordAnswer = useGameStore((s) => s.recordAnswer);
 
   const retryCount = useRef(0);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -31,7 +22,7 @@ export function useSSE(roomCode: string | null) {
     function connect() {
       if (cancelled) return;
       setStatus("connecting");
-      es = new EventSource(`/api/room/${roomCode}/events`);
+      es = new EventSource(`/api/events/${roomCode}`);
 
       es.onopen = () => {
         if (cancelled) return;
@@ -43,8 +34,10 @@ export function useSSE(roomCode: string | null) {
         if (cancelled) return;
         recordEvent();
         try {
-          const msg = JSON.parse(evt.data) as { type: string; payload: unknown };
-          routeEvent(msg.type, msg.payload);
+          const msg = JSON.parse(evt.data) as { type: string; room?: Room };
+          if (msg.type === "room" && msg.room) {
+            setRoom(msg.room);
+          }
         } catch {
           // malformed event — ignore
         }
@@ -61,47 +54,6 @@ export function useSSE(roomCode: string | null) {
         setStatus("reconnecting");
         timeoutRef.current = setTimeout(connect, delay);
       };
-    }
-
-    function routeEvent(type: string, payload: unknown) {
-      switch (type) {
-        case "room-update":
-          setRoom(payload as Room);
-          break;
-        case "player-joined":
-          addPlayer(payload as Player);
-          break;
-        case "player-left":
-          removePlayer((payload as { id: string }).id);
-          break;
-        case "player-ready":
-          setPlayerReady(
-            (payload as { id: string; ready: boolean }).id,
-            (payload as { id: string; ready: boolean }).ready
-          );
-          break;
-        case "game-phase":
-          setPhase((payload as { phase: GamePhase }).phase);
-          break;
-        case "game-question":
-          setQuestion(
-            (payload as { question: Question; nextAudioPath?: string }).question,
-            (payload as { question: Question; nextAudioPath?: string })
-              .nextAudioPath
-          );
-          break;
-        case "game-scores":
-          setScores(payload as ScoreEntry[]);
-          break;
-        case "game-answer":
-          recordAnswer(
-            (payload as { playerId: string; answerKey: string }).playerId,
-            (payload as { playerId: string; answerKey: string }).answerKey
-          );
-          break;
-        default:
-          break;
-      }
     }
 
     connect();
