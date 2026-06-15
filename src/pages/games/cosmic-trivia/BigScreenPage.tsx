@@ -5,6 +5,7 @@ import AnswerGrid from "../../../components/games/cosmic-trivia/AnswerGrid";
 import CountdownBar from "../../../components/games/cosmic-trivia/CountdownBar";
 import ScoreRow from "../../../components/games/cosmic-trivia/ScoreRow";
 import WinnerBoard from "../../../components/games/cosmic-trivia/WinnerBoard";
+import { useCosmicTriviaDirector } from "../../../hooks/useCosmicTriviaDirector";
 
 interface CosmicTriviaHostProps {
   room: Room;
@@ -41,6 +42,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
   const trivia = room.gameState as CosmicTriviaState | null;
   const [settingUp, setSettingUp] = useState(false);
   const [restartingGame, setRestartingGame] = useState(false);
+  useCosmicTriviaDirector(room, code);
 
   if (!trivia) {
     return (
