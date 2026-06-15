@@ -6,6 +6,7 @@ import HowToPlayPage from "./pages/platform/HowToPlayPage";
 import SupportPage from "./pages/platform/SupportPage";
 import CompanyPage from "./pages/platform/CompanyPage";
 import LobbyPage from "./pages/platform/LobbyPage";
+import SetupPage from "./pages/platform/SetupPage";
 import JoinPage from "./pages/player/JoinPage";
 import AvatarPage from "./pages/player/AvatarPage";
 import WaitingPage from "./pages/player/WaitingPage";
@@ -27,6 +28,7 @@ function AnimatedRoutes() {
         <Route path="/how-to-play" element={<HowToPlayPage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/company" element={<CompanyPage />} />
+        <Route path="/room/setup" element={<SetupPage />} />
         <Route path="/room/:code" element={<LobbyPage />} />
 
         {/* Player — phone */}

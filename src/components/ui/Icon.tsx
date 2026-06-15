@@ -14,6 +14,9 @@ const PATHS: Record<string, string> = {
   power: "M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10",
   card: "M1 4h22v16H1zM1 10h22",
   coins: "M12 12c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zM12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
+  music: "M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
+  copy: "M20 9H11a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
+  game: "M21 6H3a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zM7 12H7M12 9v6M9 12h6",
 };
 
 interface IconProps {
