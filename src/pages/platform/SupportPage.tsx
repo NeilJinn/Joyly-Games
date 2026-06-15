@@ -1,7 +1,12 @@
+import NavBar from "../../components/platform/NavBar";
+
 export default function SupportPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-[var(--muted)]">Support — coming in Phase 3</p>
+    <div className="min-h-screen pt-[64px]">
+      <NavBar />
+      <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 64px)" }}>
+        <p className="text-[var(--muted)]">Support — coming soon</p>
+      </div>
     </div>
   );
 }

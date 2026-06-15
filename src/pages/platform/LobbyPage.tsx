@@ -63,7 +63,7 @@ export default function LobbyPage() {
     }
   }
 
-  const joinUrl = `${window.location.origin}/?room=${code ?? ""}`;
+  const joinUrl = `${config.localJoinBase}/?room=${code ?? ""}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=164x164&data=${encodeURIComponent(joinUrl)}`;
 
   if (loading) {
@@ -93,7 +93,7 @@ export default function LobbyPage() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22 }}
     >
-      <NavBar floating={false} />
+      <NavBar />
 
       <div
         className="grid"

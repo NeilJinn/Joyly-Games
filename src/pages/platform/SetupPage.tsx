@@ -56,7 +56,7 @@ export default function SetupPage() {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.22 }}
     >
-      <NavBar floating={false} />
+      <NavBar />
 
       {/* Setup area */}
       <section
