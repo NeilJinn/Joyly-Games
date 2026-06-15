@@ -101,7 +101,7 @@ export default function HomePage() {
           {config.games.map((game) => (
             <GameCard
               key={game.id}
-              game={game as any}
+              game={game}
               onPlay={handlePlay}
             />
           ))}

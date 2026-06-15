@@ -4,12 +4,13 @@ import Icon from "../ui/Icon";
 import type { GameConfig } from "../../types/config";
 
 interface GameCardProps {
-  game: GameConfig & { genre?: string; description?: string; mood?: string; players?: string };
+  game: GameConfig;
   selected?: boolean;
   onPlay: (gameId: string) => void;
 }
 
 export default function GameCard({ game, selected = false, onPlay }: GameCardProps) {
+  const playable = game.status === "playable";
   return (
     <article
       className={[
@@ -20,27 +21,27 @@ export default function GameCard({ game, selected = false, onPlay }: GameCardPro
         .join(" ")}
     >
       <div className={`game-art game-art-${game.id}`}>
-        <Tag>{game.genre ?? ""}</Tag>
+        <Tag>{game.genre}</Tag>
       </div>
       <div className="p-[14px] grid gap-[12px]">
         <div>
-          <h3 className="text-[18px] font-[800] text-[var(--ink)] m-0">{game.name}</h3>
+          <h3 className="text-[18px] font-[800] text-[var(--ink)] m-0">{game.title}</h3>
           <p className="text-[var(--muted)] text-[13px] mt-[6px] mb-0 leading-[1.4]">
-            {game.description ?? ""}
+            {game.description}
           </p>
         </div>
         <div className="flex gap-[8px] flex-wrap text-[var(--muted)] text-[12px]">
-          <span>{game.players ?? `${game.minPlayers}–${game.maxPlayers} players`}</span>
-          {game.mood && <span>{game.mood}</span>}
-          <span>{game.playable ? "Playable" : "Coming soon"}</span>
+          <span>{game.players}</span>
+          <span>{game.mood}</span>
+          <span>{playable ? "Playable" : "Coming soon"}</span>
         </div>
         <Button
           variant="primary"
-          disabled={!game.playable}
+          disabled={!playable}
           onClick={() => onPlay(game.id)}
           className="w-full"
         >
-          {game.playable ? (
+          {playable ? (
             <>
               <Icon name="play" />
               <span>Play</span>

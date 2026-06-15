@@ -30,6 +30,8 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
 
   if (!game) return null;
 
+  const playable = game.status === "playable";
+
   return (
     <section
       className={[
@@ -51,21 +53,21 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
           {/* Left: title + copy */}
           <div>
             <Tag>
-              {(game as any).players ?? `${game.minPlayers}–${game.maxPlayers} players`} · {(game as any).genre ?? ""}
+              {game.players} · {game.genre}
             </Tag>
             <h1
               className="max-w-[860px] my-[18px] mb-[28px] [font-size:clamp(46px,7vw,86px)] leading-[.98] mt-[18px]"
             >
-              {game.name}
+              {game.title}
             </h1>
             <p className="max-w-[640px] -mt-[12px] mb-[24px] text-[#e5f4f6] text-[20px] leading-[1.42]">
-              {(game as any).description ?? ""}
+              {game.description}
             </p>
             <Button
               variant="primary"
               className="min-w-[180px]"
               onClick={() => onPlay(game.id)}
-              disabled={!game.playable}
+              disabled={!playable}
             >
               <Icon name="play" />
               <span>Play now</span>
@@ -78,11 +80,10 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
               className={`h-[220px] rounded-[6px] game-art game-art-${game.id}`}
             />
             <div>
-              <Tag>{index === 0 ? "Featured" : ((game as any).mood ?? "")}</Tag>
-              <h2 className="mt-[10px] mb-[6px] text-[30px]">{game.name}</h2>
+              <Tag>{index === 0 ? "Featured" : game.mood}</Tag>
+              <h2 className="mt-[10px] mb-[6px] text-[30px]">{game.title}</h2>
               <p className="text-[var(--muted)] text-[14px]">
-                {(game as any).mood ?? ""} ·{" "}
-                {game.playable ? "Playable now" : "Coming soon"}
+                {game.mood} · {playable ? "Playable now" : "Coming soon"}
               </p>
             </div>
           </div>
@@ -112,7 +113,7 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
                     : "w-[10px] bg-[rgba(255,248,232,.46)]",
                 ].join(" ")}
                 onClick={() => setIndex(i)}
-                aria-label={`Show ${g.name}`}
+                aria-label={`Show ${g.title}`}
               />
             ))}
           </div>

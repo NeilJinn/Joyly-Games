@@ -1,9 +1,16 @@
 export interface GameConfig {
   id: string;
-  name: string;
-  playable: boolean;
+  title: string;
+  genre: string;
+  players: string;
   minPlayers: number;
   maxPlayers: number;
+  mood: string;
+  status: "playable" | "coming-soon";
+  description: string;
+  price?: number;
+  credits?: number;
+  clientModule?: string;
 }
 
 export interface AppConfig {
