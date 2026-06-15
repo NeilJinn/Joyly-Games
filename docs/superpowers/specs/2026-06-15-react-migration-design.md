@@ -1,41 +1,33 @@
-# React Migration Design
+# React Migration Design Spec
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task.
+**Goal:** Upgrade the Joyly Games frontend from vanilla JS to React 18 + TypeScript + Vite + Tailwind CSS, preserving all existing visual layouts and functionality exactly. This is a technical upgrade — not a redesign. Layouts, spacing, colors, and component structures are preserved by converting old CSS to equivalent Tailwind classes.
 
-**Goal:** Migrate the Joyly Games frontend from vanilla JS to React + TypeScript, replacing JMS with GSAP + Framer Motion, while leaving the Node.js server API completely untouched.
-
-**Architecture:** Layered replacement strategy — build a new React SPA alongside the existing server, migrating one page surface at a time. The server's REST and SSE APIs remain unchanged throughout. Each phase produces a working, testable state.
+**Architecture:** Layered replacement — build a new React SPA alongside the existing server, migrating one surface at a time. The homepage is migrated first as a benchmark before any further work. The server's REST and SSE APIs stay completely untouched throughout.
 
 **Tech Stack:** React 18 · TypeScript · Vite · React Router v6 · Zustand · Tailwind CSS · Framer Motion · GSAP · Vitest
 
 ---
 
-## Decisions
+## Core Constraints
 
-| Topic | Decision | Reason |
-|---|---|---|
-| Migration strategy | Layered replacement (new React app alongside existing server) | Low risk, each phase is independently testable |
-| TypeScript | Yes | Better AI agent code generation quality across files |
-| JMS | Delete entirely | Replaced by GSAP (game animations) + Framer Motion (UI transitions) |
-| State management | Zustand | Lightweight, zero boilerplate, works naturally with SSE events |
-| Routing | Single SPA with React Router v6 | All surfaces in one app, clean shared component reuse |
-| Styling | Tailwind CSS | Highest AI agent generation quality, no class naming overhead |
-| Build tool | Vite | Lightweight, proxies to existing Node.js server, standard setup |
-| Testing | Vitest | Same ecosystem as Vite, zero config |
-| Server | No changes | REST + SSE API is already clean and well-structured |
-| Deleted pages | JMS playground, voice library tool | No longer needed |
+1. **Visual fidelity first.** Every migrated page must match the old design at all common viewport sizes before proceeding to the next phase.
+2. **Server is frozen.** Zero changes to `server.js` until Phase 6 (static path update only).
+3. **Homepage is the benchmark.** Phase 2 ends with a visual review gate. Phase 3 does not start until the homepage passes.
+4. **Tailwind replicates, does not redesign.** Use arbitrary-value syntax (`p-[14px]`, `text-[#3a2e5c]`) to match existing CSS values exactly. No creative deviations.
 
 ---
 
 ## What Gets Deleted
 
-- `packages/jms/` — entire directory (JMS motion system)
-- `public/voice-library/` — voice library tool page
-- `public/jms/` — JMS playground page
-- `public/platform/` — old platform JS/HTML (removed after Phase 2)
-- `public/players/` — old player JS/HTML (removed after Phase 3)
-- `public/games/cosmic-trivia/` old JS/CSS (removed after Phase 4)
-- `public/app.js`, `public/index.html` — old root files (removed in Phase 5)
+| Path | Reason |
+|---|---|
+| `packages/jms/` | JMS replaced by GSAP + Framer Motion |
+| `public/jms/` | JMS playground no longer needed |
+| `public/voice-library/` | Replaced by external software |
+| `public/platform/` | Replaced by React (Phase 3) |
+| `public/players/` | Replaced by React (Phase 4) |
+| `public/games/cosmic-trivia/` JS+CSS | Replaced by React (Phase 5) |
+| `public/app.js`, `public/index.html` | Replaced by Vite entry (Phase 6) |
 
 ---
 
@@ -43,48 +35,58 @@
 
 ```
 src/
-  app/
-    App.tsx              # React root with router
-    router.tsx           # All route definitions
+  main.tsx                   # Vite entry point
+  App.tsx                    # Router root
+  types/
+    room.ts                  # Room, Player, RoomStatus types
+    game.ts                  # GamePhase, Score, Question types
+    auth.ts                  # HostAccount, Entitlement types
+    config.ts                # Server config response shape
+  stores/
+    authStore.ts             # Host account, entitlement, time pass
+    roomStore.ts             # Room code, status, player list
+    playerStore.ts           # Current device player identity
+    gameStore.ts             # Active phase, scores, current question
+    sseStore.ts              # SSE connection lifecycle
+  hooks/
+    useSSE.ts                # Opens SSE, routes events to stores
+    useConfig.ts             # Fetches /api/config on mount
+    useRoom.ts               # Room-scoped helpers
+    useAuth.ts               # Host auth helpers
   pages/
     platform/
-      HomePage.tsx       # Host landing page, sign-in
-      GamePickerPage.tsx # Game selection modal/page
-      PaymentPage.tsx    # Time pass / points payment
-      LobbyPage.tsx      # Room lobby, player list, launch button
+      HomePage.tsx           # Landing page + room code entry  ← BENCHMARK
+      GamesPage.tsx          # Game store / library
+      HowToPlayPage.tsx
+      SupportPage.tsx
+      CompanyPage.tsx
+      LobbyPage.tsx          # Big-screen lobby: QR, player list, launch
     player/
-      JoinPage.tsx       # Enter room code
-      AvatarPage.tsx     # Nickname + avatar selection
-      WaitingPage.tsx    # Waiting in lobby on phone
-      PlayPage.tsx       # In-game phone interface (routes to game-specific)
+      JoinPage.tsx           # Phone: enter room code
+      AvatarPage.tsx         # Phone: nickname + avatar selection
+      WaitingPage.tsx        # Phone: waiting for game to start
+      InRoomPage.tsx         # Phone: in-game controls container
     games/
       cosmic-trivia/
-        PresentationPage.tsx   # Big screen: question, countdown, scores
-        PhonePage.tsx          # Phone: answer buttons
+        BigScreenPage.tsx    # Host big-screen game view
+        PhonePage.tsx        # Player phone answer UI
+        phases/
+          DeckSelectingPhase.tsx
+          QuestionIntroPhase.tsx
+          AnsweringPhase.tsx
+          ScoringPhase.tsx
+          CompletePhase.tsx
       fate-werewolf/
-        PresentationPage.tsx
-        PhonePage.tsx
+        BigScreenPage.tsx    # Stub only
+        PhonePage.tsx        # Stub only
   components/
-    ui/                  # Reusable UI: Button, Card, Modal, Avatar, etc.
-    room/                # Room code display, QR code, player token
-    platform/            # Host controls, account menu
-  stores/
-    authStore.ts         # Host login state, account info, time pass
-    roomStore.ts         # Room code, room status, player list
-    playerStore.ts       # Current player identity (nickname, avatar)
-    gameStore.ts         # Game phase, scores, current question, Director state
-    sseStore.ts          # SSE connection status
-  hooks/
-    useSSE.ts            # Core SSE hook — connects and routes events to stores
-    useRoom.ts           # Room join/leave helpers
-    useAuth.ts           # Host auth helpers
-  types/
-    room.ts              # Room, Player, RoomStatus types
-    game.ts              # GamePhase, Score, Question types
-    auth.ts              # HostAccount, Entitlement types
-  main.tsx               # Vite entry point
-index.html               # Vite root HTML
-vite.config.ts           # Vite config with server proxy
+    ui/                      # Button, Card, Modal, Icon
+    room/                    # RoomCode, QRCode, PlayerToken
+    platform/                # NavBar, GamePicker, PaymentCard, AccountMenu
+  styles/
+    globals.css              # Tailwind base + font imports + CSS variables
+index.html                   # Vite root HTML
+vite.config.ts               # Proxy /api → localhost:4173
 tailwind.config.ts
 tsconfig.json
 ```
@@ -93,147 +95,237 @@ tsconfig.json
 
 ## URL Structure
 
-| URL | Who sees it | What it is |
+| URL | Device | View |
 |---|---|---|
-| `/` | Host (big screen) | Landing page, sign-in |
-| `/room/:code` | Host (big screen) | Lobby + game presentation |
-| `/join` | Player (phone) | Enter room code |
-| `/join/:code` | Player (phone) | Direct join via QR link |
-| `/play/:code` | Player (phone) | In-game phone interface |
+| `/` | Big screen | Home / landing |
+| `/games` | Big screen | Game library |
+| `/how-to-play` | Big screen | How to play |
+| `/support` | Big screen | Support |
+| `/company` | Big screen | Company |
+| `/room/:code` | Big screen | Lobby → in-game |
+| `/join` | Phone | Enter room code |
+| `/join/:code` | Phone | Avatar selection |
+| `/play/:code` | Phone | In-game controls |
 
-Device role is determined by URL path — no device detection needed.
+Device role is determined by URL — no device detection logic needed.
 
 ---
 
 ## State Management
 
-### Stores
+### Store Shapes
 
-**`authStore`** — host login and entitlement
+**`authStore`**
 ```ts
-{ email, isSignedIn, entitlement: { hasActivePass, passExpiresAt, points } }
+{
+  email: string | null
+  isSignedIn: boolean
+  entitlement: {
+    points: number
+    hasActiveTimePass: boolean
+    timePassExpiresAt: number   // unix ms
+  }
+}
 ```
 
-**`roomStore`** — room state shared across all clients
+**`roomStore`**
 ```ts
-{ code, status, players: Player[], game: string | null, hostEmail }
+{
+  code: string | null
+  status: 'waiting' | 'playing' | 'complete' | null
+  players: Player[]
+  selectedGameId: string | null
+  hostEmail: string | null
+}
 ```
 
-**`playerStore`** — current player's own identity (phone only)
+**`playerStore`**
 ```ts
-{ playerId, nickname, avatarKey, status: 'joining' | 'ready' | 'playing' }
+{
+  playerId: string | null
+  nickname: string
+  avatarKey: string
+  joinStatus: 'idle' | 'joining' | 'joined' | 'error'
+  joinError: string
+}
 ```
 
-**`gameStore`** — live game state pushed by Director
+**`gameStore`**
 ```ts
-{ phase, currentQuestion, scores, timeRemaining, selectedAnswer }
+{
+  phase: string | null
+  currentQuestion: Question | null
+  scores: Record<string, number>
+  answers: Record<string, string>   // playerId → answer key
+  selectedAnswer: string | null     // this device's answer
+  questionAudioPath: string | null
+  nextQuestionAudioPath: string | null
+}
 ```
 
-**`sseStore`** — connection health
+**`sseStore`**
 ```ts
-{ connected, reconnecting, error }
+{
+  status: 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'error'
+  lastEventAt: number | null
+}
 ```
 
-### SSE Event Flow
+### SSE Event Routing
+
+`useSSE(roomCode)` hook:
+1. Opens `EventSource` to `/api/room/:code/events`
+2. Routes incoming events to store actions:
 
 ```
-Server SSE event arrives
-  → useSSE hook receives it
-  → Routes by event.type:
-      'room-update'   → roomStore.setRoom()
-      'player-update' → roomStore.setPlayers()
-      'game-phase'    → gameStore.setPhase()
-      'scores'        → gameStore.setScores()
-      'question'      → gameStore.setQuestion()
-  → React components re-render automatically
+room-update      → roomStore.setRoom()
+player-joined    → roomStore.addPlayer()
+player-left      → roomStore.removePlayer()
+player-ready     → roomStore.setPlayerReady()
+game-phase       → gameStore.setPhase()
+game-question    → gameStore.setQuestion()
+game-scores      → gameStore.setScores()
+game-answer      → gameStore.recordAnswer()
+game-complete    → gameStore.setComplete()
 ```
 
-`useSSE(roomCode)` is called once at the room/play page level and cleans up on unmount.
+3. Reconnects with exponential backoff on disconnect
+4. Cleans up `EventSource` on unmount
 
 ---
 
 ## Animation Strategy
 
-**Framer Motion** — everyday UI animations
-- Page transitions, modal open/close, button feedback, player join animations
-- Declared directly on React components with `motion.div`, `AnimatePresence`
+### Framer Motion — Everyday UI
+- Page enter/exit transitions
+- Modal appear/disappear
+- Player token joining the lobby ring
+- Button press feedback
+- Phase transition fades
 
-**GSAP** — game "big moment" animations
-- Question reveal, answer fly-in, score counting up, victory celebration
-- Used in `PresentationPage.tsx` via `useGSAP()` hook with refs
-- Timeline-based for precise sequencing matching the Director phase events
+### GSAP — Game Big Moments
+- Question text and option cards fly-in sequence
+- Countdown timer animation
+- Answer lock-in effect
+- Score number count-up + rank changes
+- Victory celebration sequence
+
+**Principle:** The existing JMS motion packs define the reference choreography (timing, sequence, feel). GSAP reimplements that choreography. The goal is "feels the same" — not identical frames, but the same rhythm and intent.
+
+---
+
+## Styling Approach
+
+- Before building each component, the agent reads the corresponding old CSS file
+- Tailwind classes are chosen to match computed styles exactly
+- Non-standard values use arbitrary syntax: `p-[14px]`, `bg-[#1a1035]`, `text-[13px]`
+- CSS custom properties (`--color-primary`, etc.) are ported to `globals.css`
+- Font imports are preserved in `globals.css`
+- No layout changes, no color changes, no spacing changes
+
+---
+
+## Homepage Benchmark (Phase 2 Gate)
+
+The homepage (`/`) is migrated in Phase 2. It serves as the proof-of-concept for the entire migration approach.
+
+**Pass criteria — all must be met before Phase 3 begins:**
+
+1. Visual layout matches the old homepage at mobile, tablet, and desktop widths
+2. Room code input → join flow navigates correctly
+3. Marketing navigation links route correctly via React Router
+4. No console errors on load
+5. Framer Motion page entrance animation plays on first load
+6. SSE connection established when a room code is active
+
+If any criterion fails, the styling approach or component structure is revised before continuing.
 
 ---
 
 ## Migration Phases
 
 ### Phase 1 — Foundation
-Set up the new React project skeleton inside the existing repo. Nothing gets deleted yet. Existing `public/` files keep serving.
+**Goal:** Working React skeleton, nothing deleted yet. Old `public/` keeps serving.
 
-Deliverables:
-- `src/` directory with React + TS + Vite
-- Tailwind configured
-- React Router with placeholder pages for all routes
-- Zustand stores defined (empty/stub state)
-- `useSSE` hook connecting to existing server
-- Vite dev server proxying API calls to `localhost:4173`
+- Vite + React + TypeScript scaffold in repo root
+- Tailwind + `globals.css` with existing font/variable imports
+- React Router with placeholder components for all routes
+- Zustand stores defined with correct TypeScript shapes (no real logic)
+- `useConfig.ts` fetching `/api/config`
+- `useSSE.ts` connecting to server SSE (logging events only)
+- Vite dev server proxying `/api` → `localhost:4173`
 - Vitest configured with one smoke test
 
-### Phase 2 — Platform UI (Host Big Screen)
-Migrate all pre-game host screens.
+### Phase 2 — Homepage Benchmark ⬅ Gate
+**Goal:** Fully working homepage that passes all benchmark criteria.
 
-Deliverables:
-- `HomePage.tsx` — landing, sign-in form
-- `GamePickerPage.tsx` — game selection
-- `PaymentPage.tsx` — time pass and points UI
-- `LobbyPage.tsx` — room code, QR, player list, launch button
-- Shared `ui/` components: Button, Card, Modal, RoomCode, PlayerToken
-- `authStore` + `roomStore` wired to real API
+- `HomePage.tsx` — landing content, room code entry form, navigation
+- `GamesPage.tsx`, `HowToPlayPage.tsx`, `SupportPage.tsx`, `CompanyPage.tsx`
+- Shared `components/ui/` and `components/platform/NavBar.tsx`
+- `authStore` wired to sign-in API
+- Framer Motion page transitions
+- **Visual benchmark review — must pass before Phase 3**
+
+### Phase 3 — Platform UI (Host Big Screen)
+**Goal:** All pre-game host screens working.
+
+- Auth modal (sign-in)
+- Game picker modal
+- Payment card (time pass + points UI)
+- `LobbyPage.tsx` — room code display, QR code, player list, launch button
+- `roomStore` wired to room creation + SSE room events
+- Host controls: close room, account menu
 - Delete `public/platform/` old files
 
-### Phase 3 — Player Phone UI
-Migrate the phone join and in-room flow.
+### Phase 4 — Player Phone UI
+**Goal:** Full player join and in-room flow.
 
-Deliverables:
-- `JoinPage.tsx` — room code entry
+- `JoinPage.tsx` — room code entry on phone
 - `AvatarPage.tsx` — nickname + character selection
-- `WaitingPage.tsx` — waiting lobby on phone
-- `playerStore` wired to real API
+- `WaitingPage.tsx` — lobby waiting state
+- `InRoomPage.tsx` — in-game phone container
+- `playerStore` wired to join + ready API
+- Player SSE events (phase changes, disconnects)
 - Delete `public/players/` old files
 
-### Phase 4 — Cosmic Trivia Game
-Migrate the game itself — the most animation-heavy phase.
+### Phase 5 — Cosmic Trivia Game
+**Goal:** Fully playable Cosmic Trivia in the new stack.
 
-Deliverables:
-- `PresentationPage.tsx` — big screen question/countdown/scoring with GSAP animations
-- `PhonePage.tsx` — answer buttons, feedback states with Framer Motion
-- `gameStore` receiving Director phase events via SSE
-- All Cosmic Trivia audio playback preserved
-- Delete old `public/games/cosmic-trivia/` JS/CSS files
+- `BigScreenPage.tsx` with all Director phase components
+- `PhonePage.tsx` — answer buttons, selection feedback
+- `gameStore` receiving all game SSE events
+- GSAP animations for question reveal, scoring, victory
+- Audio playback preserved and wired to Director phases
+- Delete old `public/games/cosmic-trivia/` JS + CSS files
 
-### Phase 5 — Cleanup
-Remove all legacy files and wire up production serving.
+### Phase 6 — Cleanup & Production
+**Goal:** All legacy code removed, server serving Vite build.
 
-Deliverables:
-- Delete `packages/jms/`, `public/voice-library/`, `public/jms/`, `public/app.js`, `public/index.html`
-- Update `server.js` to serve the Vite build output from `dist/`
-- Build script (`npm run build`) produces production bundle
-- Fate Werewolf: stub pages in new React app (full rewrite is a separate project)
-- All routes tested end-to-end
+- Delete `packages/jms/`, `public/jms/`, `public/voice-library/`
+- Delete `public/app.js`, `public/index.html`
+- Update `server.js`: serve `dist/` instead of `public/`, add SPA fallback for non-API routes
+- `npm run build` produces working production bundle
+- Fate Werewolf: stub `BigScreenPage` + `PhonePage` in new React structure (full implementation is a separate future project)
+- End-to-end manual test: full game loop with 2+ devices
 
 ---
 
-## Server Changes (Minimal)
+## Server Changes
 
-The only server change needed is in Phase 5: update the static file serving path from `public/` to `dist/` (Vite build output). All API routes, SSE endpoints, and game logic stay exactly as-is.
+Only one change in Phase 6:
+1. Static file serving: `public/` → `dist/` (Vite build output)
+2. SPA fallback: serve `dist/index.html` for all non-`/api` routes
+
+All API endpoints, SSE streams, and game logic: untouched.
 
 ---
 
 ## Out of Scope
 
-- Fate Werewolf full game rewrite (separate project after migration complete)
-- Voice library tool (deleted, replaced by external software)
+- Fate Werewolf full game implementation
+- Voice library tool (deleted)
 - JMS playground (deleted)
-- Backend refactoring
+- Backend refactoring or new API endpoints
 - New features or game content
 - Multilingual support
+- Real auth or payment integration
