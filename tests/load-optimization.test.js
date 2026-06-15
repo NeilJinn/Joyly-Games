@@ -26,7 +26,7 @@ function makeSnapshot(overrides = {}) {
   };
 }
 
-function planForPhase(phase, questionAudio = "/audio/q1.mp3", previousPhase = "deck-loading") {
+function planForPhase(phase, questionAudio = "/audio/q1.mp3", previousPhase = "round-prep") {
   return getReactiveAudioPlan(
     makeSnapshot({ phase: previousPhase, questionAudio: "" }),
     makeSnapshot({ phase, questionAudio }),
@@ -47,8 +47,8 @@ test("cosmic trivia client keeps presentation behind a dynamic import", async ()
   assert.doesNotMatch(source, /import\s+\{\s*hydrateTriviaHostPresentation\s*\}\s+from\s+"\.\/presentation\.js"/);
 });
 
-test("question audio is not scheduled before question-audio phase", () => {
-  const phases = ["interest-selecting", "deck-loading", "question-intro"];
+test("question audio is not scheduled before question-read phase", () => {
+  const phases = ["preferences", "round-prep", "question-intro"];
   for (const phase of phases) {
     const plan = planForPhase(phase);
     assert.equal(
@@ -59,8 +59,8 @@ test("question audio is not scheduled before question-audio phase", () => {
   }
 });
 
-test("question audio starts exactly at question-audio phase", () => {
-  const plan = planForPhase("question-audio", "/audio/q1.mp3", "question-intro");
+test("question audio starts exactly at question-read phase", () => {
+  const plan = planForPhase("question-read", "/audio/q1.mp3", "question-intro");
   assert.deepEqual(
     plan.segments.map(segment => segment.src),
     ["/audio/q1.mp3"]

@@ -11,6 +11,9 @@ function hasTestMarker(value) {
 }
 
 function inferOutputPath(candidate) {
+  if (candidate?.canonicalAudioPath) {
+    return path.join(process.cwd(), "public", String(candidate.canonicalAudioPath).replace(/^\/+/, ""));
+  }
   if (candidate?.filePath) return candidate.filePath;
   if (candidate?.audioPath) {
     return path.join(process.cwd(), "public", String(candidate.audioPath).replace(/^\/+/, ""));

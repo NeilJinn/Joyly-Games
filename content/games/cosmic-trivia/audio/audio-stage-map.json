@@ -1,108 +1,719 @@
 {
-  "version": 1,
+  "version": 4,
   "gameId": "cosmic-trivia",
-  "notes": {
+  "defaults": {
+    "hostAudioRoot": "/games/cosmic-trivia/audio/host/director",
     "questionAudioField": "questionAudio",
-    "hostAudioRoot": "/games/cosmic-trivia/audio/host",
-    "sfxAudioRoot": "/games/cosmic-trivia/audio/sfx",
-    "musicAudioRoot": "/games/cosmic-trivia/audio/music"
+    "fallbackOrder": [
+      "exact-cue",
+      "cue-fallbacks",
+      "domain.default",
+      "global.game.default",
+      "silent"
+    ]
   },
-  "phases": {
-    "interest-selecting": {
-      "hostVoice": [
-        "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-choose-preferences-01.mp3"
+  "phases": [
+    "game-setup",
+    "preferences",
+    "round-prep",
+    "question-intro",
+    "answering",
+    "answer-lock",
+    "reveal",
+    "scoring",
+    "between-questions",
+    "final-hype",
+    "finale",
+    "post-game"
+  ],
+  "cues": [
+    {
+      "cueKey": "global.game.default",
+      "scope": "global",
+      "domain": "game",
+      "phaseOrDomain": "game",
+      "event": "default",
+      "eventPath": [
+        "default"
       ],
-      "sfx": [
-        "/games/cosmic-trivia/audio/sfx/transitions/sfx-ui-welcome-sting.mp3"
-      ],
-      "music": [
-        "/games/cosmic-trivia/audio/music/bgm-lobby-loop.mp3"
-      ],
-      "purpose": "欢迎玩家并引导选择偏好"
+      "purpose": "全局兜底口播",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
     },
-    "preferences-locked": {
-      "hostVoice": [
-        "/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp3"
+    {
+      "cueKey": "phase.game-setup.question-count.selection",
+      "scope": "phase",
+      "domain": "game-setup",
+      "phaseOrDomain": "game-setup",
+      "event": "selection",
+      "eventPath": [
+        "question-count",
+        "selection"
       ],
-      "sfx": [
-        "/games/cosmic-trivia/audio/sfx/transitions/sfx-lock-confirm.mp3"
-      ],
-      "music": [],
-      "purpose": "确认偏好已锁定"
+      "purpose": "题目数量选择阶段",
+      "recommendedVariants": 2,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
     },
-    "deck-loading": {
-      "hostVoice": [
-        "/games/cosmic-trivia/audio/host/phases/phase-deck-loading-01.mp3"
+    {
+      "cueKey": "phase.preferences.selection.intro",
+      "scope": "phase",
+      "domain": "preferences",
+      "phaseOrDomain": "preferences",
+      "event": "intro",
+      "eventPath": [
+        "selection",
+        "intro"
       ],
-      "sfx": [
-        "/games/cosmic-trivia/audio/sfx/transitions/sfx-deck-loading-sweep.mp3"
-      ],
-      "music": [],
-      "purpose": "抽题和载入题组"
+      "purpose": "玩家选择题材和关键词",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
     },
-    "question-intro": {
-      "hostVoice": [
-        "/games/cosmic-trivia/audio/host/phases/phase-question-intro-01.mp3"
+    {
+      "cueKey": "phase.preferences.selection.done",
+      "scope": "phase",
+      "domain": "preferences",
+      "phaseOrDomain": "preferences",
+      "event": "done",
+      "eventPath": [
+        "selection",
+        "done"
       ],
-      "sfx": [
-        "/games/cosmic-trivia/audio/sfx/transitions/sfx-question-intro-hit.mp3"
-      ],
-      "music": [],
-      "purpose": "题目登场"
+      "purpose": "偏好选择完成",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
     },
-    "question-audio": {
-      "questionAudioFromField": "questionAudio",
-      "sfx": [],
-      "music": [],
-      "purpose": "播放每道题自己的题干语音"
+    {
+      "cueKey": "phase.round-prep.round.loading",
+      "scope": "phase",
+      "domain": "round-prep",
+      "phaseOrDomain": "round-prep",
+      "event": "loading",
+      "eventPath": [
+        "round",
+        "loading"
+      ],
+      "purpose": "抽题和准备题组",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
     },
-    "answering": {
-      "hostVoice": [
-        "/games/cosmic-trivia/audio/host/phases/phase-answering-01.mp3"
+    {
+      "cueKey": "phase.question-intro.question.next",
+      "scope": "phase",
+      "domain": "question-intro",
+      "phaseOrDomain": "question-intro",
+      "event": "next",
+      "eventPath": [
+        "question",
+        "next"
       ],
-      "sfx": [
-        "/games/cosmic-trivia/audio/sfx/transitions/sfx-answering-start.mp3",
-        "/games/cosmic-trivia/audio/sfx/countdown/sfx-countdown-warning.mp3",
-        "/games/cosmic-trivia/audio/sfx/countdown/sfx-countdown-danger.mp3"
-      ],
-      "music": [
-        "/games/cosmic-trivia/audio/music/bgm-answering-loop.mp3"
-      ],
-      "purpose": "提示玩家作答并给出倒计时反馈"
+      "purpose": "题目前导",
+      "recommendedVariants": 3,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
     },
-    "scoring": {
-      "hostVoice": [
-        "/games/cosmic-trivia/audio/host/phases/phase-scoring-01.mp3"
+    {
+      "cueKey": "phase.question-intro.question.final",
+      "scope": "phase",
+      "domain": "question-intro",
+      "phaseOrDomain": "question-intro",
+      "event": "final",
+      "eventPath": [
+        "question",
+        "final"
       ],
-      "sfx": [
-        "/games/cosmic-trivia/audio/sfx/results/sfx-score-add.mp3",
-        "/games/cosmic-trivia/audio/sfx/results/sfx-rank-rise.mp3"
-      ],
-      "music": [],
-      "purpose": "分数结算与排名变化"
+      "purpose": "最后一题前导",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
     },
-    "next-question": {
-      "hostVoice": [
-        "/games/cosmic-trivia/audio/host/phases/phase-next-question-01.mp3"
+    {
+      "cueKey": "phase.answering.answer.open",
+      "scope": "phase",
+      "domain": "answering",
+      "phaseOrDomain": "answering",
+      "event": "open",
+      "eventPath": [
+        "answer",
+        "open"
       ],
-      "sfx": [
-        "/games/cosmic-trivia/audio/sfx/transitions/sfx-next-question-whoosh.mp3"
-      ],
-      "music": [],
-      "purpose": "切到下一题"
+      "purpose": "进入答题",
+      "recommendedVariants": 3,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
     },
-    "complete": {
-      "hostVoice": [
-        "/games/cosmic-trivia/audio/host/phases/phase-complete-01.mp3"
+    {
+      "cueKey": "phase.answering.answer.all-in",
+      "scope": "phase",
+      "domain": "answering",
+      "phaseOrDomain": "answering",
+      "event": "all-in",
+      "eventPath": [
+        "answer",
+        "all-in"
       ],
-      "sfx": [
-        "/games/cosmic-trivia/audio/sfx/results/sfx-victory-fanfare.mp3",
-        "/games/cosmic-trivia/audio/sfx/results/sfx-crowd-applause.mp3"
+      "purpose": "所有人提前答完",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
+    },
+    {
+      "cueKey": "phase.answering.time.warning",
+      "scope": "phase",
+      "domain": "answering",
+      "phaseOrDomain": "answering",
+      "event": "warning",
+      "eventPath": [
+        "time",
+        "warning"
       ],
-      "music": [
-        "/games/cosmic-trivia/audio/music/bgm-results-loop.mp3"
+      "purpose": "答题时间提醒",
+      "recommendedVariants": 2,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
+    },
+    {
+      "cueKey": "phase.answering.time.critical",
+      "scope": "phase",
+      "domain": "answering",
+      "phaseOrDomain": "answering",
+      "event": "critical",
+      "eventPath": [
+        "time",
+        "critical"
       ],
-      "purpose": "结算与收尾"
+      "purpose": "答题最后几秒",
+      "recommendedVariants": 2,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
+    },
+    {
+      "cueKey": "phase.answer-lock.answer.locked",
+      "scope": "phase",
+      "domain": "answer-lock",
+      "phaseOrDomain": "answer-lock",
+      "event": "locked",
+      "eventPath": [
+        "answer",
+        "locked"
+      ],
+      "purpose": "答案锁定",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
+    },
+    {
+      "cueKey": "phase.reveal.answer.positive",
+      "scope": "phase",
+      "domain": "reveal",
+      "phaseOrDomain": "reveal",
+      "event": "positive",
+      "eventPath": [
+        "answer",
+        "positive"
+      ],
+      "purpose": "公布正确答案常规口播",
+      "recommendedVariants": 2,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
+    },
+    {
+      "cueKey": "phase.reveal.answer.no-one-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "phaseOrDomain": "reveal",
+      "event": "no-one-correct",
+      "eventPath": [
+        "answer",
+        "no-one-correct"
+      ],
+      "purpose": "无人答对",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease"
+    },
+    {
+      "cueKey": "phase.reveal.answer.everyone-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "phaseOrDomain": "reveal",
+      "event": "everyone-correct",
+      "eventPath": [
+        "answer",
+        "everyone-correct"
+      ],
+      "purpose": "所有人答对",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "celebration"
+    },
+    {
+      "cueKey": "phase.reveal.answer.only-one-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "phaseOrDomain": "reveal",
+      "event": "only-one-correct",
+      "eventPath": [
+        "answer",
+        "only-one-correct"
+      ],
+      "purpose": "只有一人答对",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease"
+    },
+    {
+      "cueKey": "phase.scoring.score.update",
+      "scope": "phase",
+      "domain": "scoring",
+      "phaseOrDomain": "scoring",
+      "event": "update",
+      "eventPath": [
+        "score",
+        "update"
+      ],
+      "purpose": "分数结算常规口播",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
+    },
+    {
+      "cueKey": "phase.scoring.score.hidden-update",
+      "scope": "phase",
+      "domain": "scoring",
+      "phaseOrDomain": "scoring",
+      "event": "hidden-update",
+      "eventPath": [
+        "score",
+        "hidden-update"
+      ],
+      "purpose": "隐藏分数期间的结算口播",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease"
+    },
+    {
+      "cueKey": "phase.scoring.leader.new",
+      "scope": "phase",
+      "domain": "scoring",
+      "phaseOrDomain": "scoring",
+      "event": "new",
+      "eventPath": [
+        "leader",
+        "new"
+      ],
+      "purpose": "出现新的领先者",
+      "recommendedVariants": 2,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "hype"
+    },
+    {
+      "cueKey": "phase.scoring.rank.big-jump",
+      "scope": "phase",
+      "domain": "scoring",
+      "phaseOrDomain": "scoring",
+      "event": "big-jump",
+      "eventPath": [
+        "rank",
+        "big-jump"
+      ],
+      "purpose": "有人排名大幅上升",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "hype"
+    },
+    {
+      "cueKey": "phase.between-questions.transition.next",
+      "scope": "phase",
+      "domain": "between-questions",
+      "phaseOrDomain": "between-questions",
+      "event": "next",
+      "eventPath": [
+        "transition",
+        "next"
+      ],
+      "purpose": "题间转场",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
+    },
+    {
+      "cueKey": "phase.final-hype.summary.only-one-correct",
+      "scope": "phase",
+      "domain": "final-hype",
+      "phaseOrDomain": "final-hype",
+      "event": "only-one-correct",
+      "eventPath": [
+        "summary",
+        "only-one-correct"
+      ],
+      "purpose": "最终揭晓前：某题只有一人答对",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
+    },
+    {
+      "cueKey": "phase.final-hype.summary.everyone-missed",
+      "scope": "phase",
+      "domain": "final-hype",
+      "phaseOrDomain": "final-hype",
+      "event": "everyone-missed",
+      "eventPath": [
+        "summary",
+        "everyone-missed"
+      ],
+      "purpose": "最终揭晓前：某题无人答对",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease"
+    },
+    {
+      "cueKey": "phase.final-hype.summary.best-streak",
+      "scope": "phase",
+      "domain": "final-hype",
+      "phaseOrDomain": "final-hype",
+      "event": "best-streak",
+      "eventPath": [
+        "summary",
+        "best-streak"
+      ],
+      "purpose": "最终揭晓前：连对统计",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "hype"
+    },
+    {
+      "cueKey": "phase.final-hype.summary.close-finish",
+      "scope": "phase",
+      "domain": "final-hype",
+      "phaseOrDomain": "final-hype",
+      "event": "close-finish",
+      "eventPath": [
+        "summary",
+        "close-finish"
+      ],
+      "purpose": "最终揭晓前：比分接近",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
+    },
+    {
+      "cueKey": "phase.final-hype.summary.round-energy",
+      "scope": "phase",
+      "domain": "final-hype",
+      "phaseOrDomain": "final-hype",
+      "event": "round-energy",
+      "eventPath": [
+        "summary",
+        "round-energy"
+      ],
+      "purpose": "最终揭晓前：通用悬念总结",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
+    },
+    {
+      "cueKey": "phase.finale.result.incoming",
+      "scope": "phase",
+      "domain": "finale",
+      "phaseOrDomain": "finale",
+      "event": "incoming",
+      "eventPath": [
+        "result",
+        "incoming"
+      ],
+      "purpose": "最终结果公布前预热",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
+    },
+    {
+      "cueKey": "phase.post-game.result.outro",
+      "scope": "phase",
+      "domain": "post-game",
+      "phaseOrDomain": "post-game",
+      "event": "outro",
+      "eventPath": [
+        "result",
+        "outro"
+      ],
+      "purpose": "赛后收尾",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "celebration"
+    },
+    {
+      "cueKey": "global.score.hidden.started",
+      "scope": "global",
+      "domain": "score",
+      "phaseOrDomain": "score",
+      "event": "started",
+      "eventPath": [
+        "hidden",
+        "started"
+      ],
+      "purpose": "最后 30% 题目开始隐藏分数",
+      "recommendedVariants": 2,
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease"
+    },
+    {
+      "cueKey": "global.player.join.in",
+      "scope": "global",
+      "domain": "player",
+      "phaseOrDomain": "player",
+      "event": "in",
+      "eventPath": [
+        "join",
+        "in"
+      ],
+      "purpose": "玩家加入时的全局插播",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
+    },
+    {
+      "cueKey": "cross.game.final-question-armed",
+      "scope": "cross",
+      "domain": "game",
+      "phaseOrDomain": "game",
+      "event": "final-question-armed",
+      "eventPath": [
+        "final-question-armed"
+      ],
+      "purpose": "最后一题即将开始的跨阶段提醒",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
+    },
+    {
+      "cueKey": "cross.game.final-question-ended",
+      "scope": "cross",
+      "domain": "game",
+      "phaseOrDomain": "game",
+      "event": "final-question-ended",
+      "eventPath": [
+        "final-question-ended"
+      ],
+      "purpose": "最后一题结束后的跨阶段提醒",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense"
+    },
+    {
+      "cueKey": "cross.player.disconnected",
+      "scope": "cross",
+      "domain": "player",
+      "phaseOrDomain": "player",
+      "event": "disconnected",
+      "eventPath": [
+        "disconnected"
+      ],
+      "purpose": "玩家断线时的轻量提示",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
+    },
+    {
+      "cueKey": "cross.player.reconnected",
+      "scope": "cross",
+      "domain": "player",
+      "phaseOrDomain": "player",
+      "event": "reconnected",
+      "eventPath": [
+        "reconnected"
+      ],
+      "purpose": "玩家重连时的轻量提示",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
+    },
+    {
+      "cueKey": "cross.player.idle.filler",
+      "scope": "cross",
+      "domain": "player",
+      "phaseOrDomain": "player",
+      "event": "filler",
+      "eventPath": [
+        "idle",
+        "filler"
+      ],
+      "purpose": "等待玩家操作时的跨阶段填充",
+      "recommendedVariants": 2,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
+    },
+    {
+      "cueKey": "cross.network.delay.filler",
+      "scope": "cross",
+      "domain": "network",
+      "phaseOrDomain": "network",
+      "event": "filler",
+      "eventPath": [
+        "delay",
+        "filler"
+      ],
+      "purpose": "网络或加载等待时的跨阶段填充",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
+    },
+    {
+      "cueKey": "cross.stats.streak.detected",
+      "scope": "cross",
+      "domain": "stats",
+      "phaseOrDomain": "stats",
+      "event": "detected",
+      "eventPath": [
+        "streak",
+        "detected"
+      ],
+      "purpose": "连对或连错统计插播",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "hype"
+    },
+    {
+      "cueKey": "global.host.pause",
+      "scope": "global",
+      "domain": "host",
+      "phaseOrDomain": "host",
+      "event": "pause",
+      "eventPath": [
+        "pause"
+      ],
+      "purpose": "主持人暂停游戏",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
+    },
+    {
+      "cueKey": "global.host.resume",
+      "scope": "global",
+      "domain": "host",
+      "phaseOrDomain": "host",
+      "event": "resume",
+      "eventPath": [
+        "resume"
+      ],
+      "purpose": "主持人恢复游戏",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
+    },
+    {
+      "cueKey": "global.network.unstable",
+      "scope": "global",
+      "domain": "network",
+      "phaseOrDomain": "network",
+      "event": "unstable",
+      "eventPath": [
+        "unstable"
+      ],
+      "purpose": "网络不稳定时的全局插播",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral"
+    },
+    {
+      "cueKey": "global.network.recovered",
+      "scope": "global",
+      "domain": "network",
+      "phaseOrDomain": "network",
+      "event": "recovered",
+      "eventPath": [
+        "recovered"
+      ],
+      "purpose": "网络恢复时的全局插播",
+      "recommendedVariants": 1,
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm"
     }
-  }
+  ]
 }

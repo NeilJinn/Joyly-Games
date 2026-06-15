@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
 import queue
+import re
+import ssl
+import time
+import hashlib
+import sqlite3
+import subprocess
 import threading
 import tkinter as tk
 from dataclasses import dataclass
@@ -12,9 +19,22 @@ import webbrowser
 
 
 APP_TITLE = "Voice Library Generator"
-API_BASE = "http://127.0.0.1:4173"
-VOICE_LIBRARY_URL = f"{API_BASE}/voice-library/"
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DB_PATH = PROJECT_ROOT / "content" / "voice-library" / "voice-library.sqlite"
+PUBLIC_ROOT = PROJECT_ROOT / "public"
+MANIFEST_PATH = PROJECT_ROOT / "content" / "games" / "cosmic-trivia" / "audio" / "tts-manifest.json"
+REVIEW_STATE_PATH = PROJECT_ROOT / "content" / "voice-library" / "review-state.json"
+VOICE_LIBRARY_URL = f"file://{PROJECT_ROOT / 'public' / 'voice-library' / 'index.html'}"
 CONFIG_PATH = Path.home() / ".voice-library-generator.json"
+DEFAULT_REGENERATE_ONLY = False
+REVIEW_STATUS_OPTIONS = ("unreviewed", "pending", "approved")
+CA_BUNDLE_CANDIDATES = (
+    os.environ.get("SSL_CERT_FILE", ""),
+    os.environ.get("REQUESTS_CA_BUNDLE", ""),
+    "/etc/ssl/cert.pem",
+    "/opt/homebrew/etc/openssl@3/cert.pem",
+    "/usr/local/etc/openssl@3/cert.pem",
+)
 
 
 def normalize_text(value: object) -> str:
@@ -36,6 +56,36 @@ def truncate(text: object, limit: int = 80) -> str:
     return f"{clean[: max(0, limit - 1)]}…"
 
 
+def now_ms() -> int:
+    return int(time.time() * 1000)
+
+
+def clean_segment(value: object) -> str:
+    clean = re.sub(r"[^a-z0-9]+", "-", str(value or "").strip().lower())
+    return clean.strip("-")
+
+
+def normalize_event_path(value: object) -> list[str]:
+    if isinstance(value, list):
+        return [clean_segment(item) for item in value if clean_segment(item)]
+    return [clean_segment(item) for item in str(value or "").split(".") if clean_segment(item)]
+
+
+def cue_key_for(scope: str, domain: str, event_path: list[str]) -> str:
+    return ".".join([scope, domain, *event_path])
+
+
+def text_hash(text: str) -> str:
+    return hashlib.sha256(str(text or "").encode("utf-8")).hexdigest()
+
+
+def create_https_context() -> ssl.SSLContext:
+    for candidate in CA_BUNDLE_CANDIDATES:
+        if candidate and Path(candidate).exists():
+            return ssl.create_default_context(cafile=str(candidate))
+    return ssl.create_default_context()
+
+
 def read_json_url(url: str) -> dict:
     with request.urlopen(url, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
@@ -51,6 +101,13 @@ def post_json_url(url: str, payload: dict) -> dict:
     )
     with request.urlopen(req, timeout=60 * 30) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+def read_json_file(path: Path) -> dict:
+    try:
+        return json.loads(path.read_text("utf-8"))
+    except Exception:
+        return {}
 
 
 def load_settings() -> dict[str, str]:
@@ -74,19 +131,43 @@ def save_settings(settings: dict[str, str]) -> None:
 class TargetRow:
     candidate_id: str
     project_title: str
+    project_id: str
     group_title: str
     group_id: str
+    cue_key: str
+    scope: str
+    domain: str
+    event_path: list[str]
     candidate_label: str
     candidate_title: str
     file_name: str
+    audio_path: str
     transcript: str
     status: str
     tags: list[str]
+    asset_status: str
     skip_reason: str | None
+    trigger_mode: str = "manual"
+    trigger_phase: str = ""
+    trigger_event_key: str = ""
+    trigger_priority: int = 100
+    trigger_enabled: bool = True
 
     @property
     def display_text(self) -> str:
         return self.transcript or self.candidate_label or self.candidate_title or self.file_name or ""
+
+    @property
+    def event_label(self) -> str:
+        return ".".join(self.event_path)
+
+    @property
+    def event_name(self) -> str:
+        return self.event_path[0] if self.event_path else ""
+
+    @property
+    def subevent_label(self) -> str:
+        return ".".join(self.event_path[1:]) if len(self.event_path) > 1 else ""
 
 
 def normalize_tags(value: object) -> list[str]:
@@ -103,6 +184,74 @@ def normalize_tags(value: object) -> list[str]:
     return tags
 
 
+def normalize_review_status(value: object) -> str:
+    status = normalize_text(value)
+    if status == "regenerate":
+        return "unreviewed"
+    return status if status in REVIEW_STATUS_OPTIONS else "unreviewed"
+
+
+def subevent_options_for_event(rows: list["TargetRow"], selected_event: str) -> list[str]:
+    scoped_rows = rows if selected_event == "All" else [row for row in rows if row.event_name == selected_event]
+    return ["All", *sorted({row.subevent_label for row in scoped_rows if row.subevent_label})]
+
+
+def option_values(items: list[str]) -> list[str]:
+    return ["All", *sorted({item for item in items if item})]
+
+
+def filter_options_for_selection(
+    rows: list["TargetRow"],
+    *,
+    project: str = "All",
+    scope: str = "All",
+    domain: str = "All",
+    event: str = "All",
+    status: str = "All",
+) -> dict[str, list[str]]:
+    project_rows = rows
+    scope_rows = [row for row in project_rows if project == "All" or row.project_id == project]
+    domain_rows = [row for row in scope_rows if scope == "All" or row.scope == scope]
+    event_rows = [row for row in domain_rows if domain == "All" or row.domain == domain]
+    subevent_rows = [row for row in event_rows if event == "All" or row.event_name == event]
+    return {
+        "project": option_values([row.project_id for row in project_rows]),
+        "scope": option_values([row.scope for row in scope_rows]),
+        "domain": option_values([row.domain for row in domain_rows]),
+        "event": option_values([row.event_name for row in event_rows]),
+        "subevent": option_values([row.subevent_label for row in subevent_rows]),
+        "status": ["All", *REVIEW_STATUS_OPTIONS],
+    }
+
+
+def filter_rows_for_selection(
+    rows: list["TargetRow"],
+    *,
+    project: str = "All",
+    scope: str = "All",
+    domain: str = "All",
+    event: str = "All",
+    subevent: str = "All",
+    status: str = "All",
+    regenerate_only: bool = False,
+) -> list["TargetRow"]:
+    return [
+        row
+        for row in rows
+        if not (regenerate_only and "regenerate" not in row.tags)
+        and (project == "All" or row.project_id == project)
+        and (scope == "All" or row.scope == scope)
+        and (domain == "All" or row.domain == domain)
+        and (event == "All" or row.event_name == event)
+        and (subevent == "All" or row.subevent_label == subevent)
+        and (status == "All" or normalize_review_status(row.status) == status)
+    ]
+
+
+def should_generate_voice_row(row: TargetRow) -> bool:
+    return normalize_review_status(row.status) == "pending"
+
+
 def flatten_targets(catalog: dict, review_state: dict) -> list[TargetRow]:
     candidates_state = review_state.get("candidates", {}) if isinstance(review_state, dict) else {}
     rows: list[TargetRow] = []
@@ -112,7 +261,7 @@ def flatten_targets(catalog: dict, review_state: dict) -> list[TargetRow]:
         sections = project.get("sections", {}) or {}
         for section_name in ("director", "question"):
             for group in sections.get(section_name, []) or []:
-                group_title = group.get("title") or group.get("subtitle") or group.get("phase") or group.get("id") or "Untitled group"
+                group_title = group.get("title") or group.get("subtitle") or group.get("phase") or group.get("id") or "Untitled cue"
                 group_id = group.get("id") or ""
                 for candidate in group.get("candidates", []) or []:
                     candidate_id = candidate.get("id") or ""
@@ -150,20 +299,515 @@ def flatten_targets(catalog: dict, review_state: dict) -> list[TargetRow]:
                         TargetRow(
                             candidate_id=candidate_id,
                             project_title=project_title,
+                            project_id=project.get("id") or "",
                             group_title=group_title,
                             group_id=group_id,
+                            cue_key=candidate.get("cueKey") or group.get("cueKey") or "",
+                            scope=group.get("scope") or candidate.get("scope") or "",
+                            domain=group.get("domain") or candidate.get("domain") or "",
+                            event_path=group.get("eventPath") or candidate.get("eventPath") or [],
                             candidate_label=candidate.get("label") or "",
                             candidate_title=candidate.get("title") or "",
                             file_name=candidate.get("fileName") or "",
+                            audio_path=candidate.get("audioPath") or "",
                             transcript=str(transcript or ""),
                             status=status or "unreviewed",
                             tags=tags,
+                            asset_status="unknown",
                             skip_reason=skip_reason,
                         )
                     )
 
     rows.sort(key=lambda row: (row.project_title.lower(), row.group_title.lower(), row.file_name.lower()))
     return rows
+
+
+def flatten_db_lines(db_snapshot: dict) -> list[TargetRow]:
+    rows: list[TargetRow] = []
+    for line in db_snapshot.get("lines", []) or []:
+        tags = normalize_tags(line.get("tags"))
+        transcript = line.get("transcript") or line.get("sourceText") or ""
+        skip_reason: str | None = None
+        if has_test_marker(
+            line.get("id"),
+            line.get("groupTitle"),
+            line.get("fileName"),
+            line.get("sourceText"),
+            line.get("cueKey"),
+        ):
+            skip_reason = "test-sample"
+        elif "regenerate" in tags and not split_voice_text(transcript):
+            skip_reason = "missing-text"
+
+        rows.append(
+            TargetRow(
+                candidate_id=line.get("id") or line.get("candidateId") or "",
+                project_title=line.get("projectTitle") or line.get("projectId") or "Untitled project",
+                project_id=line.get("projectId") or "",
+                group_title=line.get("groupTitle") or line.get("cueKey") or "Untitled cue",
+                group_id=line.get("groupId") or "",
+                cue_key=line.get("cueKey") or "",
+                scope=line.get("scope") or "",
+                domain=line.get("domain") or "",
+                event_path=line.get("eventPath") or [],
+                candidate_label=line.get("sourceText") or "",
+                candidate_title=line.get("fileName") or "",
+                file_name=line.get("fileName") or "",
+                audio_path=line.get("audioPath") or "",
+                transcript=str(transcript or ""),
+                status=line.get("status") or "unreviewed",
+                tags=tags,
+                asset_status=line.get("assetStatus") or "unknown",
+                skip_reason=skip_reason,
+                trigger_mode=line.get("triggerMode") or "manual",
+                trigger_phase=line.get("triggerPhase") or "",
+                trigger_event_key=line.get("triggerEventKey") or "",
+                trigger_priority=int(line.get("triggerPriority") or 100),
+                trigger_enabled=bool(line.get("triggerEnabled", True)),
+            )
+        )
+    rows.sort(key=lambda row: (row.project_title.lower(), row.scope, row.domain, row.event_label, row.file_name.lower()))
+    return rows
+
+
+def parse_json_cell(value: object, fallback: object) -> object:
+    try:
+        return json.loads(str(value or ""))
+    except Exception:
+        return fallback
+
+
+def db_connection() -> sqlite3.Connection:
+    if not DB_PATH.exists():
+        raise FileNotFoundError(f"SQLite database not found: {DB_PATH}")
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    ensure_db_schema(conn)
+    return conn
+
+
+def ensure_db_schema(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS director_trigger_rules (
+          cue_key TEXT PRIMARY KEY REFERENCES voice_cues(cue_key) ON DELETE CASCADE,
+          trigger_mode TEXT NOT NULL DEFAULT 'manual',
+          phase TEXT,
+          event_key TEXT,
+          priority INTEGER NOT NULL DEFAULT 100,
+          enabled INTEGER NOT NULL DEFAULT 1,
+          updated_at INTEGER NOT NULL
+        )
+        """
+    )
+    conn.commit()
+
+
+def audio_path_to_file_path(audio_path: str) -> Path:
+    return PUBLIC_ROOT / str(audio_path or "").lstrip("/")
+
+
+def asset_status_for(audio_path: str) -> tuple[str, int | None]:
+    file_path = audio_path_to_file_path(audio_path)
+    if not file_path.exists():
+        return "missing-file", None
+    return "ready", file_path.stat().st_size
+
+
+def load_local_lines() -> list[TargetRow]:
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+              l.line_id,
+              l.cue_key,
+              l.game_id,
+              l.file_name,
+              l.audio_path,
+              l.source_text,
+              l.tone,
+              l.audience,
+              l.visibility,
+              c.project_title,
+              c.group_id,
+              c.title AS group_title,
+              c.scope,
+              c.domain,
+              c.event_path_json,
+              r.status,
+              r.tags_json,
+              r.transcript,
+              a.asset_status,
+              a.file_size,
+              t.trigger_mode,
+              t.phase AS trigger_phase,
+              t.event_key AS trigger_event_key,
+              t.priority AS trigger_priority,
+              t.enabled AS trigger_enabled
+            FROM voice_lines l
+            JOIN voice_cues c ON c.cue_key = l.cue_key
+            JOIN voice_review_state r ON r.line_id = l.line_id
+            LEFT JOIN voice_assets a ON a.line_id = l.line_id
+            LEFT JOIN director_trigger_rules t ON t.cue_key = c.cue_key
+            ORDER BY c.project_title, c.scope, c.domain, c.event_path_json, l.file_name
+            """
+        ).fetchall()
+
+    snapshot = {"lines": []}
+    for row in rows:
+        status, file_size = asset_status_for(row["audio_path"])
+        snapshot["lines"].append(
+            {
+                "id": row["line_id"],
+                "candidateId": row["line_id"],
+                "cueKey": row["cue_key"],
+                "projectId": row["game_id"],
+                "projectTitle": row["project_title"],
+                "groupId": row["group_id"],
+                "groupTitle": row["group_title"],
+                "scope": row["scope"],
+                "domain": row["domain"],
+                "eventPath": parse_json_cell(row["event_path_json"], []),
+                "fileName": row["file_name"],
+                "audioPath": row["audio_path"],
+                "sourceText": row["source_text"],
+                "transcript": row["transcript"],
+                "status": row["status"],
+                "tags": parse_json_cell(row["tags_json"], []),
+                "tone": row["tone"] or "",
+                "audience": row["audience"] or "",
+                "visibility": row["visibility"] or "",
+                "assetStatus": status,
+                "fileSize": file_size,
+                "triggerMode": row["trigger_mode"] or "manual",
+                "triggerPhase": row["trigger_phase"] or "",
+                "triggerEventKey": row["trigger_event_key"] or "",
+                "triggerPriority": row["trigger_priority"] if row["trigger_priority"] is not None else 100,
+                "triggerEnabled": row["trigger_enabled"] != 0,
+            }
+        )
+    return flatten_db_lines(snapshot)
+
+
+def next_line_number(conn: sqlite3.Connection, cue_key: str) -> int:
+    rows = conn.execute("SELECT file_name FROM voice_lines WHERE cue_key = ?", (cue_key,)).fetchall()
+    used: list[int] = []
+    for row in rows:
+        match = re.match(r"line-(\d+)\.mp3$", str(row["file_name"] or ""), flags=re.IGNORECASE)
+        if match:
+            used.append(int(match.group(1)))
+    return max(used, default=0) + 1
+
+
+def create_local_cue(
+    *,
+    scope: str,
+    domain: str,
+    event: str,
+    subevent: str,
+    title: str,
+    transcript: str,
+    trigger_mode: str,
+    trigger_phase: str,
+    trigger_event_key: str,
+    priority: int,
+) -> dict:
+    clean_scope = clean_segment(scope)
+    clean_domain = clean_segment(domain)
+    event_path = normalize_event_path([event, *str(subevent or "").split(".")])
+    if clean_scope not in {"phase", "global", "cross"}:
+        raise ValueError("Scope must be phase, global, or cross.")
+    if not clean_domain:
+        raise ValueError("Phase / Domain is required.")
+    if not event_path:
+        raise ValueError("Event is required.")
+    cue_key = cue_key_for(clean_scope, clean_domain, event_path)
+    timestamp = now_ms()
+    with db_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO voice_cues (
+              cue_key, game_id, project_title, group_id, title, scope, domain, event_path_json, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(cue_key) DO UPDATE SET
+              title = excluded.title,
+              scope = excluded.scope,
+              domain = excluded.domain,
+              event_path_json = excluded.event_path_json,
+              updated_at = excluded.updated_at
+            """,
+            (
+                cue_key,
+                "cosmic-trivia",
+                "Cosmic Trivia",
+                f"cosmic-trivia:director:{cue_key}",
+                title.strip() or cue_key,
+                clean_scope,
+                clean_domain,
+                json.dumps(event_path),
+                timestamp,
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO director_trigger_rules (
+              cue_key, trigger_mode, phase, event_key, priority, enabled, updated_at
+            ) VALUES (?, ?, ?, ?, ?, 1, ?)
+            ON CONFLICT(cue_key) DO UPDATE SET
+              trigger_mode = excluded.trigger_mode,
+              phase = excluded.phase,
+              event_key = excluded.event_key,
+              priority = excluded.priority,
+              enabled = excluded.enabled,
+              updated_at = excluded.updated_at
+            """,
+            (
+                cue_key,
+                trigger_mode if trigger_mode in {"manual", "phase-entry", "event-match", "fallback-only"} else "manual",
+                trigger_phase.strip() or (clean_domain if clean_scope == "phase" else ""),
+                trigger_event_key.strip(),
+                int(priority or 100),
+                timestamp,
+            ),
+        )
+        conn.commit()
+    line = create_local_line(cue_key, transcript)
+    return {"cueKey": cue_key, **line}
+
+
+def create_local_line(cue_key: str, transcript: str) -> dict:
+    timestamp = now_ms()
+    with db_connection() as conn:
+        cue = conn.execute("SELECT * FROM voice_cues WHERE cue_key = ?", (cue_key,)).fetchone()
+        if not cue:
+            raise ValueError(f"Unknown cue: {cue_key}")
+        event_path = parse_json_cell(cue["event_path_json"], [])
+        line_number = next_line_number(conn, cue_key)
+        file_name = f"line-{line_number:02d}.mp3"
+        line_id = f"{cue_key}.line-{line_number:02d}"
+        audio_path = f"/games/{cue['game_id']}/audio/host/director/{cue['scope']}/{cue['domain']}/{'/'.join(event_path)}/{file_name}"
+        conn.execute(
+            """
+            INSERT INTO voice_lines (
+              line_id, cue_key, game_id, kind, file_name, audio_path, source_text, source_text_hash,
+              tone, audience, visibility, active, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+            """,
+            (
+                line_id,
+                cue_key,
+                cue["game_id"],
+                "director-candidate",
+                file_name,
+                audio_path,
+                transcript,
+                text_hash(transcript),
+                "witty",
+                "host",
+                "public-safe",
+                timestamp,
+            ),
+        )
+        conn.execute(
+            """
+            INSERT INTO voice_review_state (line_id, status, tags_json, transcript, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (line_id, "unreviewed", json.dumps(["regenerate"]), transcript, timestamp),
+        )
+        update_asset_record(conn, line_id, audio_path, transcript, "missing-file")
+        conn.commit()
+    mirror_review_state_candidate(line_id, transcript=transcript, tags=["regenerate"], status="unreviewed")
+    build_runtime_manifest()
+    return {"lineId": line_id, "fileName": file_name, "audioPath": audio_path}
+
+
+def save_local_transcript(line_id: str, transcript: str) -> dict:
+    with db_connection() as conn:
+        existing = conn.execute("SELECT line_id FROM voice_lines WHERE line_id = ?", (line_id,)).fetchone()
+        if not existing:
+            raise ValueError(f"Unknown voice line: {line_id}")
+        current = conn.execute("SELECT tags_json, status FROM voice_review_state WHERE line_id = ?", (line_id,)).fetchone()
+        tags = normalize_tags(parse_json_cell(current["tags_json"], []) if current else [])
+        if "regenerate" not in tags:
+            tags.append("regenerate")
+        status = "unreviewed" if not current or current["status"] == "approved" else current["status"]
+        conn.execute(
+            """
+            INSERT INTO voice_review_state (line_id, status, tags_json, transcript, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(line_id) DO UPDATE SET
+              status = excluded.status,
+              tags_json = excluded.tags_json,
+              transcript = excluded.transcript,
+              updated_at = excluded.updated_at
+            """,
+            (line_id, status or "unreviewed", json.dumps(tags), transcript, int(__import__("time").time() * 1000)),
+        )
+        conn.commit()
+    mirror_review_state_candidate(line_id, transcript=transcript, tags=tags, status=status or "unreviewed")
+    return {"lineId": line_id, "transcript": transcript, "tags": tags, "status": status or "unreviewed"}
+
+
+def save_local_review(line_id: str, *, status: str) -> dict:
+    clean_status = normalize_review_status(status)
+    with db_connection() as conn:
+        existing = conn.execute(
+            """
+            SELECT r.transcript, r.tags_json
+            FROM voice_lines l
+            JOIN voice_review_state r ON r.line_id = l.line_id
+            WHERE l.line_id = ?
+            """,
+            (line_id,),
+        ).fetchone()
+        if not existing:
+            raise ValueError(f"Unknown voice line: {line_id}")
+        conn.execute(
+            """
+            UPDATE voice_review_state
+            SET status = ?, updated_at = ?
+            WHERE line_id = ?
+            """,
+            (clean_status, now_ms(), line_id),
+        )
+        conn.commit()
+    tags = normalize_tags(parse_json_cell(existing["tags_json"], []))
+    mirror_review_state_candidate(line_id, transcript=existing["transcript"], tags=tags, status=clean_status)
+    return {"lineId": line_id, "status": clean_status}
+
+
+def mirror_review_state_candidate(line_id: str, transcript: str, tags: list[str], status: str) -> None:
+    state = read_json_file(REVIEW_STATE_PATH)
+    if not state:
+        state = {"groups": {}, "candidates": {}, "customTags": []}
+    state.setdefault("groups", {})
+    state.setdefault("candidates", {})
+    state.setdefault("customTags", [])
+    candidate = state["candidates"].setdefault(line_id, {"id": line_id, "notes": []})
+    candidate["status"] = status
+    candidate["tags"] = tags
+    candidate["transcript"] = transcript
+    candidate["transcriptSegments"] = split_voice_text(transcript)
+    candidate["updatedAt"] = int(__import__("time").time() * 1000)
+    if "regenerate" in tags and "regenerate" not in state["customTags"]:
+        state["customTags"].append("regenerate")
+        state["customTags"] = sorted(set(state["customTags"]))
+    REVIEW_STATE_PATH.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", "utf-8")
+
+
+def update_asset_record(conn: sqlite3.Connection, line_id: str, audio_path: str, text: str, status: str) -> None:
+    file_path = audio_path_to_file_path(audio_path)
+    file_size = file_path.stat().st_size if file_path.exists() else None
+    conn.execute(
+        """
+        INSERT INTO voice_assets (line_id, audio_path, file_hash, file_size, text_hash, asset_status, checked_at)
+        VALUES (?, ?, NULL, ?, NULL, ?, ?)
+        ON CONFLICT(line_id) DO UPDATE SET
+          audio_path = excluded.audio_path,
+          file_size = excluded.file_size,
+          asset_status = excluded.asset_status,
+          checked_at = excluded.checked_at
+        """,
+        (line_id, audio_path, file_size, status, int(__import__("time").time() * 1000)),
+    )
+
+
+def generate_speech(api_key: str, base_url: str, voice_id: str, model_id: str, output_format: str, text: str, voice_settings: dict) -> bytes:
+    payload = {
+        "text": text,
+        "model_id": model_id,
+    }
+    if voice_settings:
+        payload["voice_settings"] = voice_settings
+    body = json.dumps(payload).encode("utf-8")
+    req = request.Request(
+        f"{base_url}/v1/text-to-speech/{voice_id}?output_format={output_format}",
+        data=body,
+        method="POST",
+        headers={
+            "xi-api-key": api_key,
+            "Content-Type": "application/json",
+        },
+    )
+    with request.urlopen(req, timeout=60 * 10, context=create_https_context()) as response:
+        return response.read()
+
+
+def build_runtime_manifest() -> str:
+    result = subprocess.run(
+        ["node", "scripts/build-cosmic-trivia-director-cues.js"],
+        cwd=PROJECT_ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr or result.stdout or "Runtime manifest build failed")
+    return result.stdout.strip()
+
+
+def generate_local_marked(api_key: str, voice_id_override: str = "") -> dict:
+    manifest = read_json_file(MANIFEST_PATH)
+    base_url = str(__import__("os").environ.get("ELEVENLABS_BASE_URL") or "https://api.elevenlabs.io").rstrip("/")
+    model_id = str(__import__("os").environ.get("ELEVENLABS_MODEL_ID") or manifest.get("modelId") or "eleven_v3")
+    output_format = str(__import__("os").environ.get("ELEVENLABS_OUTPUT_FORMAT") or manifest.get("outputFormat") or "mp3_44100_128")
+    voice_settings = manifest.get("voiceSettings") or {}
+    default_voice_id = voice_id_override or str(manifest.get("voiceId") or "")
+    if not api_key:
+        raise ValueError("Missing API key. Add it in the API Key field.")
+    if not default_voice_id:
+        raise ValueError("Missing Voice ID. Add a Voice ID override or set one in the manifest.")
+
+    generated: list[dict] = []
+    skipped: list[dict] = []
+    with db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT l.line_id, l.audio_path, l.file_name, r.transcript, r.tags_json, a.asset_status
+            FROM voice_lines l
+            JOIN voice_review_state r ON r.line_id = l.line_id
+            LEFT JOIN voice_assets a ON a.line_id = l.line_id
+            WHERE r.status = 'pending'
+            ORDER BY l.line_id
+            """
+        ).fetchall()
+        for row in rows:
+            line_id = row["line_id"]
+            text = row["transcript"].strip()
+            if not split_voice_text(text):
+                skipped.append({"id": line_id, "reason": "missing-text"})
+                continue
+            if has_test_marker(line_id, row["file_name"], text):
+                skipped.append({"id": line_id, "reason": "test-sample"})
+                continue
+            output_path = audio_path_to_file_path(row["audio_path"])
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            audio = generate_speech(
+                api_key=api_key,
+                base_url=base_url,
+                voice_id=default_voice_id,
+                model_id=model_id,
+                output_format=output_format,
+                text=text,
+                voice_settings=voice_settings,
+            )
+            output_path.write_bytes(audio)
+            tags = [tag for tag in normalize_tags(parse_json_cell(row["tags_json"], [])) if tag != "regenerate"]
+            conn.execute(
+                """
+                UPDATE voice_review_state
+                SET status = ?, tags_json = ?, updated_at = ?
+                WHERE line_id = ?
+                """,
+                ("pending", json.dumps(tags), int(__import__("time").time() * 1000), line_id),
+            )
+            update_asset_record(conn, line_id, row["audio_path"], text, "ready")
+            mirror_review_state_candidate(line_id, transcript=text, tags=tags, status="pending")
+            generated.append({"id": line_id, "outputPath": str(output_path)})
+        conn.commit()
+    manifest_log = build_runtime_manifest() if generated else ""
+    return {"generated": generated, "skipped": skipped, "manifestLog": manifest_log}
 
 
 class VoiceLibraryGeneratorApp(tk.Tk):
@@ -175,13 +819,23 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         self.task_queue: queue.Queue[tuple[str, object]] = queue.Queue()
         self.busy = False
+        self.preview_process: subprocess.Popen | None = None
         self.catalog: dict = {}
         self.review_state: dict = {}
+        self.all_targets: list[TargetRow] = []
         self.targets: list[TargetRow] = []
         self.row_map: dict[str, TargetRow] = {}
         self.settings = load_settings()
         self.api_key_var = tk.StringVar(value=self.settings.get("apiKey", ""))
         self.voice_id_var = tk.StringVar(value=self.settings.get("voiceId", ""))
+        self.review_status_var = tk.StringVar(value="unreviewed")
+        self.project_filter_var = tk.StringVar(value="All")
+        self.scope_filter_var = tk.StringVar(value="All")
+        self.domain_filter_var = tk.StringVar(value="All")
+        self.event_filter_var = tk.StringVar(value="All")
+        self.subevent_filter_var = tk.StringVar(value="All")
+        self.status_filter_var = tk.StringVar(value="All")
+        self.regenerate_only_var = tk.BooleanVar(value=DEFAULT_REGENERATE_ONLY)
 
         self._build_styles()
         self._build_ui()
@@ -197,12 +851,14 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         style.configure("Header.TLabel", font=("Helvetica", 20, "bold"))
         style.configure("Subtle.TLabel", foreground="#666666")
         style.configure("Accent.TButton", font=("Helvetica", 11, "bold"))
+        style.configure("Status.TButton", padding=(8, 4))
+        style.configure("StatusActive.TButton", padding=(8, 4), font=("Helvetica", 10, "bold"))
         style.configure("Treeview", rowheight=30)
         style.configure("Treeview.Heading", font=("Helvetica", 10, "bold"))
 
     def _build_ui(self) -> None:
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(2, weight=1)
+        self.rowconfigure(3, weight=1)
 
         top = ttk.Frame(self, padding=(16, 14, 16, 8))
         top.grid(row=0, column=0, sticky="ew")
@@ -220,7 +876,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         button_row.grid(row=0, column=1, rowspan=2, sticky="e")
         self.refresh_button = ttk.Button(button_row, text="Refresh", command=self.refresh_data)
         self.refresh_button.grid(row=0, column=0, padx=(0, 8))
-        self.generate_button = ttk.Button(button_row, text="Generate marked voices", style="Accent.TButton", command=self.generate_marked)
+        self.generate_button = ttk.Button(button_row, text="Generate pending voices", style="Accent.TButton", command=self.generate_marked)
         self.generate_button.grid(row=0, column=1, padx=(0, 8))
         ttk.Button(button_row, text="Open Voice Library", command=lambda: webbrowser.open(VOICE_LIBRARY_URL)).grid(row=0, column=2)
 
@@ -238,8 +894,51 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         api_entry.bind("<FocusOut>", lambda _event: self.save_settings())
         voice_entry.bind("<FocusOut>", lambda _event: self.save_settings())
 
+        filter_row = ttk.Frame(top)
+        filter_row.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(12, 0))
+        for index in (1, 3, 5, 7):
+            filter_row.columnconfigure(index, weight=1)
+
+        ttk.Label(filter_row, text="Project").grid(row=0, column=0, sticky="w", padx=(0, 6))
+        self.project_filter = ttk.Combobox(filter_row, textvariable=self.project_filter_var, state="readonly", values=["All"])
+        self.project_filter.grid(row=0, column=1, sticky="ew", padx=(0, 12))
+
+        ttk.Label(filter_row, text="Scope").grid(row=0, column=2, sticky="w", padx=(0, 6))
+        self.scope_filter = ttk.Combobox(filter_row, textvariable=self.scope_filter_var, state="readonly", values=["All"])
+        self.scope_filter.grid(row=0, column=3, sticky="ew", padx=(0, 12))
+
+        ttk.Label(filter_row, text="Phase / Domain").grid(row=0, column=4, sticky="w", padx=(0, 6))
+        self.domain_filter = ttk.Combobox(filter_row, textvariable=self.domain_filter_var, state="readonly", values=["All"])
+        self.domain_filter.grid(row=0, column=5, sticky="ew", padx=(0, 12))
+
+        ttk.Label(filter_row, text="Event").grid(row=0, column=6, sticky="w", padx=(0, 6))
+        self.event_filter = ttk.Combobox(filter_row, textvariable=self.event_filter_var, state="readonly", values=["All"])
+        self.event_filter.grid(row=0, column=7, sticky="ew", padx=(0, 12))
+
+        ttk.Label(filter_row, text="Subevent").grid(row=1, column=0, sticky="w", padx=(0, 6), pady=(8, 0))
+        self.subevent_filter = ttk.Combobox(filter_row, textvariable=self.subevent_filter_var, state="readonly", values=["All"])
+        self.subevent_filter.grid(row=1, column=1, sticky="ew", padx=(0, 12), pady=(8, 0))
+
+        ttk.Label(filter_row, text="Status").grid(row=1, column=2, sticky="w", padx=(0, 6), pady=(8, 0))
+        status_filter_buttons = ttk.Frame(filter_row)
+        status_filter_buttons.grid(row=1, column=3, sticky="ew", padx=(0, 12), pady=(8, 0))
+        self.status_filter_buttons: dict[str, ttk.Button] = {}
+        for index, status in enumerate(("All", *REVIEW_STATUS_OPTIONS)):
+            button = ttk.Button(
+                status_filter_buttons,
+                text=status,
+                style="Status.TButton",
+                command=lambda value=status: self.set_status_filter(value),
+            )
+            button.grid(row=0, column=index, sticky="ew", padx=(0, 4))
+            self.status_filter_buttons[status] = button
+
+        ttk.Checkbutton(filter_row, text="Regenerate only", variable=self.regenerate_only_var, command=self._apply_filters).grid(row=1, column=4, columnspan=2, sticky="w", pady=(8, 0))
+        for combo in (self.project_filter, self.scope_filter, self.domain_filter, self.event_filter, self.subevent_filter):
+            combo.bind("<<ComboboxSelected>>", lambda _event: self._on_filter_changed())
+
         self.main = ttk.Panedwindow(self, orient=tk.HORIZONTAL)
-        self.main.grid(row=2, column=0, sticky="nsew", padx=16, pady=(0, 12))
+        self.main.grid(row=3, column=0, sticky="nsew", padx=16, pady=(0, 12))
 
         left = ttk.Frame(self.main, padding=12)
         right = ttk.Notebook(self.main)
@@ -251,28 +950,35 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         table_header = ttk.Frame(left)
         table_header.grid(row=0, column=0, sticky="ew", pady=(0, 8))
-        ttk.Label(table_header, text="Marked for regeneration", font=("Helvetica", 13, "bold")).grid(row=0, column=0, sticky="w")
-        ttk.Label(table_header, text="Rows tagged regenerate, plus anything the server will skip because it's test data or missing text.", style="Subtle.TLabel").grid(row=1, column=0, sticky="w", pady=(2, 0))
+        ttk.Label(table_header, text="Voice lines", font=("Helvetica", 13, "bold")).grid(row=0, column=0, sticky="w")
+        ttk.Label(table_header, text="Browse, edit, review, and generate local SQLite voice lines.", style="Subtle.TLabel").grid(row=1, column=0, sticky="w", pady=(2, 0))
 
         table_frame = ttk.Frame(left)
         table_frame.grid(row=1, column=0, sticky="nsew")
         table_frame.columnconfigure(0, weight=1)
         table_frame.rowconfigure(0, weight=1)
 
-        columns = ("project", "group", "title", "text", "status", "skip")
+        columns = ("project", "scope", "domain", "event", "subevent", "title", "text", "review", "asset")
         self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse")
         self.tree.heading("project", text="Project")
-        self.tree.heading("group", text="Group")
-        self.tree.heading("title", text="Voice")
+        self.tree.heading("scope", text="Scope")
+        self.tree.heading("domain", text="Phase / Domain")
+        self.tree.heading("event", text="Event")
+        self.tree.heading("subevent", text="Subevent")
+        self.tree.heading("title", text="Cue note")
         self.tree.heading("text", text="Transcript")
-        self.tree.heading("status", text="State")
-        self.tree.heading("skip", text="Preview")
-        self.tree.column("project", width=150, anchor="w")
-        self.tree.column("group", width=180, anchor="w")
-        self.tree.column("title", width=210, anchor="w")
-        self.tree.column("text", width=380, anchor="w")
-        self.tree.column("status", width=90, anchor="w")
-        self.tree.column("skip", width=130, anchor="w")
+        self.tree.heading("review", text="Review")
+        self.tree.heading("asset", text="Asset")
+
+        self.tree.column("project", width=130, anchor="w")
+        self.tree.column("scope", width=80, anchor="w")
+        self.tree.column("domain", width=140, anchor="w")
+        self.tree.column("event", width=110, anchor="w")
+        self.tree.column("subevent", width=130, anchor="w")
+        self.tree.column("title", width=180, anchor="w")
+        self.tree.column("text", width=460, anchor="w")
+        self.tree.column("review", width=100, anchor="w")
+        self.tree.column("asset", width=100, anchor="w")
         self.tree.grid(row=0, column=0, sticky="nsew")
 
         yscroll = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=self.tree.yview)
@@ -290,10 +996,43 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         right_detail.columnconfigure(0, weight=1)
         right_detail.rowconfigure(1, weight=1)
-        ttk.Label(right_detail, text="Selected candidate", font=("Helvetica", 13, "bold")).grid(row=0, column=0, sticky="w")
-        self.detail_text = scrolledtext.ScrolledText(right_detail, wrap=tk.WORD, height=20, font=("Helvetica", 11))
+        right_detail.rowconfigure(3, weight=2)
+        right_detail.rowconfigure(4, weight=0)
+        ttk.Label(right_detail, text="Selected voice line", font=("Helvetica", 13, "bold")).grid(row=0, column=0, sticky="w")
+        self.detail_text = scrolledtext.ScrolledText(right_detail, wrap=tk.WORD, height=10, font=("Helvetica", 11))
         self.detail_text.grid(row=1, column=0, sticky="nsew", pady=(8, 0))
         self.detail_text.configure(state="disabled")
+
+        editor_header = ttk.Frame(right_detail)
+        editor_header.grid(row=2, column=0, sticky="ew", pady=(12, 4))
+        editor_header.columnconfigure(0, weight=1)
+        ttk.Label(editor_header, text="Editable transcript", font=("Helvetica", 12, "bold")).grid(row=0, column=0, columnspan=3, sticky="w")
+        self.play_button = ttk.Button(editor_header, text="Play", command=self.play_selected_audio)
+        self.play_button.grid(row=1, column=0, sticky="ew", padx=(0, 6), pady=(6, 0))
+        self.stop_button = ttk.Button(editor_header, text="Stop", command=self.stop_preview_audio)
+        self.stop_button.grid(row=1, column=1, sticky="ew", padx=(0, 6), pady=(6, 0))
+        self.add_line_button = ttk.Button(editor_header, text="Add line to cue", command=self.add_line_to_selected_cue)
+        self.add_line_button.grid(row=1, column=2, sticky="ew", padx=(0, 6), pady=(6, 0))
+        self.add_cue_button = ttk.Button(editor_header, text="Add new cue", command=self.add_new_cue)
+        self.add_cue_button.grid(row=2, column=0, sticky="ew", padx=(0, 6), pady=(6, 0))
+        self.save_text_button = ttk.Button(editor_header, text="Save text + mark regenerate", command=self.save_selected_text)
+        self.save_text_button.grid(row=2, column=1, columnspan=2, sticky="ew", padx=(0, 6), pady=(6, 0))
+        self.transcript_editor = scrolledtext.ScrolledText(right_detail, wrap=tk.WORD, height=8, font=("Helvetica", 12))
+        self.transcript_editor.grid(row=3, column=0, sticky="nsew")
+
+        review_controls = ttk.LabelFrame(right_detail, text="Review status", padding=10)
+        review_controls.grid(row=4, column=0, sticky="ew", pady=(10, 0))
+        ttk.Label(review_controls, text="Status").grid(row=0, column=0, sticky="w", padx=(0, 6))
+        self.review_status_buttons: dict[str, ttk.Button] = {}
+        for index, status in enumerate(REVIEW_STATUS_OPTIONS, start=1):
+            button = ttk.Button(
+                review_controls,
+                text=status,
+                style="Status.TButton",
+                command=lambda value=status: self.save_selected_review(value),
+            )
+            button.grid(row=0, column=index, sticky="ew", padx=(0, 6))
+            self.review_status_buttons[status] = button
 
         right_log.columnconfigure(0, weight=1)
         right_log.rowconfigure(1, weight=1)
@@ -304,13 +1043,20 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         self.status_var = tk.StringVar(value="Ready.")
         status_bar = ttk.Label(self, textvariable=self.status_var, padding=(16, 6))
-        status_bar.grid(row=3, column=0, sticky="ew")
+        status_bar.grid(row=4, column=0, sticky="ew")
 
     def _set_busy(self, busy: bool, message: str | None = None) -> None:
         self.busy = busy
         state = tk.DISABLED if busy else tk.NORMAL
         self.refresh_button.configure(state=state)
         self.generate_button.configure(state=state)
+        self.save_text_button.configure(state=state)
+        for button in self.review_status_buttons.values():
+            button.configure(state=state)
+        self.play_button.configure(state=state)
+        self.stop_button.configure(state=state)
+        self.add_line_button.configure(state=state)
+        self.add_cue_button.configure(state=state)
         if message is not None:
             self.status_var.set(message)
 
@@ -338,6 +1084,21 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.detail_text.insert("end", text)
         self.detail_text.configure(state="disabled")
 
+    def _update_review_status_buttons(self, status: str) -> None:
+        current = normalize_review_status(status)
+        for value, button in self.review_status_buttons.items():
+            button.configure(style="StatusActive.TButton" if value == current else "Status.TButton")
+
+    def _update_status_filter_buttons(self) -> None:
+        current = self.status_filter_var.get()
+        for value, button in self.status_filter_buttons.items():
+            button.configure(style="StatusActive.TButton" if value == current else "Status.TButton")
+
+    def set_status_filter(self, status: str) -> None:
+        self.status_filter_var.set(status if status == "All" else normalize_review_status(status))
+        self._update_status_filter_buttons()
+        self._on_filter_changed()
+
     def _poll_queue(self) -> None:
         try:
             while True:
@@ -345,12 +1106,24 @@ class VoiceLibraryGeneratorApp(tk.Tk):
                 if kind == "refresh-ok":
                     self.catalog = payload["catalog"]
                     self.review_state = payload["review_state"]
-                    self.targets = payload["targets"]
-                    self.row_map = {row.candidate_id: row for row in self.targets}
-                    self._render_rows()
+                    self.all_targets = payload["targets"]
+                    self._update_filter_options()
+                    self._apply_filters()
                     self._update_summary()
                     self._set_busy(False, payload.get("message", "Ready."))
                     self._append_log(payload.get("log", "Refreshed the library snapshot."))
+                elif kind == "save-ok":
+                    self._append_log(payload.get("log", "Saved transcript."))
+                    self._set_busy(False, payload.get("message", "Text saved."))
+                    self.refresh_data()
+                elif kind == "review-ok":
+                    self._append_log(payload.get("log", "Saved review."))
+                    self._set_busy(False, payload.get("message", "Review saved."))
+                    self.refresh_data()
+                elif kind == "create-ok":
+                    self._append_log(payload.get("log", "Created voice line."))
+                    self._set_busy(False, payload.get("message", "Voice line created."))
+                    self.refresh_data()
                 elif kind == "generate-ok":
                     self._append_log(payload["log"])
                     self._set_busy(False, payload.get("message", "Ready."))
@@ -364,37 +1137,110 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.after(200, self._poll_queue)
 
     def _update_summary(self) -> None:
-        total = len(self.targets)
-        ready = sum(1 for row in self.targets if not row.skip_reason)
-        skipped = total - ready
+        total = len(self.all_targets)
+        shown = len(self.targets)
+        marked = sum(1 for row in self.all_targets if "regenerate" in row.tags)
+        ready = sum(1 for row in self.all_targets if "regenerate" in row.tags and not row.skip_reason)
+        skipped = marked - ready
         if total == 0:
-            self.summary_var.set("No marked voices found. Mark child items with regenerate in Voice Library, then come back here.")
+            self.summary_var.set("No voice lines found. Check the local SQLite database.")
         else:
-            self.summary_var.set(f"{total} marked voices found • {ready} ready to generate • {skipped} will be skipped by preview")
+            self.summary_var.set(f"{shown} shown • {total} total voice lines • {marked} marked regenerate • {ready} ready • {skipped} skipped")
+
+    def _update_filter_options(self) -> None:
+        current = {
+            "project": self.project_filter_var.get(),
+            "scope": self.scope_filter_var.get(),
+            "domain": self.domain_filter_var.get(),
+            "event": self.event_filter_var.get(),
+            "subevent": self.subevent_filter_var.get(),
+            "status": self.status_filter_var.get(),
+        }
+        for _attempt in range(2):
+            options = filter_options_for_selection(
+                self.all_targets,
+                project=current["project"],
+                scope=current["scope"],
+                domain=current["domain"],
+                event=current["event"],
+                status=current["status"],
+            )
+            self.project_filter.configure(values=options["project"])
+            self.scope_filter.configure(values=options["scope"])
+            self.domain_filter.configure(values=options["domain"])
+            self.event_filter.configure(values=options["event"])
+            self.subevent_filter.configure(values=options["subevent"])
+            changed = False
+            for key, variable in (
+                ("project", self.project_filter_var),
+                ("scope", self.scope_filter_var),
+                ("domain", self.domain_filter_var),
+                ("event", self.event_filter_var),
+                ("subevent", self.subevent_filter_var),
+                ("status", self.status_filter_var),
+            ):
+                if current[key] not in options[key]:
+                    variable.set("All")
+                    current[key] = "All"
+                    changed = True
+            if not changed:
+                break
+        self._update_status_filter_buttons()
+
+    def _on_filter_changed(self) -> None:
+        self._update_filter_options()
+        self._apply_filters()
+
+    def _apply_filters(self) -> None:
+        project = self.project_filter_var.get()
+        scope = self.scope_filter_var.get()
+        domain = self.domain_filter_var.get()
+        event = self.event_filter_var.get()
+        subevent = self.subevent_filter_var.get()
+        status = self.status_filter_var.get()
+        regenerate_only = self.regenerate_only_var.get()
+        self.targets = filter_rows_for_selection(
+            self.all_targets,
+            project=project,
+            scope=scope,
+            domain=domain,
+            event=event,
+            subevent=subevent,
+            status=status,
+            regenerate_only=regenerate_only,
+        )
+        self.row_map = {row.candidate_id: row for row in self.targets}
+        self._render_rows()
+        self._update_summary()
 
     def _render_rows(self) -> None:
         for item in self.tree.get_children():
             self.tree.delete(item)
 
         for row in self.targets:
-            preview = row.skip_reason or f"{len(split_voice_text(row.display_text))} segment(s)"
+            review_status = normalize_review_status(row.status)
             self.tree.insert(
                 "",
                 "end",
                 iid=row.candidate_id,
                 values=(
                     row.project_title,
-                    truncate(row.group_title, 32),
-                    truncate(row.candidate_label or row.candidate_title or row.file_name, 42),
+                    row.scope,
+                    row.domain,
+                    truncate(row.event_name, 24),
+                    truncate(row.subevent_label, 28),
+                    truncate(row.group_title, 40),
                     truncate(row.display_text, 88),
-                    row.status,
-                    preview,
+                    review_status,
+                    row.asset_status,
                 ),
+                tags=(review_status, "skip") if row.skip_reason else (review_status,),
             )
-            if row.skip_reason:
-                self.tree.item(row.candidate_id, tags=("skip",))
 
         self.tree.tag_configure("skip", foreground="#8a8a8a")
+        self.tree.tag_configure("pending", background="#eef4ff")
+        self.tree.tag_configure("approved", background="#eff8f0")
+        self.tree.tag_configure("unreviewed", background="#ffffff")
 
         if self.tree.get_children():
             first = self.tree.get_children()[0]
@@ -402,7 +1248,8 @@ class VoiceLibraryGeneratorApp(tk.Tk):
             self.tree.focus(first)
             self._show_row_detail(first)
         else:
-            self._set_detail("No marked voice candidates found.")
+            self._set_detail("No voice lines found.")
+            self.transcript_editor.delete("1.0", "end")
 
     def _show_row_detail(self, candidate_id: str) -> None:
         row = self.row_map.get(candidate_id)
@@ -412,12 +1259,17 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         segments = split_voice_text(row.display_text)
         detail = [
-            f"Candidate ID: {row.candidate_id}",
+            f"Line ID: {row.candidate_id}",
             f"Project: {row.project_title}",
-            f"Group: {row.group_title}",
+            f"Cue: {row.cue_key}",
+            f"Cue note: {row.group_title}",
+            f"Scope: {row.scope}",
+            f"Domain: {row.domain}",
+            f"Event path: {row.event_label}",
+            f"Trigger: {row.trigger_mode} phase={row.trigger_phase or '-'} event={row.trigger_event_key or '-'} priority={row.trigger_priority} enabled={row.trigger_enabled}",
             f"File: {row.file_name}",
-            f"State: {row.status}",
-            f"Tags: {', '.join(row.tags) or 'none'}",
+            f"State: {normalize_review_status(row.status)}",
+            f"Asset: {row.asset_status}",
             f"Preview: {row.skip_reason or 'ready'}",
             "",
             "Transcript:",
@@ -428,6 +1280,10 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         if row.skip_reason:
             detail.extend(["", f"Skip reason: {row.skip_reason}"])
         self._set_detail("\n".join(detail))
+        self.transcript_editor.delete("1.0", "end")
+        self.transcript_editor.insert("end", row.display_text)
+        self.review_status_var.set(normalize_review_status(row.status))
+        self._update_review_status_buttons(row.status)
 
     def _on_select_row(self, _event: object) -> None:
         selection = self.tree.selection()
@@ -436,10 +1292,8 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self._show_row_detail(selection[0])
 
     def _fetch_snapshot(self) -> tuple[dict, dict, list[TargetRow]]:
-        review_state = read_json_url(f"{API_BASE}/api/voice-library/state")
-        catalog = read_json_url(f"{API_BASE}/api/voice-library/catalog")
-        targets = flatten_targets(catalog, review_state)
-        return catalog, review_state, targets
+        targets = load_local_lines()
+        return {}, {}, targets
 
     def refresh_data(self) -> None:
         if self.busy:
@@ -458,7 +1312,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
                             "review_state": review_state,
                             "targets": targets,
                             "message": "Snapshot updated.",
-                            "log": f"Loaded {len(targets)} marked candidate(s) from the server.",
+                            "log": f"Loaded {len(targets)} voice line(s) from {DB_PATH}.",
                         },
                     )
                 )
@@ -467,57 +1321,304 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def save_selected_text(self) -> None:
+        if self.busy:
+            return
+        selection = self.tree.selection()
+        if not selection:
+            messagebox.showinfo(APP_TITLE, "Select a voice line before saving text.")
+            return
+        candidate_id = selection[0]
+        transcript = self.transcript_editor.get("1.0", "end").strip()
+        if not transcript:
+            if not messagebox.askyesno(APP_TITLE, "Save an empty transcript? It will be skipped during generation until text is added."):
+                return
+
+        self._set_busy(True, "Saving transcript…")
+        self._append_log(f"Saving transcript for {candidate_id}.")
+
+        def worker() -> None:
+            try:
+                updated = save_local_transcript(candidate_id, transcript)
+                self.task_queue.put(
+                    (
+                        "save-ok",
+                        {
+                            "message": "Transcript saved and marked regenerate.",
+                            "log": f"Saved {updated.get('lineId') or candidate_id}; tags: {', '.join(updated.get('tags') or [])}",
+                        },
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001
+                self.task_queue.put(("error", f"Save failed: {exc}"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def save_selected_review(self, status: str | None = None) -> None:
+        if self.busy:
+            return
+        row = self._selected_row()
+        if not row:
+            messagebox.showinfo(APP_TITLE, "Select a voice line before saving review state.")
+            return
+        status = normalize_review_status(status or self.review_status_var.get())
+        self.review_status_var.set(status)
+        self._update_review_status_buttons(status)
+        self._set_busy(True, "Saving review state…")
+        self._append_log(f"Saving review state for {row.candidate_id}.")
+
+        def worker() -> None:
+            try:
+                updated = save_local_review(row.candidate_id, status=status)
+                self.task_queue.put(
+                    (
+                        "review-ok",
+                        {
+                            "message": "Review state saved.",
+                            "log": f"Saved review for {updated['lineId']}; status: {updated['status']}",
+                        },
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001
+                self.task_queue.put(("error", f"Review save failed: {exc}"))
+
+        threading.Thread(target=worker, daemon=True).start()
+    def stop_preview_audio(self) -> None:
+        process = self.preview_process
+        self.preview_process = None
+        if process and process.poll() is None:
+            process.terminate()
+        self.status_var.set("Preview stopped.")
+
+    def play_selected_audio(self) -> None:
+        row = self._selected_row()
+        if not row:
+            messagebox.showinfo(APP_TITLE, "Select a voice line before previewing audio.")
+            return
+        file_path = audio_path_to_file_path(row.audio_path)
+        if not file_path.exists():
+            message = f"Missing audio file: {file_path}"
+            self.status_var.set(message)
+            self._append_log(message)
+            return
+        self.stop_preview_audio()
+        try:
+            self.preview_process = subprocess.Popen(["afplay", str(file_path)])
+            self.status_var.set(f"Previewing {row.file_name}.")
+        except FileNotFoundError:
+            webbrowser.open(file_path.as_uri())
+            self.status_var.set(f"Opened {row.file_name} with the system player.")
+        except Exception as exc:  # noqa: BLE001
+            messagebox.showerror(APP_TITLE, f"Could not play audio: {exc}")
+
+    def _selected_row(self) -> TargetRow | None:
+        selection = self.tree.selection()
+        if not selection:
+            return None
+        return self.row_map.get(selection[0])
+
+    def _text_dialog(self, title: str, prompt: str, initial: str = "") -> str | None:
+        dialog = tk.Toplevel(self)
+        dialog.title(title)
+        dialog.transient(self)
+        dialog.grab_set()
+        dialog.geometry("560x320")
+        dialog.columnconfigure(0, weight=1)
+        dialog.rowconfigure(1, weight=1)
+        ttk.Label(dialog, text=prompt, padding=(12, 12, 12, 4)).grid(row=0, column=0, sticky="w")
+        text_box = scrolledtext.ScrolledText(dialog, wrap=tk.WORD, height=8, font=("Helvetica", 12))
+        text_box.grid(row=1, column=0, sticky="nsew", padx=12, pady=(0, 8))
+        text_box.insert("end", initial)
+        result: dict[str, str | None] = {"value": None}
+
+        button_row = ttk.Frame(dialog, padding=(12, 0, 12, 12))
+        button_row.grid(row=2, column=0, sticky="e")
+
+        def save() -> None:
+            result["value"] = text_box.get("1.0", "end").strip()
+            dialog.destroy()
+
+        ttk.Button(button_row, text="Cancel", command=dialog.destroy).grid(row=0, column=0, padx=(0, 8))
+        ttk.Button(button_row, text="Create", style="Accent.TButton", command=save).grid(row=0, column=1)
+        text_box.focus_set()
+        self.wait_window(dialog)
+        return result["value"]
+
+    def _cue_dialog(self) -> dict | None:
+        selected = self._selected_row()
+        dialog = tk.Toplevel(self)
+        dialog.title("Add cue + first voice line")
+        dialog.transient(self)
+        dialog.grab_set()
+        dialog.geometry("780x680")
+        dialog.columnconfigure(0, weight=1)
+        dialog.rowconfigure(2, weight=1)
+
+        scope_var = tk.StringVar(value=selected.scope if selected else "phase")
+        domain_var = tk.StringVar(value=selected.domain if selected else "answering")
+        event_var = tk.StringVar(value=selected.event_name if selected else "")
+        subevent_var = tk.StringVar(value=selected.subevent_label if selected else "")
+        title_var = tk.StringVar(value="")
+        trigger_var = tk.StringVar(value="phase-entry")
+        trigger_phase_var = tk.StringVar(value=selected.domain if selected and selected.scope == "phase" else domain_var.get())
+        priority_var = tk.StringVar(value="100")
+
+        help_text = "Create one cue/event category, then add its first voice line."
+        ttk.Label(dialog, text=help_text, wraplength=720, style="Subtle.TLabel").grid(row=0, column=0, sticky="ew", padx=12, pady=(12, 8))
+
+        cue_frame = ttk.LabelFrame(dialog, text="1. Cue / event category", padding=10)
+        cue_frame.grid(row=1, column=0, sticky="ew", padx=12, pady=(0, 10))
+        cue_frame.columnconfigure(1, weight=1)
+
+        line_frame = ttk.LabelFrame(dialog, text="2. First voice line inside this cue", padding=10)
+        line_frame.grid(row=2, column=0, sticky="nsew", padx=12, pady=(0, 10))
+        line_frame.columnconfigure(1, weight=1)
+        line_frame.rowconfigure(1, weight=1)
+
+        fields = [
+            ("Scope", ttk.Combobox(cue_frame, textvariable=scope_var, values=["phase", "global", "cross"], state="readonly")),
+            ("Phase / Domain", ttk.Entry(cue_frame, textvariable=domain_var)),
+            ("Event", ttk.Entry(cue_frame, textvariable=event_var)),
+            ("Subevent", ttk.Entry(cue_frame, textvariable=subevent_var)),
+            ("Cue note", ttk.Entry(cue_frame, textvariable=title_var)),
+            ("Trigger mode", ttk.Combobox(cue_frame, textvariable=trigger_var, values=["phase-entry", "event-match", "manual", "fallback-only"], state="readonly")),
+            ("Trigger phase", ttk.Entry(cue_frame, textvariable=trigger_phase_var)),
+            ("Priority", ttk.Entry(cue_frame, textvariable=priority_var)),
+        ]
+        for index, (label, widget) in enumerate(fields):
+            ttk.Label(cue_frame, text=label).grid(row=index, column=0, sticky="w", padx=(0, 8), pady=5)
+            widget.grid(row=index, column=1, sticky="ew", pady=5)
+
+        field_help = "Tips: Cue note is only for display. Priority controls tie-breaking; lower numbers are chosen first. Event-match uses the cue path above automatically."
+        ttk.Label(cue_frame, text=field_help, wraplength=700, style="Subtle.TLabel").grid(row=len(fields), column=0, columnspan=2, sticky="ew", pady=(6, 0))
+
+        ttk.Label(line_frame, text="First line text").grid(row=0, column=0, sticky="nw", padx=(0, 8), pady=(0, 6))
+        ttk.Label(line_frame, text="This creates line-01 for the cue above. Use Add line to cue later for line-02, line-03, etc.", style="Subtle.TLabel", wraplength=660).grid(row=0, column=1, sticky="ew", pady=(0, 6))
+        text_box = scrolledtext.ScrolledText(line_frame, wrap=tk.WORD, height=7, font=("Helvetica", 12))
+        text_box.grid(row=1, column=0, columnspan=2, sticky="nsew")
+        result: dict[str, dict | None] = {"value": None}
+
+        button_row = ttk.Frame(dialog, padding=(12, 4, 12, 12))
+        button_row.grid(row=3, column=0, sticky="e")
+
+        def create() -> None:
+            try:
+                priority = int(priority_var.get() or "100")
+            except ValueError:
+                messagebox.showerror(APP_TITLE, "Priority must be a number. Lower numbers are chosen first.")
+                return
+            event_path = normalize_event_path([event_var.get(), *str(subevent_var.get() or "").split(".")])
+            trigger_event_key = ""
+            if trigger_var.get() == "event-match" and event_path:
+                trigger_event_key = cue_key_for(clean_segment(scope_var.get()), clean_segment(domain_var.get()), event_path)
+            payload = {
+                "scope": scope_var.get(),
+                "domain": domain_var.get(),
+                "event": event_var.get(),
+                "subevent": subevent_var.get(),
+                "title": title_var.get(),
+                "transcript": text_box.get("1.0", "end").strip(),
+                "trigger_mode": trigger_var.get(),
+                "trigger_phase": trigger_phase_var.get(),
+                "trigger_event_key": trigger_event_key,
+                "priority": priority,
+            }
+            if not payload["transcript"]:
+                messagebox.showerror(APP_TITLE, "First line text is required.")
+                return
+            result["value"] = payload
+            dialog.destroy()
+
+        ttk.Button(button_row, text="Cancel", command=dialog.destroy).grid(row=0, column=0, padx=(0, 8))
+        ttk.Button(button_row, text="Create cue + line", style="Accent.TButton", command=create).grid(row=0, column=1)
+        self.wait_window(dialog)
+        return result["value"]
+
+    def add_line_to_selected_cue(self) -> None:
+        if self.busy:
+            return
+        row = self._selected_row()
+        if not row:
+            messagebox.showinfo(APP_TITLE, "Select an existing cue before adding a line.")
+            return
+        transcript = self._text_dialog("Add line to cue", f"New line for {row.cue_key}", "")
+        if transcript is None:
+            return
+        self._set_busy(True, "Creating voice line…")
+        self._append_log(f"Adding a new line to {row.cue_key}.")
+
+        def worker() -> None:
+            try:
+                created = create_local_line(row.cue_key, transcript)
+                self.task_queue.put(("create-ok", {"message": "Line created and marked regenerate.", "log": f"Created {created['lineId']}"}))
+            except Exception as exc:  # noqa: BLE001
+                self.task_queue.put(("error", f"Create line failed: {exc}"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def add_new_cue(self) -> None:
+        if self.busy:
+            return
+        payload = self._cue_dialog()
+        if not payload:
+            return
+        self._set_busy(True, "Creating cue…")
+        self._append_log("Creating a new cue and first line.")
+
+        def worker() -> None:
+            try:
+                created = create_local_cue(**payload)
+                self.task_queue.put(("create-ok", {"message": "Cue created and marked regenerate.", "log": f"Created {created['cueKey']} / {created['lineId']}"}))
+            except Exception as exc:  # noqa: BLE001
+                self.task_queue.put(("error", f"Create cue failed: {exc}"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
     def generate_marked(self) -> None:
         if self.busy:
             return
-        if not self.targets:
-            messagebox.showinfo(APP_TITLE, "No tagged voices were found to generate.")
+        marked_targets = [row for row in self.all_targets if should_generate_voice_row(row)]
+        if not marked_targets:
+            messagebox.showinfo(APP_TITLE, "No pending voices were found to generate.")
             return
 
-        ready = [row for row in self.targets if not row.skip_reason]
-        skipped = [row for row in self.targets if row.skip_reason]
+        ready = [row for row in marked_targets if not row.skip_reason]
+        skipped = [row for row in marked_targets if row.skip_reason]
         api_key = self.api_key_var.get().strip()
         voice_id = self.voice_id_var.get().strip()
         if not messagebox.askyesno(
             APP_TITLE,
             (
-                f"Generate the {len(self.targets)} marked voice(s) now?\n\n"
+                f"Generate the {len(marked_targets)} pending voice(s) now?\n\n"
                 f"Ready: {len(ready)}\n"
                 f"Skipped by preview: {len(skipped)}\n\n"
                 f"API key: {'set' if api_key else 'server env'}\n"
-                f"Voice ID: {voice_id or 'candidate voice IDs'}\n\n"
-                "The server will re-read your saved Voice Library state, regenerate the tagged items, and mark regenerated items as pending."
+                f"Voice ID: {voice_id or 'line voice IDs'}\n\n"
+                "The tool will read SQLite locally, generate pending items, update file status, and rebuild the runtime manifest."
             ),
         ):
             return
 
         self.save_settings()
-        self._set_busy(True, "Generating marked voices…")
-        self._append_log(f"Starting generation for {len(self.targets)} marked voice(s).")
+        self._set_busy(True, "Generating pending voices…")
+        self._append_log(f"Starting generation for {len(marked_targets)} pending voice(s).")
 
         def worker() -> None:
             try:
-                review_state = read_json_url(f"{API_BASE}/api/voice-library/state")
-                payload: dict[str, object] = {"reviewState": review_state}
-                if api_key:
-                    payload["apiKey"] = api_key
-                if voice_id:
-                    payload["voiceIdOverride"] = voice_id
-                response = post_json_url(
-                    f"{API_BASE}/api/voice-library/regenerate",
-                    payload,
-                )
+                response = generate_local_marked(api_key=api_key, voice_id_override=voice_id)
                 generated = response.get("generated", []) or []
                 skipped_payload = response.get("skipped", []) or []
                 catalog, refreshed_state, targets = self._fetch_snapshot()
                 lines = [
-                    f"Generated {len(generated)} candidate(s).",
-                    f"Skipped {len(skipped_payload)} candidate(s).",
+                    f"Generated {len(generated)} voice line(s).",
+                    f"Skipped {len(skipped_payload)} voice line(s).",
                 ]
                 for item in generated:
                     lines.append(f"Generated: {item.get('id')} -> {item.get('outputPath')}")
                 for item in skipped_payload:
                     lines.append(f"Skipped: {item.get('id')} ({item.get('reason')})")
+                if response.get("manifestLog"):
+                    lines.append(response["manifestLog"])
                 self.task_queue.put(
                     (
                         "generate-ok",
@@ -530,9 +1631,6 @@ class VoiceLibraryGeneratorApp(tk.Tk):
                         },
                     )
                 )
-            except error.HTTPError as exc:
-                details = exc.read().decode("utf-8", errors="ignore") if exc.fp else ""
-                self.task_queue.put(("error", f"Generation failed: HTTP {exc.code} {exc.reason}\n{details}"))
             except Exception as exc:  # noqa: BLE001
                 self.task_queue.put(("error", f"Generation failed: {exc}"))
 

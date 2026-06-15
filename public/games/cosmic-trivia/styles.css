@@ -77,7 +77,9 @@
 }
 
 .director-countdown {
-  --timer-progress: 0;
+  --countdown-duration-ms: 0ms;
+  --countdown-elapsed-ms: 0ms;
+  --countdown-progress: 0;
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -92,7 +94,6 @@
   bottom: 0;
   z-index: -1;
   width: 100%;
-  transform: scaleX(var(--timer-progress));
   transform-origin: left center;
   overflow: hidden;
   background: linear-gradient(90deg,
@@ -102,6 +103,11 @@
   -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 20px), rgba(0, 0, 0, .72) calc(100% - 12px), rgba(0, 0, 0, .34) calc(100% - 5px), transparent 100%);
   mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 20px), rgba(0, 0, 0, .72) calc(100% - 12px), rgba(0, 0, 0, .34) calc(100% - 5px), transparent 100%);
   will-change: transform;
+  animation-name: countdownFillProgress;
+  animation-duration: var(--countdown-duration-ms);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-delay: calc(-1 * var(--countdown-elapsed-ms));
   transition: background .2s ease, filter .2s ease;
 }
 
@@ -121,6 +127,7 @@
   transform: translate3d(-125%, 0, 0) skewX(-8deg);
   animation: countdownFillFlow 5.8s cubic-bezier(.42, 0, .18, 1) infinite;
   will-change: transform;
+  transition: background .2s ease, filter .2s ease;
   pointer-events: none;
 }
 
@@ -129,11 +136,15 @@
   inset: 0 auto 0 0;
   z-index: -1;
   width: 100%;
-  transform: scaleX(var(--timer-progress));
   transform-origin: left center;
   overflow: visible;
   pointer-events: none;
   will-change: transform;
+  animation-name: countdownFillProgress;
+  animation-duration: var(--countdown-duration-ms);
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-delay: calc(-1 * var(--countdown-elapsed-ms));
 }
 
 .director-countdown-glow {
@@ -222,7 +233,21 @@
   }
 }
 
+@keyframes countdownFillProgress {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .director-countdown-fill,
+  .director-countdown-glow-track {
+    animation: none !important;
+    transform: scaleX(var(--countdown-progress));
+  }
   .director-countdown-fill::before {
     animation: none !important;
   }

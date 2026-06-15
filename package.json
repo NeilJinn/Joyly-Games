@@ -10,6 +10,7 @@
     "start": "node server.js",
     "test": "node --test tests/*.test.js",
     "build:trivia": "node scripts/build-cosmic-trivia-pack.js",
+    "build:trivia-director-cues": "node scripts/build-cosmic-trivia-director-cues.js",
     "validate:cosmic-trivia": "node scripts/validate-cosmic-trivia-pack.js",
     "generate:cosmic-trivia-host-audio": "node scripts/generate-cosmic-trivia-host-audio.js",
     "generate:cosmic-trivia-question-audio": "node scripts/generate-cosmic-trivia-question-audio.js"

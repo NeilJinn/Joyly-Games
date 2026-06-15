@@ -5,6 +5,7 @@ import { triviaMotionPacks } from "/jms/src/packs/trivia-packs.js";
 import { setPngLayer } from "/jms/src/runtime/runtime.js";
 import { mountSvgAsset } from "/jms/src/visuals/index.js";
 import { getReactiveAudioPlan } from "/games/cosmic-trivia/audio/director-flow.js";
+import { audioPlanPlaybackKey } from "/games/cosmic-trivia/presentation-audio-keys.js";
 import { getDirectorSegmentPauseMs } from "/shared/director/flow.js";
 
 const TROPHY_BADGE_SRC = "/assets/avatars/events/event-winner-trophy.png";
@@ -13,6 +14,7 @@ const BACKGROUND_MUSIC_LIBRARY_ENDPOINT = "/api/games/cosmic-trivia/music-librar
 const BACKGROUND_MUSIC_VOLUME = 0.45;
 const BACKGROUND_MUSIC_DUCKED_VOLUME = 0.15;
 const BACKGROUND_MUSIC_FADE_MS = 180;
+const DIRECTOR_AUDIO_HEARTBEAT_MS = 1_000;
 
 let jmsReady = null;
 const roomSnapshots = new Map();
@@ -106,20 +108,24 @@ function rankPlayersByScore(room, trivia, previousOrder = null) {
 function snapshotRoom(room, previousSnapshot = null) {
   const trivia = room?.gameState || room?.trivia || {};
   const previousOrder = previousSnapshot ? new Map(previousSnapshot.rankedIds.map((playerId, index) => [playerId, index])) : null;
+  const visibleScores = trivia?.scoreboardVisible ? { ...(trivia.scores || {}) } : {};
   return {
     phase: trivia.phase || "",
     questionId: trivia.currentQuestion?.id || "",
     playCount: Number(trivia.playCount || 1),
     questionIndex: Number(trivia.questionIndex || 0),
     totalQuestions: Number(trivia.totalQuestions || 0),
-    scores: { ...(trivia.scores || {}) },
-    rankedIds: rankPlayersByScore(room, trivia, previousOrder),
+    scores: visibleScores,
+    rankedIds: trivia?.scoreboardVisible ? rankPlayersByScore(room, { ...trivia, scores: visibleScores }, previousOrder) : [],
     correctAnswer: trivia.currentQuestion?.correctAnswer || null,
     questionAudio: trivia.currentQuestion?.questionAudio || "",
     lastResolution: trivia.lastResolution || null,
     answersCount: Number(trivia.answersCount || 0),
     expectedAnswerCount: Number(trivia.expectedAnswerCount || 0),
-    remainingMs: Number(trivia.remainingMs || 0)
+    remainingMs: Number(trivia.remainingMs || 0),
+    scoreVisibility: trivia?.scoreVisibility || "visible",
+    scoreboardVisible: Boolean(trivia?.scoreboardVisible),
+    finalHype: trivia?.finalHype || null
   };
 }
 
@@ -143,7 +149,7 @@ function shouldRevealQuestion(previousSnapshot, nextSnapshot) {
   if (!nextSnapshot.questionId) return false;
   if (!previousSnapshot) return true;
   if (previousSnapshot.questionId !== nextSnapshot.questionId) return true;
-  return previousSnapshot.phase !== "question-audio" && nextSnapshot.phase === "question-audio";
+  return previousSnapshot.phase !== "question-read" && nextSnapshot.phase === "question-read";
 }
 
 async function ensureTriviaJMS() {
@@ -211,23 +217,34 @@ function pickRandomBackgroundMusicSource(previousSrc, sources) {
   return finalPool[Math.floor(Math.random() * finalPool.length)];
 }
 
-function waitForAudioMetadata(audio) {
+function waitForAudioMetadata(audio, timeoutMs = 1200) {
   if (!audio) return Promise.resolve();
   if (Number.isFinite(audio.duration) && audio.duration > 0) return Promise.resolve();
   return new Promise(resolve => {
-    const done = () => resolve();
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      audio.removeEventListener("loadedmetadata", done);
+      audio.removeEventListener("error", done);
+      resolve();
+    };
+    const timeoutId = window.setTimeout(done, Math.max(0, timeoutMs));
     audio.addEventListener("loadedmetadata", done, { once: true });
     audio.addEventListener("error", done, { once: true });
   });
 }
 
-async function notifyDirectorAudioEnded(roomCode, phase, snapshot) {
+async function notifyDirectorAudioStatus(roomCode, phase, snapshot, status) {
   try {
-    await fetch(`/api/rooms/${roomCode}/trivia/director/audio-ended`, {
+    await fetch(`/api/rooms/${roomCode}/trivia/director/audio-status`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         phase,
+        status,
+        playbackKey: snapshot?.playbackKey || "",
         questionId: snapshot?.questionId || "",
         playCount: snapshot?.playCount || 1
       })
@@ -237,10 +254,39 @@ async function notifyDirectorAudioEnded(roomCode, phase, snapshot) {
   }
 }
 
+function clearDirectorAudioHeartbeat(controller) {
+  if (controller?.heartbeatId) {
+    window.clearInterval(controller.heartbeatId);
+    controller.heartbeatId = null;
+  }
+}
+
+function setDirectorAudioStatus(roomCode, plan, snapshot, controller, status) {
+  if (!controller || controller.stopped) return;
+  controller.status = status;
+  if (plan.notifyOnEnd || plan.advanceOnEnd) {
+    void notifyDirectorAudioStatus(roomCode, plan.phase, snapshot, status);
+  }
+}
+
+function startDirectorAudioHeartbeat(roomCode, plan, snapshot, controller) {
+  if (!controller || controller.stopped || (!plan.notifyOnEnd && !plan.advanceOnEnd)) return;
+  clearDirectorAudioHeartbeat(controller);
+  controller.heartbeatId = window.setInterval(() => {
+    if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller) {
+      clearDirectorAudioHeartbeat(controller);
+      return;
+    }
+    if (!controller.status) return;
+    void notifyDirectorAudioStatus(roomCode, plan.phase, snapshot, controller.status);
+  }, DIRECTOR_AUDIO_HEARTBEAT_MS);
+}
+
 function stopRoomAudio(roomCode) {
   const controller = roomAudioPlayers.get(roomCode);
   if (!controller) return;
   controller.stopped = true;
+  clearDirectorAudioHeartbeat(controller);
   if (controller.audio) {
     controller.audio.pause();
     controller.audio.currentTime = 0;
@@ -374,17 +420,24 @@ window.addEventListener("beforeunload", stopAllRoomBackgroundMusic);
 
 function playDirectorAudioSequence(roomCode, plan, snapshot) {
   if (!plan || !plan.segments || !plan.segments.length) {
-    if (plan?.advanceOnEnd) {
-      void notifyDirectorAudioEnded(roomCode, plan.phase, snapshot);
+    if (plan?.notifyOnEnd || plan?.advanceOnEnd) {
+      void notifyDirectorAudioStatus(roomCode, plan.phase, snapshot, "ended");
     }
     return;
   }
 
   stopRoomAudio(roomCode);
+  const playbackKey = audioPlanPlaybackKey(plan, snapshot);
+  const playbackSnapshot = {
+    ...snapshot,
+    playbackKey
+  };
   const controller = {
     phase: plan.phase,
-    key: `${plan.phase}:${plan.segments.map(segment => segment.src).join("|")}:${snapshot?.playCount || 1}:${snapshot?.questionId || ""}`,
+    key: playbackKey,
     stopped: false,
+    status: "queued",
+    heartbeatId: null,
     audio: null
   };
   roomAudioPlayers.set(roomCode, controller);
@@ -392,14 +445,17 @@ function playDirectorAudioSequence(roomCode, plan, snapshot) {
   if (plan.duckMusic !== false) {
     duckRoomBackgroundMusic(roomCode);
   }
+  setDirectorAudioStatus(roomCode, plan, playbackSnapshot, controller, "queued");
+  startDirectorAudioHeartbeat(roomCode, plan, playbackSnapshot, controller);
 
   const playIndex = index => {
     if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller) return;
     const segment = plan.segments[index];
     if (!segment?.src) {
-      if (index >= plan.segments.length - 1 && plan.advanceOnEnd) {
+      if (index >= plan.segments.length - 1 && (plan.notifyOnEnd || plan.advanceOnEnd)) {
         roomAudioPlayers.delete(roomCode);
-        void notifyDirectorAudioEnded(roomCode, plan.phase, snapshot);
+        clearDirectorAudioHeartbeat(controller);
+        void notifyDirectorAudioStatus(roomCode, plan.phase, playbackSnapshot, "ended");
       }
       return;
     }
@@ -408,9 +464,28 @@ function playDirectorAudioSequence(roomCode, plan, snapshot) {
     audio.preload = "auto";
     audio.volume = 1;
     controller.audio = audio;
+    audio.addEventListener("playing", () => {
+      if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller) return;
+      setDirectorAudioStatus(roomCode, plan, playbackSnapshot, controller, "playing");
+    }, { once: true });
+    audio.addEventListener("waiting", () => {
+      if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller || audio.ended) return;
+      setDirectorAudioStatus(roomCode, plan, playbackSnapshot, controller, "queued");
+    });
+    audio.addEventListener("stalled", () => {
+      if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller || audio.ended) return;
+      setDirectorAudioStatus(roomCode, plan, playbackSnapshot, controller, "queued");
+    });
+    audio.addEventListener("pause", () => {
+      if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller || audio.ended) return;
+      setDirectorAudioStatus(roomCode, plan, playbackSnapshot, controller, "queued");
+    });
 
     const advanceIfNeeded = () => {
       if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller) return;
+      if (index < plan.segments.length - 1) {
+        setDirectorAudioStatus(roomCode, plan, playbackSnapshot, controller, "queued");
+      }
       void waitForAudioMetadata(audio).then(() => {
         const pauseMs = getDirectorSegmentPauseMs(plan, Number(audio.duration || 0), {
           roomCode,
@@ -427,8 +502,9 @@ function playDirectorAudioSequence(roomCode, plan, snapshot) {
         }
         window.setTimeout(() => {
           if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller) return;
-          if (plan.advanceOnEnd) {
-            void notifyDirectorAudioEnded(roomCode, plan.phase, snapshot);
+          if (plan.notifyOnEnd || plan.advanceOnEnd) {
+            clearDirectorAudioHeartbeat(controller);
+            void notifyDirectorAudioStatus(roomCode, plan.phase, playbackSnapshot, "ended");
           }
           roomAudioPlayers.delete(roomCode);
         }, pauseMs);
@@ -436,10 +512,25 @@ function playDirectorAudioSequence(roomCode, plan, snapshot) {
     };
 
     audio.addEventListener("ended", advanceIfNeeded, { once: true });
+    audio.addEventListener("error", () => {
+      if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller) return;
+      clearDirectorAudioHeartbeat(controller);
+      setDirectorAudioStatus(roomCode, plan, playbackSnapshot, controller, "blocked");
+      if (plan.duckMusic !== false) {
+        setRoomBackgroundMusicVolume(roomCode, BACKGROUND_MUSIC_VOLUME);
+      }
+      roomAudioPlayers.delete(roomCode);
+    }, { once: true });
     const playResult = audio.play();
     if (playResult && typeof playResult.catch === "function") {
       playResult.catch(() => {
-        advanceIfNeeded();
+        if (controller.stopped || roomAudioPlayers.get(roomCode) !== controller) return;
+        clearDirectorAudioHeartbeat(controller);
+        setDirectorAudioStatus(roomCode, plan, playbackSnapshot, controller, "blocked");
+        if (plan.duckMusic !== false) {
+          setRoomBackgroundMusicVolume(roomCode, BACKGROUND_MUSIC_VOLUME);
+        }
+        roomAudioPlayers.delete(roomCode);
       });
     }
   };
@@ -450,7 +541,7 @@ function playDirectorAudioSequence(roomCode, plan, snapshot) {
 function maybePlayPhaseAudio(roomCode, previousSnapshot, nextSnapshot) {
   if (!nextSnapshot.phase) return;
   startRoomBackgroundMusic(roomCode);
-  const activeQuestionAudio = nextSnapshot.phase === "question-audio"
+  const activeQuestionAudio = nextSnapshot.phase === "question-read"
     ? nextSnapshot.questionAudio || ""
     : "";
   const plan = getReactiveAudioPlan(previousSnapshot, nextSnapshot, {
@@ -459,13 +550,15 @@ function maybePlayPhaseAudio(roomCode, previousSnapshot, nextSnapshot) {
     questionIndex: nextSnapshot.questionIndex || 0,
     questionAudio: activeQuestionAudio,
     isLastQuestion: nextSnapshot.totalQuestions ? nextSnapshot.questionIndex >= nextSnapshot.totalQuestions - 1 : false,
-    lastResolution: nextSnapshot.lastResolution || null
+    lastResolution: nextSnapshot.lastResolution || null,
+    scoreVisibility: nextSnapshot.scoreVisibility || "visible",
+    finalHype: nextSnapshot.finalHype || null
   });
-  const nextKey = plan.replayKey || `${plan.phase}:${plan.segments.map(segment => segment.src).join("|")}:${nextSnapshot.playCount || 1}:${nextSnapshot.questionId || ""}`;
+  const nextKey = audioPlanPlaybackKey(plan, nextSnapshot);
   const current = roomAudioPlayers.get(roomCode);
   if (previousSnapshot?.phase === nextSnapshot.phase && roomAudioCues.get(roomCode) === nextKey) return;
   if (current) stopRoomAudio(roomCode);
-  if (plan.segments.length || plan.advanceOnEnd) {
+  if (plan.segments.length || plan.notifyOnEnd || plan.advanceOnEnd) {
     playDirectorAudioSequence(roomCode, plan, nextSnapshot);
   } else {
     setRoomBackgroundMusicVolume(roomCode, BACKGROUND_MUSIC_VOLUME);
@@ -502,6 +595,7 @@ function enqueueRankAnimation(roomCode, task) {
 }
 
 function scoreDeltas(previousSnapshot, nextSnapshot) {
+  if (!nextSnapshot?.scoreboardVisible) return [];
   const deltas = [];
   for (const [playerId, score] of Object.entries(nextSnapshot.scores || {})) {
     const delta = score - (previousSnapshot?.scores?.[playerId] || 0);
@@ -511,6 +605,7 @@ function scoreDeltas(previousSnapshot, nextSnapshot) {
 }
 
 function rankMoves(previousSnapshot, nextSnapshot) {
+  if (!nextSnapshot?.scoreboardVisible) return [];
   if (!previousSnapshot) return [];
   const previousOrder = new Map(previousSnapshot.rankedIds.map((playerId, index) => [playerId, index]));
   return nextSnapshot.rankedIds
@@ -705,7 +800,7 @@ export async function hydrateTriviaHostPresentation(root, room) {
     });
   }
 
-  if (previousSnapshot?.phase !== "scoring" && trivia.phase === "scoring" && nextSnapshot.correctAnswer) {
+  if (previousSnapshot?.phase !== "reveal" && trivia.phase === "reveal" && nextSnapshot.correctAnswer) {
     const tile = root.querySelector(`[data-jms-choice="${nextSnapshot.correctAnswer}"]`);
     if (tile) {
       playPack("answer.reveal", {
@@ -716,7 +811,7 @@ export async function hydrateTriviaHostPresentation(root, room) {
     }
   }
 
-  if (previousSnapshot?.phase !== "complete" && trivia.phase === "complete") {
+  if (previousSnapshot?.phase !== "post-game" && trivia.phase === "post-game") {
     const winnerRow = root.querySelector("[data-jms-winner-row='winner']");
     const badge = root.querySelector("[data-jms-victory-badge]");
     if (winnerRow) {

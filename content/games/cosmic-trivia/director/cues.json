@@ -1,0 +1,1465 @@
+{
+  "version": 3,
+  "gameId": "cosmic-trivia",
+  "defaults": {
+    "audioRoot": "/games/cosmic-trivia/audio/host/director",
+    "fallbackOrder": [
+      "exact-cue",
+      "cue-fallbacks",
+      "domain.default",
+      "global.game.default",
+      "silent"
+    ]
+  },
+  "cues": [
+    {
+      "cueKey": "global.game.default",
+      "scope": "global",
+      "domain": "game",
+      "eventPath": [
+        "default"
+      ],
+      "purpose": "全局兜底口播",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-cue",
+        "fallback": [
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "global.game.default.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/game/default/line-01.mp3",
+          "text": "All right, space cadets, let's keep this quiz comet moving.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.game-setup.question-count.selection",
+      "scope": "phase",
+      "domain": "game-setup",
+      "eventPath": [
+        "question-count",
+        "selection"
+      ],
+      "purpose": "题目数量选择阶段",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.game-setup.question-count.selection.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/game-setup/question-count/selection/line-01.mp3",
+          "text": "First up: how many questions are we launching into orbit?",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.game-setup.question-count.selection.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/game-setup/question-count/selection/line-02.mp3",
+          "text": "Pick the question count, because apparently infinity was too many.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.preferences.selection.intro",
+      "scope": "phase",
+      "domain": "preferences",
+      "eventPath": [
+        "selection",
+        "intro"
+      ],
+      "purpose": "玩家选择题材和关键词",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.preferences.selection.intro.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/preferences/selection/intro/line-01.mp3",
+          "text": "Grab your phone and choose the topics you want to bravely overestimate yourself in.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.preferences.selection.intro.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/preferences/selection/intro/line-02.mp3",
+          "text": "Pick your favorite categories. The quiz machine is judging your taste, politely.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.preferences.selection.done",
+      "scope": "phase",
+      "domain": "preferences",
+      "eventPath": [
+        "selection",
+        "done"
+      ],
+      "purpose": "偏好选择完成",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "phase.round-prep.round.loading",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.preferences.selection.done.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/preferences/selection/done/line-01.mp3",
+          "text": "Preferences received. The question blender is now making science noises.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.round-prep.round.loading",
+      "scope": "phase",
+      "domain": "round-prep",
+      "eventPath": [
+        "round",
+        "loading"
+      ],
+      "purpose": "抽题和准备题组",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.round-prep.round.loading.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/round-prep/round/loading/line-01.mp3",
+          "text": "I'm assembling the round now. Please enjoy this brief moment of false confidence.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.round-prep.round.loading.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/round-prep/round/loading/line-02.mp3",
+          "text": "Questions are loading. Somewhere, a spreadsheet just got very nervous.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.question-intro.question.next",
+      "scope": "phase",
+      "domain": "question-intro",
+      "eventPath": [
+        "question",
+        "next"
+      ],
+      "purpose": "题目前导",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.question-intro.question.next.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/question-intro/question/next/line-01.mp3",
+          "text": "Next question incoming. Eyes up, phones ready, dignity optional.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.question-intro.question.next.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/question-intro/question/next/line-02.mp3",
+          "text": "Here comes the next one. Try to look like you meant to know this.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.question-intro.question.next.line-03",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/question-intro/question/next/line-03.mp3",
+          "text": "Attention back to the screen. The quiz gremlin has selected another question.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.question-intro.question.final",
+      "scope": "phase",
+      "domain": "question-intro",
+      "eventPath": [
+        "question",
+        "final"
+      ],
+      "purpose": "最后一题前导",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "phase.question-intro.question.next",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.question-intro.question.final.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/question-intro/question/final/line-01.mp3",
+          "text": "Final question. This is where legends are made, and also where guesses wear tiny capes.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.answering.answer.open",
+      "scope": "phase",
+      "domain": "answering",
+      "eventPath": [
+        "answer",
+        "open"
+      ],
+      "purpose": "进入答题",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.answering.answer.open.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/answer/open/line-01.mp3",
+          "text": "Answers are open. Tap your choice before your confidence changes its mind.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.answering.answer.open.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/answer/open/line-02.mp3",
+          "text": "Choose wisely, or at least choose with theatrical commitment.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.answering.answer.open.line-03",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/answer/open/line-03.mp3",
+          "text": "Lock in an answer on your phone. The universe accepts both knowledge and panic.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.answering.answer.all-in",
+      "scope": "phase",
+      "domain": "answering",
+      "eventPath": [
+        "answer",
+        "all-in"
+      ],
+      "purpose": "所有人提前答完",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "phase.answering.answer.open",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.answering.answer.all-in.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/answer/all-in/line-01.mp3",
+          "text": "Everyone answered. Look at that, a tiny miracle with Wi-Fi.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.answering.answer.all-in.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/answer/all-in/line-02.mp3",
+          "text": "All answers are in. No more hiding behind strategic hesitation.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.answering.time.warning",
+      "scope": "phase",
+      "domain": "answering",
+      "eventPath": [
+        "time",
+        "warning"
+      ],
+      "purpose": "答题时间提醒",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.answering.time.warning.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/time/warning/line-01.mp3",
+          "text": "Time is getting dramatic. If you're still thinking, think faster.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.answering.time.warning.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/time/warning/line-02.mp3",
+          "text": "A few seconds left. This is your brain's final boarding call.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.answering.time.critical",
+      "scope": "phase",
+      "domain": "answering",
+      "eventPath": [
+        "time",
+        "critical"
+      ],
+      "purpose": "答题最后几秒",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "phase.answering.time.warning",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.answering.time.critical.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/time/critical/line-01.mp3",
+          "text": "Last seconds. Pick something and pretend it was a strategy.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.answering.time.critical.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answering/time/critical/line-02.mp3",
+          "text": "Hurry up. Even the timer is starting to sweat.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.answer-lock.answer.locked",
+      "scope": "phase",
+      "domain": "answer-lock",
+      "eventPath": [
+        "answer",
+        "locked"
+      ],
+      "purpose": "答案锁定",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.answer-lock.answer.locked.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/answer-lock/answer/locked/line-01.mp3",
+          "text": "Answers locked. Regret may now begin forming in a neat little line.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.reveal.answer.positive",
+      "scope": "phase",
+      "domain": "reveal",
+      "eventPath": [
+        "answer",
+        "positive"
+      ],
+      "purpose": "公布正确答案常规口播",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.reveal.answer.positive.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/positive/line-01.mp3",
+          "text": "And the correct answer is... please act surprised if needed.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.reveal.answer.positive.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/positive/line-02.mp3",
+          "text": "Let's reveal the answer and see whose confidence was accidentally correct.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.reveal.answer.no-one-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "eventPath": [
+        "answer",
+        "no-one-correct"
+      ],
+      "purpose": "无人答对",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "phase.reveal.answer.positive",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.reveal.answer.no-one-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/no-one-correct/line-01.mp3",
+          "text": "Nobody got it. The question wins this round and is being very smug about it.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.reveal.answer.no-one-correct.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/no-one-correct/line-02.mp3",
+          "text": "Not a single correct answer. Somewhere, trivia is cackling into a tiny microphone.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.reveal.answer.everyone-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "eventPath": [
+        "answer",
+        "everyone-correct"
+      ],
+      "purpose": "所有人答对",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "celebration",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "phase.reveal.answer.positive",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.reveal.answer.everyone-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/everyone-correct/line-01.mp3",
+          "text": "Everybody got it right. Suspiciously competent, all of you.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.reveal.answer.only-one-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "eventPath": [
+        "answer",
+        "only-one-correct"
+      ],
+      "purpose": "只有一人答对",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "phase.reveal.answer.positive",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.reveal.answer.only-one-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/only-one-correct/line-01.mp3",
+          "text": "Only one player got that right. One hero, surrounded by confident fiction.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.scoring.score.update",
+      "scope": "phase",
+      "domain": "scoring",
+      "eventPath": [
+        "score",
+        "update"
+      ],
+      "purpose": "分数结算常规口播",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.scoring.score.update.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/score/update/line-01.mp3",
+          "text": "Scores are updating. Please keep all victory dances inside the vehicle.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.scoring.score.update.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/score/update/line-02.mp3",
+          "text": "Points are being counted by highly trained imaginary interns.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.scoring.score.hidden-update",
+      "scope": "phase",
+      "domain": "scoring",
+      "eventPath": [
+        "score",
+        "hidden-update"
+      ],
+      "purpose": "隐藏分数期间的结算口播",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "phase.scoring.score.update",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.scoring.score.hidden-update.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/score/hidden-update/line-01.mp3",
+          "text": "Scores are changing behind the curtain. The curtain is feeling powerful.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.scoring.leader.new",
+      "scope": "phase",
+      "domain": "scoring",
+      "eventPath": [
+        "leader",
+        "new"
+      ],
+      "purpose": "出现新的领先者",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "hype",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "phase.scoring.score.update",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.scoring.leader.new.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/leader/new/line-01.mp3",
+          "text": "We have a new leader. The leaderboard just rearranged its furniture.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.scoring.leader.new.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/leader/new/line-02.mp3",
+          "text": "First place has changed hands. Politely, but with consequences.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.scoring.rank.big-jump",
+      "scope": "phase",
+      "domain": "scoring",
+      "eventPath": [
+        "rank",
+        "big-jump"
+      ],
+      "purpose": "有人排名大幅上升",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "hype",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "phase.scoring.score.update",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.scoring.rank.big-jump.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/rank/big-jump/line-01.mp3",
+          "text": "Somebody just rocketed up the rankings. Please secure your loose expectations.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.between-questions.transition.next",
+      "scope": "phase",
+      "domain": "between-questions",
+      "eventPath": [
+        "transition",
+        "next"
+      ],
+      "purpose": "题间转场",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-question",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.between-questions.transition.next.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/between-questions/transition/next/line-01.mp3",
+          "text": "Onward to the next question. Hydrate your brain if possible.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.between-questions.transition.next.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/between-questions/transition/next/line-02.mp3",
+          "text": "Next question is warming up. It has been stretching backstage.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.final-hype.summary.only-one-correct",
+      "scope": "phase",
+      "domain": "final-hype",
+      "eventPath": [
+        "summary",
+        "only-one-correct"
+      ],
+      "purpose": "最终揭晓前：某题只有一人答对",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.only-one-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/only-one-correct/line-01.mp3",
+          "text": "At one point, only one player got the answer right. Mysterious. Impressive. Slightly annoying.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.final-hype.summary.everyone-missed",
+      "scope": "phase",
+      "domain": "final-hype",
+      "eventPath": [
+        "summary",
+        "everyone-missed"
+      ],
+      "purpose": "最终揭晓前：某题无人答对",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.everyone-missed.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/everyone-missed/line-01.mp3",
+          "text": "One question completely wiped the room. A clean sweep, but rude.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.final-hype.summary.best-streak",
+      "scope": "phase",
+      "domain": "final-hype",
+      "eventPath": [
+        "summary",
+        "best-streak"
+      ],
+      "purpose": "最终揭晓前：连对统计",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "hype",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.best-streak.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/best-streak/line-01.mp3",
+          "text": "Someone put together a streak tonight. I'm not naming names, but their ego knows.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.final-hype.summary.close-finish",
+      "scope": "phase",
+      "domain": "final-hype",
+      "eventPath": [
+        "summary",
+        "close-finish"
+      ],
+      "purpose": "最终揭晓前：比分接近",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.close-finish.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/close-finish/line-01.mp3",
+          "text": "This finish is close enough to make the scoreboard breathe into a paper bag.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.final-hype.summary.round-energy",
+      "scope": "phase",
+      "domain": "final-hype",
+      "eventPath": [
+        "summary",
+        "round-energy"
+      ],
+      "purpose": "最终揭晓前：通用悬念总结",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.round-energy.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/round-energy/line-01.mp3",
+          "text": "This round had twists, turns, and at least one answer that looked legally questionable.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.finale.result.incoming",
+      "scope": "phase",
+      "domain": "finale",
+      "eventPath": [
+        "result",
+        "incoming"
+      ],
+      "purpose": "最终结果公布前预热",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.finale.result.incoming.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/finale/result/incoming/line-01.mp3",
+          "text": "Final results are coming up. Please prepare your gracious winner face, just in case.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.finale.result.incoming.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/finale/result/incoming/line-02.mp3",
+          "text": "Time for the final ranking. May the scoreboard be merciful and well-lit.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.post-game.result.outro",
+      "scope": "phase",
+      "domain": "post-game",
+      "eventPath": [
+        "result",
+        "outro"
+      ],
+      "purpose": "赛后收尾",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "celebration",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "phase.post-game.result.outro.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/post-game/result/outro/line-01.mp3",
+          "text": "That's the game. You brought knowledge, guesses, and a surprising amount of confidence.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "phase.post-game.result.outro.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/post-game/result/outro/line-02.mp3",
+          "text": "Cosmic Trivia is complete. Please return all borrowed brain cells to the front desk.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "global.score.hidden.started",
+      "scope": "global",
+      "domain": "score",
+      "eventPath": [
+        "hidden",
+        "started"
+      ],
+      "purpose": "最后 30% 题目开始隐藏分数",
+      "required": true,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "tease",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "global.score.hidden.started.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/score/hidden/started/line-01.mp3",
+          "text": "From here on, scores are hidden. Suspense has entered the chat.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "global.score.hidden.started.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/global/score/hidden/started/line-02.mp3",
+          "text": "The scoreboard is going undercover. You'll see the truth at the end.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "global.player.join.in",
+      "scope": "global",
+      "domain": "player",
+      "eventPath": [
+        "join",
+        "in"
+      ],
+      "purpose": "玩家加入时的全局插播",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-player",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "global.player.join.in.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/player/join/in/line-01.mp3",
+          "text": "A new player joined. The chaos budget has been increased.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.game.final-question-armed",
+      "scope": "cross",
+      "domain": "game",
+      "eventPath": [
+        "final-question-armed"
+      ],
+      "purpose": "最后一题即将开始的跨阶段提醒",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "phase.question-intro.question.final",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "cross.game.final-question-armed.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/game/final-question-armed/line-01.mp3",
+          "text": "The final question is armed and probably wearing sunglasses.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.game.final-question-ended",
+      "scope": "cross",
+      "domain": "game",
+      "eventPath": [
+        "final-question-ended"
+      ],
+      "purpose": "最后一题结束后的跨阶段提醒",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "suspense",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "phase.finale.result.incoming",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "cross.game.final-question-ended.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/game/final-question-ended/line-01.mp3",
+          "text": "The final question is done. Now we let suspense do its weird little dance.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.player.disconnected",
+      "scope": "cross",
+      "domain": "player",
+      "eventPath": [
+        "disconnected"
+      ],
+      "purpose": "玩家断线时的轻量提示",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "cooldown",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "cross.player.disconnected.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/player/disconnected/line-01.mp3",
+          "text": "A player blipped out for a moment. Classic space internet behavior.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.player.reconnected",
+      "scope": "cross",
+      "domain": "player",
+      "eventPath": [
+        "reconnected"
+      ],
+      "purpose": "玩家重连时的轻量提示",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "cooldown",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "cross.player.reconnected.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/player/reconnected/line-01.mp3",
+          "text": "They're back. The signal survived its side quest.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.player.idle.filler",
+      "scope": "cross",
+      "domain": "player",
+      "eventPath": [
+        "idle",
+        "filler"
+      ],
+      "purpose": "等待玩家操作时的跨阶段填充",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "cooldown",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "cross.player.idle.filler.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/player/idle/filler/line-01.mp3",
+          "text": "Still waiting on a few taps. No rush, except for the very real rush.",
+          "placeholder": true,
+          "regenerate": true
+        },
+        {
+          "id": "cross.player.idle.filler.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/player/idle/filler/line-02.mp3",
+          "text": "Someone is still choosing. Maybe it's wisdom. Maybe it's snacks.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.network.delay.filler",
+      "scope": "cross",
+      "domain": "network",
+      "eventPath": [
+        "delay",
+        "filler"
+      ],
+      "purpose": "网络或加载等待时的跨阶段填充",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "cooldown",
+        "fallback": [
+          "cross.player.idle.filler",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "cross.network.delay.filler.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/network/delay/filler/line-01.mp3",
+          "text": "The signal is squeezing through an asteroid belt. Very normal technology.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.stats.streak.detected",
+      "scope": "cross",
+      "domain": "stats",
+      "eventPath": [
+        "streak",
+        "detected"
+      ],
+      "purpose": "连对或连错统计插播",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "hype",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "per-round",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "cross.stats.streak.detected.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/detected/line-01.mp3",
+          "text": "Someone has a streak going. I won't say who, but the scoreboard is whispering.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "global.host.pause",
+      "scope": "global",
+      "domain": "host",
+      "eventPath": [
+        "pause"
+      ],
+      "purpose": "主持人暂停游戏",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-event",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "global.host.pause.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/host/pause/line-01.mp3",
+          "text": "Game paused. Everybody freeze in your most intelligent pose.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "global.host.resume",
+      "scope": "global",
+      "domain": "host",
+      "eventPath": [
+        "resume"
+      ],
+      "purpose": "主持人恢复游戏",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "replace",
+        "interruptible": true,
+        "dedupe": "per-event",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "global.host.resume.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/host/resume/line-01.mp3",
+          "text": "And we're back. Please resume pretending this was all under control.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "global.network.unstable",
+      "scope": "global",
+      "domain": "network",
+      "eventPath": [
+        "unstable"
+      ],
+      "purpose": "网络不稳定时的全局插播",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "neutral",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "cooldown",
+        "fallback": [
+          "cross.network.delay.filler",
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "global.network.unstable.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/network/unstable/line-01.mp3",
+          "text": "The network is wobbling. Give it a second to remember its job.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    },
+    {
+      "cueKey": "global.network.recovered",
+      "scope": "global",
+      "domain": "network",
+      "eventPath": [
+        "recovered"
+      ],
+      "purpose": "网络恢复时的全局插播",
+      "required": false,
+      "audience": "host",
+      "visibility": "public-safe",
+      "tone": "warm",
+      "policy": {
+        "playback": "queue",
+        "interruptible": true,
+        "dedupe": "cooldown",
+        "fallback": [
+          "global.game.default",
+          "silent"
+        ]
+      },
+      "variants": [
+        {
+          "id": "global.network.recovered.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/network/recovered/line-01.mp3",
+          "text": "Signal recovered. Technology has decided to participate again.",
+          "placeholder": true,
+          "regenerate": true
+        }
+      ]
+    }
+  ]
+}

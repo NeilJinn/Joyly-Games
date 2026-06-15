@@ -10,6 +10,13 @@ import { getVoiceLibraryCatalog } from "./server/voice-library/catalog.js";
 import { regenerateTaggedVoiceLibraryAudio } from "./server/voice-library/regenerate.js";
 import { joinVoiceSegments, splitVoiceText } from "./server/voice-library/text.js";
 import { loadVoiceLibraryReviewState, saveVoiceLibraryReviewState } from "./server/voice-library/review-state.js";
+import {
+  createVoiceLibraryDatabase,
+  listVoiceLibraryLines,
+  syncVoiceLibraryDatabase,
+  updateVoiceLibraryLineTranscript,
+  validateVoiceLibraryAssets
+} from "./server/voice-library/sqlite-store.js";
 import { getAvatarCatalog } from "./server/players/avatar-catalog.js";
 import { normalizePlayerProfile, testPlayers } from "./server/players/player-info.js";
 import {
@@ -26,6 +33,7 @@ const jmsDir = path.join(__dirname, "packages", "jms");
 const cosmicTriviaMusicDir = path.join(publicDir, "games", "cosmic-trivia", "audio", "music");
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "0.0.0.0";
+const voiceLibraryDb = createVoiceLibraryDatabase();
 const localOnlyToolsEnabled = process.env.JOYLY_LOCAL_TOOLS === "true" || process.env.NODE_ENV !== "production";
 
 const rooms = new Map();
@@ -38,6 +46,7 @@ const pairings = new Map();
 const PLAYER_DISCONNECT_WINDOW_MS = 200_000;
 const PLAYER_RECONNECT_WINDOW_MS = 400_000;
 const PLAYER_SWEEP_INTERVAL_MS = 15_000;
+const marketingPaths = new Set(["/", "/games", "/how-to-play", "/support", "/company"]);
 
 function makeId() {
   if (typeof crypto?.randomUUID === "function") return crypto.randomUUID();
@@ -384,6 +393,14 @@ async function serveStaticDir(req, res, rootDir, {
 }
 
 async function serveStatic(req, res) {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  if (marketingPaths.has(url.pathname)) {
+    return serveStaticDir({
+      url: "/index.html",
+      method: req.method,
+      headers: req.headers
+    }, res, publicDir);
+  }
   return serveStaticDir(req, res, publicDir);
 }
 
@@ -455,6 +472,30 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/voice-library/db") {
+      const reviewState = await loadVoiceLibraryReviewState();
+      const catalog = getVoiceLibraryCatalog();
+      syncVoiceLibraryDatabase(voiceLibraryDb, { catalog, reviewState, publicRoot: publicDir });
+      validateVoiceLibraryAssets(voiceLibraryDb, { publicRoot: publicDir });
+      const regenerateOnly = url.searchParams.get("regenerateOnly") === "1";
+      const lines = listVoiceLibraryLines(voiceLibraryDb, {
+        projectId: url.searchParams.get("projectId") || "",
+        scope: url.searchParams.get("scope") || "",
+        domain: url.searchParams.get("domain") || "",
+        regenerateOnly
+      });
+      sendJson(res, 200, {
+        lines,
+        filters: {
+          projects: [...new Set(lines.map(line => line.projectId).filter(Boolean))],
+          scopes: [...new Set(lines.map(line => line.scope).filter(Boolean))],
+          domains: [...new Set(lines.map(line => line.domain).filter(Boolean))],
+          events: [...new Set(lines.map(line => (line.eventPath || []).join(".")).filter(Boolean))]
+        }
+      });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/games/cosmic-trivia/music-library") {
       sendJson(res, 200, {
         sources: await listCosmicTriviaMusicSources()
@@ -472,7 +513,28 @@ const server = http.createServer(async (req, res) => {
       const body = await getBody(req);
       const reviewState = body.reviewState || body.state || body || {};
       const saved = await saveVoiceLibraryReviewState(reviewState);
+      syncVoiceLibraryDatabase(voiceLibraryDb, { catalog: getVoiceLibraryCatalog(), reviewState: saved, publicRoot: publicDir });
       sendJson(res, 200, saved);
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/voice-library/line") {
+      const body = await getBody(req);
+      const lineId = String(body.lineId || body.candidateId || "").trim();
+      if (!lineId) {
+        sendJson(res, 400, { error: "Missing lineId" });
+        return;
+      }
+      const reviewState = await loadVoiceLibraryReviewState();
+      syncVoiceLibraryDatabase(voiceLibraryDb, { catalog: getVoiceLibraryCatalog(), reviewState, publicRoot: publicDir });
+      const updated = updateVoiceLibraryLineTranscript(voiceLibraryDb, {
+        lineId,
+        transcript: String(body.transcript || ""),
+        reviewState
+      });
+      const saved = await saveVoiceLibraryReviewState(reviewState);
+      syncVoiceLibraryDatabase(voiceLibraryDb, { catalog: getVoiceLibraryCatalog(), reviewState: saved, publicRoot: publicDir });
+      sendJson(res, 200, { updated, reviewState: saved });
       return;
     }
 
@@ -534,7 +596,9 @@ const server = http.createServer(async (req, res) => {
             kind: candidate.kind || "director-candidate",
             title: segment.text || segmentFileName.replace(/\.mp3$/, ""),
             label: segment.text || `Segment ${segment.index + 1}`,
-            audioPath: `/games/cosmic-trivia/audio/host/phases/${segmentFileName}`,
+            audioPath: candidate.canonicalAudioPath
+              ? `${path.dirname(candidate.canonicalAudioPath)}/${segmentFileName}`
+              : `/games/cosmic-trivia/audio/host/director/${segmentFileName}`,
             filePath: segment.outputPath,
             text: segment.text || "",
             modelId: candidate.modelId || modelId,
@@ -564,6 +628,8 @@ const server = http.createServer(async (req, res) => {
         }
       }
       await saveVoiceLibraryReviewState(reviewState);
+      syncVoiceLibraryDatabase(voiceLibraryDb, { catalog: getVoiceLibraryCatalog(), reviewState, publicRoot: publicDir });
+      validateVoiceLibraryAssets(voiceLibraryDb, { publicRoot: publicDir });
       sendJson(res, 200, {
         generated: result.generated || [],
         skipped: result.skipped || [],
@@ -927,6 +993,36 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "GET" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/private\/[^/]+$/)) {
+      const [, , , code, , , playerId] = url.pathname.split("/");
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.privateState) return sendJson(res, 404, { error: "This game does not expose private state" });
+      await runtime.ensureState(room);
+      const privateState = runtime.privateState(room, playerId);
+      if (!privateState) return sendJson(res, 404, { error: "Private state not found" });
+      sendJson(res, 200, { privateState });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/setup$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.setup) return sendJson(res, 404, { error: "This game does not support setup" });
+      const result = await runtime.setup(room, body || {});
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      scheduleDirector(code);
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/answer$/)) {
       const code = url.pathname.split("/")[3];
       const room = rooms.get(code);
@@ -971,6 +1067,29 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/director\/audio-status$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.directorAudioStatus) return sendJson(res, 404, { error: "This game does not support director audio events" });
+      const result = await runtime.directorAudioStatus(
+        room,
+        String(body.phase || ""),
+        String(body.playbackKey || ""),
+        String(body.status || "")
+      );
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      if (result.advanced) {
+        scheduleDirector(code);
+      }
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/director\/audio-ended$/)) {
       const code = url.pathname.split("/")[3];
       const room = rooms.get(code);
@@ -979,11 +1098,27 @@ const server = http.createServer(async (req, res) => {
       const body = await getBody(req);
       const runtime = runtimeFor(room.selectedGame?.id);
       if (!runtime.directorAudioEnded) return sendJson(res, 404, { error: "This game does not support director audio events" });
-      const result = await runtime.directorAudioEnded(room, String(body.phase || ""));
+      const result = await runtime.directorAudioEnded(room, String(body.phase || ""), String(body.playbackKey || ""));
       if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
       if (result.advanced) {
         scheduleDirector(code);
       }
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/director\/audio-started$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.directorAudioStarted) return sendJson(res, 404, { error: "This game does not support director audio events" });
+      const result = await runtime.directorAudioStarted(room, String(body.phase || ""), String(body.playbackKey || ""));
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      scheduleDirector(code);
       broadcast(code);
       sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
       return;

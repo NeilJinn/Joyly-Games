@@ -724,7 +724,7 @@ async function main() {
       "会被 publicState 暴露并在大屏上自动播放。"
     ],
     [
-      "public/games/cosmic-trivia/audio/host/phases/",
+      "public/games/cosmic-trivia/audio/host/director/",
       "是",
       "固定文件名",
       "所有主持人口播的 mp3 文件。",

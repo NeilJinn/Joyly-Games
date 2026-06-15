@@ -63,6 +63,12 @@ async function writeAudioFile(filePath, buffer) {
   await writeFile(filePath, buffer);
 }
 
+function audioPathToOutputPath(audioPath = "") {
+  const clean = String(audioPath || "").replace(/^\/+/, "");
+  if (!clean) return "";
+  return path.join(projectRoot, "public", clean.replace(/^games\//, ""));
+}
+
 async function generateSpeech({ apiKey, baseUrl, voiceId, modelId, outputFormat, text, voiceSettings }) {
   const body = {
     text,
@@ -100,32 +106,38 @@ async function main() {
   const defaultVoiceId = String(manifest.voiceId || process.env[manifest.voiceIdEnv || "ELEVENLABS_VOICE_ID"] || "").trim();
   const dryRun = flags.has("--dry-run");
   const overwrite = flags.has("--overwrite");
-  const phasePrefix = String(options.get("--phase-prefix") || "").trim();
+  const cuePrefix = String(options.get("--cue-prefix") || options.get("--phase-prefix") || "").trim();
   const excludePhasePrefix = String(options.get("--exclude-phase-prefix") || "").trim();
   const filePrefix = String(options.get("--file-prefix") || "").trim();
   const matchText = String(options.get("--match") || "").trim();
 
   const selectedFiles = manifest.files.filter(entry => {
-    if (phasePrefix && !String(entry.phase || "").startsWith(phasePrefix)) return false;
-    if (excludePhasePrefix && String(entry.phase || "").startsWith(excludePhasePrefix)) return false;
+    const cueKey = String(entry.cueKey || "");
+    const phaseKey = String(entry.phase || "");
+    if (cuePrefix && !(cueKey.startsWith(cuePrefix) || phaseKey.startsWith(cuePrefix))) return false;
+    if (excludePhasePrefix && (cueKey.startsWith(excludePhasePrefix) || phaseKey.startsWith(excludePhasePrefix))) return false;
     if (filePrefix && !String(entry.fileName || "").startsWith(filePrefix)) return false;
-    if (matchText && !`${entry.phase || ""} ${entry.fileName || ""} ${entry.text || ""}`.includes(matchText)) return false;
+    if (entry.active === false) return false;
+    if (matchText && !`${entry.cueKey || ""} ${entry.phase || ""} ${entry.fileName || ""} ${entry.text || ""}`.includes(matchText)) return false;
     return true;
   });
 
   console.log(`Generating ${selectedFiles.length} audio file(s)`);
   console.log(`Model: ${modelId}`);
   console.log(`Output format: ${outputFormat}`);
-  console.log(`Output directory: ${manifest.outputDir}`);
+  console.log(`Output root: ${manifest.outputRoot || manifest.outputDir || ""}`);
 
   for (const entry of selectedFiles) {
-    const outputPath = path.join(manifest.outputDir, entry.fileName);
-    const message = `[${entry.phase}] ${entry.fileName}`;
+    const outputPath = audioPathToOutputPath(entry.audioPath || "");
+    const message = `[${entry.cueKey || entry.phase || "unknown"}] ${entry.fileName}`;
 
     const text = prepareVoiceText(entry.text);
 
     if (!text) {
       throw new Error(`${message}: missing text`);
+    }
+    if (!outputPath) {
+      throw new Error(`${message}: missing audioPath`);
     }
 
     try {

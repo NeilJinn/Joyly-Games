@@ -1,66 +1,99 @@
 # Cosmic Trivia TTS Workflow
 
-This is the simplest reliable pipeline for turning scripts into playable audio files.
+这份流程只负责 `host director voice`。题干语音、SFX、BGM 分开维护。
 
-## 1. Prepare the source text
+## 1. 先选 Cue，再写台词
 
-- Keep one script line per file or per segment.
-- Use short, spoken phrasing.
-- Avoid long sentences, nested clauses, and rare words if you want clean TTS output.
-- Keep a consistent tone across all phase scripts.
+每条主持人语音必须挂到一个明确的 cue：
 
-## 2. Choose the voice setup
+- `phase.<phase>.<eventPath...>`
+- `global.<domain>.<eventPath...>`
+- `cross.<domain>.<eventPath...>`
 
-- Pick one host voice for all phase broadcasts.
-- Use the same voice settings across the whole set so the director feels coherent.
-- If the provider supports it, keep speed, pitch, and style consistent.
-- Use the same voice for all question title reads.
+示例：
 
-## 3. Generate the audio
+- `phase.preferences.selection.intro`
+- `phase.answering.answer.all-in`
+- `global.score.hidden.started`
+- `cross.player.idle.filler`
 
-- Generate one file per phase script.
-- For repeated short prompts like `question-intro`, `answering`, `scoring`, and `next-question`, generate several variants and let the director rotate them.
-- Use the naming pattern from `AUDIO_SYSTEM.md`.
-- Start with `interest-selecting`, `deck-loading`, `question-intro`, `answering`, `scoring`, `next-question`, and `complete`.
-- Then generate the question title voices for every enabled question in the pack.
-- In this project, the batch generator reads `content/games/cosmic-trivia/audio/tts-manifest.json` and writes MP3 files into `public/games/cosmic-trivia/audio/host/phases/`.
-- A second batch generator reads the question pack and writes question title MP3 files into `public/games/cosmic-trivia/audio/`.
-- Run it with:
+不要先写一句台词，再临时塞进目录。
 
-```bash
-ELEVENLABS_API_KEY=your_key_here \
-ELEVENLABS_VOICE_ID=your_voice_id_here \
-npm run generate:cosmic-trivia-host-audio
-```
+## 2. Cue Registry 是真相来源
 
-- Add `--dry-run` to preview the job list.
-- Add `--overwrite` if you want to regenerate files that already exist.
-- For Eleven v3, use audio tags like `[excited]` and `[happily]`, plus punctuation and short phrases, to shape the delivery.
-- The UI's `Creative` stability mode is approximated here with a lower `stability` value and expressive tags in the text.
+编辑入口：
 
-## 4. Check the result
+- `content/games/cosmic-trivia/director/cues.json`
 
-- Listen for weird pronunciation, clipped endings, and awkward pauses.
-- If a line feels too long, rewrite the script before regenerating.
-- Keep the volume and loudness similar across files.
-- Trim silence at the start and end if the provider leaves extra space.
+每个 cue 至少包含：
 
-## 5. Normalize the files
+- `cueKey`
+- `scope`
+- `domain`
+- `eventPath`
+- `lines`
+- `variants`
 
-- Export as `mp3`.
-- Use a consistent sample rate and channel layout across the project.
-- Rename the output to the final file name before placing it in `public/games/cosmic-trivia/audio/host/phases/`.
+`cueKey` 必须等于 `[scope, domain, ...eventPath].join(".")`。
 
-## 6. Wire it to the director
+## 3. 文件落点
 
-- Map each phase to its host voice file in `content/games/cosmic-trivia/audio/audio-stage-map.json`.
-- Use `questionAudio` for the question title read.
-- Let the server remain the source of truth for when the audio should play.
-- The server-side director should stay responsible for phase timing; ElevenLabs is only the audio renderer.
+主持人导演语音统一写入：
 
-## Recommended rollout order
+- `public/games/cosmic-trivia/audio/host/director/phase/<phase>/<eventPath...>/line-01.mp3`
+- `public/games/cosmic-trivia/audio/host/director/global/<domain>/<eventPath...>/line-01.mp3`
+- `public/games/cosmic-trivia/audio/host/director/cross/<domain>/<eventPath...>/line-01.mp3`
 
-1. Generate the host phase files first.
-2. Then generate the question title files.
-3. After that, add SFX and music beds.
-4. Finally, hook the files into the playback logic and test the full round.
+文件名只表示同一个 cue 下的第几个变体：
+
+- `line-01.mp3`
+- `line-02.mp3`
+- `line-03.mp3`
+
+业务含义写在 cue registry，不写进文件名。
+
+## 4. 生成顺序
+
+推荐先补齐当前运行时会直接使用的 cue：
+
+- `phase.preferences.selection.intro`
+- `phase.round-prep.round.loading`
+- `phase.question-intro.question.next`
+- `phase.answering.answer.open`
+- `phase.answering.answer.all-in`
+- `phase.answer-lock.answer.locked`
+- `phase.reveal.answer.positive`
+- `phase.reveal.answer.no-one-correct`
+- `phase.scoring.score.update`
+- `phase.between-questions.transition.next`
+- `phase.finale.result.incoming`
+- `phase.post-game.result.outro`
+- `global.score.hidden.started`
+
+再扩展全局和跨阶段插入 cue：
+
+- `global.player.join.in`
+- `cross.player.idle.filler`
+- `cross.network.delay.filler`
+- `cross.stats.streak.detected`
+
+## 5. 运行时绑定原则
+
+运行时永远按 `cueKey` 找音频，不从旧文件名或旧阶段名反推。
+
+查找顺序：
+
+1. 精确 cue。
+2. 同 domain 的默认 fallback cue。
+3. `global.game.default`。
+4. 静默。
+
+静默是合法结果，不能阻塞游戏流程。
+
+## 6. 检查清单
+
+- `cueKey`、`scope`、`domain`、`eventPath` 是否一致。
+- `variants[].path` 是否指向新的 `host/director/<scope>/...` 目录。
+- 文案是否没有泄露隐藏分数、最终排名等敏感信息。
+- 同一个 cue 的多个 `line-xx.mp3` 是否真的有表达差异。
+- 修改后运行 `npm run build:trivia-director-cues`。

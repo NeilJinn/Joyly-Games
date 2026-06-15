@@ -1,4 +1,5 @@
 import { escape, html, icon, withIcon } from "./shared/ui.js";
+import { isMarketingSurface, pathFromSurface, surfaceFromPath } from "./routes.js";
 import {
   activePlayers as activeRoomPlayers,
   disconnectedPlayers,
@@ -7,6 +8,7 @@ import {
   readyActivePlayers,
   waitingStatusLabel
 } from "./shared/player-status.js";
+import { reconcilePhonePlayerState } from "./shared/phone-player-state.js";
 import {
   avatarEditor,
   avatarToken,
@@ -59,7 +61,7 @@ let selectedMinutes = 60;
 let selectedCreditPack = 20;
 let joinError = "";
 let lobbyError = "";
-let activeSurface = "home";
+let activeSurface = surfaceFromPath(location.pathname);
 let desktopPairing = null;
 let activePairingToken = localStorage.getItem(ACTIVE_PAIRING_KEY) || "";
 let pairError = "";
@@ -94,6 +96,12 @@ const joinCode = params.get("room");
 const hostCode = params.get("host");
 const pairToken = params.get("pair");
 const route = pairToken ? "pair" : joinCode ? "join" : "host";
+const MARKETING_NAV_ITEMS = [
+  { surface: "games", label: "Games" },
+  { surface: "how-to-play", label: "How to Play" },
+  { surface: "support", label: "Support" },
+  { surface: "company", label: "Company" }
+];
 
 window.addEventListener("cosmic-trivia-rank-animation-start", () => {
   triviaRankAnimationActive = true;
@@ -140,6 +148,11 @@ function maybeResumePlayingRender() {
 
 window.addEventListener("cosmic-trivia-rank-animation-end", maybeResumePlayingRender);
 window.addEventListener("cosmic-trivia-choice-animation-end", maybeResumePlayingRender);
+window.addEventListener("popstate", () => {
+  if (route !== "host" || room || hostCode || joinCode || pairToken) return;
+  activeSurface = surfaceFromPath(location.pathname);
+  render();
+});
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -248,8 +261,29 @@ function isPhoneViewport() {
   return deviceView === "mobile" || window.matchMedia?.("(max-width: 700px)")?.matches;
 }
 
+function marketingPathFor(surface) {
+  return pathFromSurface(surface);
+}
+
+function navigateToSurface(surface, { replace = false } = {}) {
+  activeSurface = surface;
+  if (route !== "host" || room || hostCode || joinCode || pairToken || !isMarketingSurface(surface)) {
+    render();
+    return;
+  }
+
+  const nextPath = marketingPathFor(surface);
+  const nextUrl = `${nextPath}${location.search}`;
+  const currentUrl = `${location.pathname}${location.search}`;
+  if (nextUrl !== currentUrl) {
+    const method = replace ? "replaceState" : "pushState";
+    window.history[method]({}, "", nextUrl);
+  }
+  render();
+}
+
 function isInteractionLocked() {
-  return accountMenuOpen || authOpen || gamePickerOpen || paymentOpen || isTextEntryActive() || Boolean(document.querySelector("#hostPlayerForm, #joinForm"));
+  return accountMenuOpen || authOpen || gamePickerOpen || paymentOpen || isTextEntryActive() || Boolean(document.querySelector("#hostPlayerForm, #joinForm, #phonePlayerEditForm"));
 }
 
 function applyPendingRoom() {
@@ -509,10 +543,21 @@ function applyRoomUpdate(previousStatus) {
     render();
     return;
   }
-  if (phonePlayerEditing && (!player || player.ready || room.status !== "waiting")) {
-    phonePlayerEditing = false;
+  if ((route === "join" || route === "pair") && player?.id) {
+    const reconciled = reconcilePhonePlayerState({
+      room,
+      playerId: player.id,
+      previousPlayer: player,
+      phonePlayerEditing
+    });
+    player = reconciled.player;
+    phonePlayerEditing = reconciled.phonePlayerEditing;
+  } else {
+    recoverPlayerFromRoom(room);
+    if (phonePlayerEditing && (!player || player.ready || room.status !== "waiting")) {
+      phonePlayerEditing = false;
+    }
   }
-  recoverPlayerFromRoom(room);
   if ((route === "join" || route === "pair") && player && room.status === "waiting" && previousStatus === "waiting") {
     if (!updatePhoneStatus()) render();
     return;
@@ -779,10 +824,32 @@ function attachPhoneChromeHandlers() {
 function topbar(extra = "") {
   return html`
     <header class="topbar ${room ? "" : "floating"}">
-      <button class="brand brand-button" id="homeLogo" type="button" aria-label="Home"><span class="brand-mark">J</span> Joyly Games</button>
+      <div class="topbar-brand">
+        <button class="brand brand-button" id="homeLogo" type="button" aria-label="Home"><span class="brand-mark">J</span> Joyly Games</button>
+        ${marketingNav()}
+      </div>
       ${extra}
     </header>
   `;
+}
+
+function marketingNav() {
+  if (!shouldShowMarketingNav()) return "";
+  return html`
+    <nav class="marketing-nav" aria-label="Site">
+      ${MARKETING_NAV_ITEMS.map(item => {
+        const active = activeSurface === item.surface;
+        return `<button class="marketing-link ${active ? "active" : ""}" data-nav-surface="${item.surface}" type="button" aria-current="${active ? "page" : "false"}">${escape(item.label)}</button>`;
+      }).join("")}
+    </nav>
+  `;
+}
+
+function shouldShowMarketingNav() {
+  if (!isMarketingSurface(activeSurface)) return false;
+  if (joinCode || pairToken) return false;
+  if (hostCode && room) return false;
+  return true;
 }
 
 function roomStatusPill() {
@@ -961,8 +1028,12 @@ function attachChromeHandlers() {
     });
   });
   document.querySelector("#homeLogo")?.addEventListener("click", () => {
-    activeSurface = "home";
-    render();
+    navigateToSurface("home");
+  });
+  document.querySelectorAll("[data-nav-surface]").forEach(button => {
+    button.addEventListener("click", () => {
+      navigateToSurface(button.dataset.navSurface || "home");
+    });
   });
   document.querySelector("#openRoomFromTop")?.addEventListener("click", () => {
     activeSurface = "room";
@@ -1044,10 +1115,10 @@ async function closeCurrentRoom({ nextSurface = "home" } = {}) {
   }
 }
 
-function gameCards(mode = "play") {
+function gameCards(mode = "play", gameList = config.games) {
   const playAttr = hostAccount ? "data-start-setup" : "data-open-auth data-auth-next=\"setup\"";
   const waitingForPairedPhone = isDesktopControlledByPairedPhone();
-  return config.games.map(game => html`
+  return gameList.map(game => html`
     <article class="store-card ${game.id === selectedGameId ? "selected" : ""}">
       <div class="game-art game-art-${escape(game.id)}"><span class="tag">${escape(game.genre)}</span></div>
       <div class="game-body">
@@ -1437,6 +1508,231 @@ function renderHome() {
   });
 }
 
+function marketingPageIntro(eyebrow, title, copy) {
+  return html`
+    <section class="marketing-hero">
+      <span class="tag">${escape(eyebrow)}</span>
+      <h1>${escape(title)}</h1>
+      <p class="hero-copy">${escape(copy)}</p>
+    </section>
+  `;
+}
+
+function marketingPageShell(surface, intro, body) {
+  app.innerHTML = html`
+    <main class="home-screen marketing-screen marketing-screen-${surface}">
+      ${topbar(topbarActions())}
+      ${intro}
+      <section class="marketing-body">${body}</section>
+      ${authModal()}
+    </main>
+  `;
+  attachChromeHandlers();
+  attachAuthHandlers();
+}
+
+function renderGamesPage() {
+  const playable = config.games.filter(game => game.status === "playable");
+  const comingSoon = config.games.filter(game => game.status !== "playable");
+  const intro = marketingPageIntro(
+    "Game library",
+    "Choose a party game that fits the room",
+    "Jump from quick chaos to longer hosted sessions. Joyly is built for one big shared screen and every player joining from their own phone."
+  );
+  const body = html`
+    <section class="marketing-section">
+      <div class="section-title">
+        <div>
+          <h2>Playable now</h2>
+          <p class="muted">Ready for live groups today.</p>
+        </div>
+      </div>
+      <div class="store-grid">${gameCards("play", playable)}</div>
+    </section>
+    <section class="marketing-section marketing-feature-grid">
+      <article class="marketing-card">
+        <span class="tag">Why it works</span>
+        <h3>Hosted on the big screen</h3>
+        <p class="muted">The host runs the room, players join by code, and the energy stays in one shared moment instead of everyone staring at separate apps.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Designed for groups</span>
+        <h3>Fast onboarding</h3>
+        <p class="muted">Short setup, low friction phone join, and game rounds that keep spectators engaged while the next twist lands.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Session formats</span>
+        <h3>From warm-up to main event</h3>
+        <p class="muted">Use Joyly for icebreakers, pub nights, team socials, birthdays, or a longer hosted game block with rotating moods.</p>
+      </article>
+    </section>
+    ${comingSoon.length ? html`
+      <section class="marketing-section">
+        <div class="section-title">
+          <div>
+            <h2>Coming next</h2>
+            <p class="muted">Titles in the pipeline for broader party styles.</p>
+          </div>
+        </div>
+        <div class="store-grid">${comingSoon.map(game => html`
+          <article class="marketing-card marketing-card-compact">
+            <span class="tag">${escape(game.genre)}</span>
+            <h3>${escape(game.title)}</h3>
+            <p class="muted">${escape(game.description)}</p>
+            <div class="game-meta">
+              <span>${escape(game.players)}</span>
+              <span>${escape(game.mood)}</span>
+              <span>Coming soon</span>
+            </div>
+          </article>
+        `).join("")}</div>
+      </section>
+    ` : ""}
+  `;
+  marketingPageShell("games", intro, body);
+}
+
+function renderHowToPlayPage() {
+  const playAttr = hostAccount ? "data-start-setup" : "data-open-auth data-auth-next=\"setup\"";
+  const intro = marketingPageIntro(
+    "How it works",
+    "One screen, many phones, zero awkward setup",
+    "Joyly keeps the host flow simple so your group can move from idea to live game in a minute or two."
+  );
+  const body = html`
+    <section class="marketing-section marketing-step-grid">
+      <article class="marketing-step">
+        <strong>01</strong>
+        <h3>Pick a game</h3>
+        <p class="muted">Choose a format that matches your group size, energy level, and how long you want to play.</p>
+      </article>
+      <article class="marketing-step">
+        <strong>02</strong>
+        <h3>Open a room</h3>
+        <p class="muted">The host starts a room on the big screen, and Joyly generates a short code for everyone to join.</p>
+      </article>
+      <article class="marketing-step">
+        <strong>03</strong>
+        <h3>Players join by phone</h3>
+        <p class="muted">Each player uses their phone as a controller, answer pad, or secret role surface depending on the game.</p>
+      </article>
+    </section>
+    <section class="marketing-section marketing-feature-grid">
+      <article class="marketing-card">
+        <span class="tag">Host flow</span>
+        <h3>Big-screen control</h3>
+        <p class="muted">The host selects the title, manages the room, and keeps the pacing moving while everyone else simply joins and plays.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Player flow</span>
+        <h3>Phone as controller</h3>
+        <p class="muted">No downloads, no shared controller passing, and no confusion about where to tap next once the room is live.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Best setup</span>
+        <h3>Works great for 2-8 players</h3>
+        <p class="muted">Use a laptop, TV, or projector for the shared screen and let each person keep their own private inputs on mobile.</p>
+      </article>
+    </section>
+    <section class="marketing-section marketing-callout">
+      <div>
+        <span class="tag">Ready to host</span>
+        <h2>Start your next room when the group is ready</h2>
+      </div>
+      <button class="primary btn-play" ${playAttr}>${withIcon("play", "Start hosting")}</button>
+    </section>
+  `;
+  marketingPageShell("how-to-play", intro, body);
+}
+
+function renderSupportPage() {
+  const intro = marketingPageIntro(
+    "Support",
+    "Get your room running fast",
+    "Most issues come down to pairing, room codes, or device setup. Here is the quickest path to getting everyone back into the game."
+  );
+  const body = html`
+    <section class="marketing-section marketing-faq-grid">
+      <article class="marketing-card">
+        <span class="tag">Joining</span>
+        <h3>Room code not working</h3>
+        <p class="muted">Double-check that the host room is still open, the 6-digit code is current, and the room has not already been closed or restarted.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Pairing</span>
+        <h3>Phone and screen are not paired</h3>
+        <p class="muted">Use the pair code shown on the desktop screen, then finish sign-in on the phone before creating the room.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Devices</span>
+        <h3>Recommended setup</h3>
+        <p class="muted">Use a modern phone browser for players and a stable laptop or tablet connected to the shared display for the host.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Network</span>
+        <h3>Keep everyone on a solid connection</h3>
+        <p class="muted">A steady local Wi-Fi or mobile data connection helps the room stay responsive during timing-sensitive rounds.</p>
+      </article>
+    </section>
+    <section class="marketing-section marketing-contact-grid">
+      <article class="marketing-card">
+        <span class="tag">Need a hand</span>
+        <h3>Contact support</h3>
+        <p class="muted">Email <a href="mailto:support@joyly.games">support@joyly.games</a> with your issue, device type, and what step you were on when it happened.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Feedback</span>
+        <h3>Tell us what felt confusing</h3>
+        <p class="muted">If a setup step slowed your group down, we want to know. Clear friction reports help us simplify the host and player flow.</p>
+      </article>
+    </section>
+  `;
+  marketingPageShell("support", intro, body);
+}
+
+function renderCompanyPage() {
+  const intro = marketingPageIntro(
+    "Company",
+    "Joyly builds party games that feel hosted, social, and alive",
+    "We care about the energy in the room, not just the mechanics on the screen. Every page, prompt, and interaction is there to make groups laugh faster and stay engaged longer."
+  );
+  const body = html`
+    <section class="marketing-section marketing-feature-grid">
+      <article class="marketing-card">
+        <span class="tag">What we make</span>
+        <h3>Shared-screen party games</h3>
+        <p class="muted">Joyly designs browser-based game nights where the big screen drives the moment and players bring their own phones to the action.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">What we believe</span>
+        <h3>Low friction creates better energy</h3>
+        <p class="muted">When setup is simple and pacing is clear, groups stay in the room with each other instead of getting lost in logistics.</p>
+      </article>
+      <article class="marketing-card">
+        <span class="tag">Where it fits</span>
+        <h3>From friends to work socials</h3>
+        <p class="muted">Joyly is built for casual hangouts, hosted events, cafes, bars, and team sessions that need something social and easy to launch.</p>
+      </article>
+    </section>
+    <section class="marketing-section marketing-callout marketing-callout-story">
+      <div>
+        <span class="tag">Our approach</span>
+        <h2>We build around room dynamics first</h2>
+        <p class="muted">That means readable big-screen moments, private phone inputs where they matter, and games that work even when people are noisy, playful, and not reading instructions word for word.</p>
+      </div>
+    </section>
+  `;
+  marketingPageShell("company", intro, body);
+}
+
+function renderMarketingSurface() {
+  if (activeSurface === "games") return renderGamesPage();
+  if (activeSurface === "how-to-play") return renderHowToPlayPage();
+  if (activeSurface === "support") return renderSupportPage();
+  if (activeSurface === "company") return renderCompanyPage();
+  return renderHome();
+}
+
 function updateInlineError(selector, message) {
   const element = document.querySelector(selector);
   if (element) element.textContent = message || "";
@@ -1807,7 +2103,7 @@ function renderHost() {
   const surface = currentPhoneSurface();
   if (pairToken && !pairClaimed) return renderPairPage();
   if (isHostPhoneSession()) {
-    if (activeSurface === "home") return renderHome();
+    if (isMarketingSurface(activeSurface)) return renderMarketingSurface();
     if (room) {
       if (surface === "player") {
         if (player) return renderPhone();
@@ -1819,7 +2115,7 @@ function renderHost() {
   }
   if (hostCode && room?.status === "playing") return void renderPlaying();
   if (hostCode && room) return renderLobby();
-  if (activeSurface === "home") return renderHome();
+  if (isMarketingSurface(activeSurface)) return renderMarketingSurface();
   if (activeSurface === "setup" && hostAccount) return renderSetup();
   if (room?.status === "playing") return void renderPlaying();
   if (room) return renderLobby();
@@ -2175,7 +2471,7 @@ async function renderPhone() {
     bindAvatarEditors(app);
     document.querySelector("#cancelPlayerEdit")?.addEventListener("click", () => {
       phonePlayerEditing = false;
-      renderPhone();
+      void renderPhone().then(() => applyPendingRoom());
     });
     document.querySelector("#phonePlayerEditForm")?.addEventListener("submit", async event => {
       event.preventDefault();
@@ -2189,7 +2485,7 @@ async function renderPhone() {
       room = data.room;
       syncPlayerIdentityFromPlayer(data.player);
       phonePlayerEditing = false;
-      renderPhone();
+      void renderPhone().then(() => applyPendingRoom());
       } catch (error) {
         document.querySelector("#phonePlayerEditError").textContent = error.message;
       }

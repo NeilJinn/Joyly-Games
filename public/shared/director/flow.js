@@ -102,6 +102,10 @@ export function createDirectorFlow(definition = {}) {
     return getDirectorMode(phase) === "audio-advance";
   }
 
+  function shouldNotifyOnAudioEnd(phase) {
+    return ["audio-advance", "timer-and-audio"].includes(getDirectorMode(phase));
+  }
+
   function shouldHoldOnComplete(phase) {
     return getDirectorMode(phase) === "hold";
   }
@@ -132,6 +136,7 @@ export function createDirectorFlow(definition = {}) {
       phase,
       mode: step.kind || null,
       advanceOnEnd: shouldAdvanceOnAudioEnd(phase),
+      notifyOnEnd: shouldNotifyOnAudioEnd(phase),
       hold: shouldHoldOnComplete(phase),
       nextPhase: getDirectorNextPhase(phase, context),
       timerMs: getDirectorTimerMs(phase, context),
@@ -151,6 +156,7 @@ export function createDirectorFlow(definition = {}) {
     getDirectorTimerMs,
     getDirectorMode,
     shouldAdvanceOnAudioEnd,
+    shouldNotifyOnAudioEnd,
     shouldHoldOnComplete,
     getDirectorAudioSources,
     getDirectorAudioPlan

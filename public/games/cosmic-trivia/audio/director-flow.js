@@ -1,156 +1,99 @@
-import { createDirectorFlow, pickVariant } from "../../../shared/director/flow.js";
+import { createDirectorFlow } from "../../../shared/director/flow.js";
 import { createReactiveDirector } from "../../../shared/director/cues.js";
+import { COSMIC_TRIVIA_PHASES } from "../../../shared/director/cosmic-trivia-phases.js";
+import { getPhaseEntryCues, getTriggeredCues, pickCueVariant } from "../director/cue-library.js";
 
-const LOBBY_PREFIX_BY_PLAY_COUNT = [
-  "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-hello-welcome-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-round-2-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-round-3-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-again-01.mp3"
-];
-
-const LOBBY_DESCRIPTION_VARIANTS = [
-  "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-desc-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-desc-02.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-desc-03.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-desc-04.mp3"
-];
-
-const QUESTION_INTRO_VARIANTS = [
-  "/games/cosmic-trivia/audio/host/phases/phase-question-intro-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-question-intro-02.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-question-intro-03.mp3"
-];
-
-const ANSWERING_VARIANTS = [
-  "/games/cosmic-trivia/audio/host/phases/phase-answering-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-answering-02.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-answering-03.mp3"
-];
-
-const SCORING_VARIANTS_POSITIVE = [
-  "/games/cosmic-trivia/audio/host/phases/phase-scoring-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-scoring-02.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-scoring-03.mp3"
-];
-
-const SCORING_VARIANTS_NO_CORRECT = [
-  "/games/cosmic-trivia/audio/host/phases/phase-scoring-no-correct-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-scoring-no-correct-02.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-scoring-no-correct-03.mp3"
-];
-
-const NEXT_QUESTION_VARIANTS = [
-  "/games/cosmic-trivia/audio/host/phases/phase-next-question-01.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-next-question-02.mp3",
-  "/games/cosmic-trivia/audio/host/phases/phase-next-question-03.mp3"
-];
-
-// Placeholder until we record a dedicated "all answers are in" cue.
-const ALL_ANSWERED_VARIANTS = [
-  "/games/cosmic-trivia/audio/host/phases/phase-next-question-03.mp3"
-];
-
-function playCountPrefixIndex(playCount = 1) {
-  if (playCount <= 1) return 0;
-  if (playCount === 2) return 1;
-  if (playCount === 3) return 2;
-  return 3;
+function cueAudio(cueKey, seed = "") {
+  return pickCueVariant(cueKey, seed);
 }
 
-function lobbyIntroAudio(context = {}) {
-  const playCount = Number(context.playCount || 1);
-  const prefix = LOBBY_PREFIX_BY_PLAY_COUNT[playCountPrefixIndex(playCount)];
-  const description = pickVariant(
-    LOBBY_DESCRIPTION_VARIANTS,
-    `${context.roomCode || ""}:${playCount}:${context.questionIndex || 0}`
-  );
-  return [prefix, ...description].filter(Boolean);
-}
-
-const cosmicTriviaDirector = createDirectorFlow({
-  phases: {
-    "interest-selecting": {
-      kind: "timer",
-      timerMs: 35_000,
-      next: "preferences-locked",
-      message: "Choose your categories and keywords",
-      audio: lobbyIntroAudio
-    },
-    "preferences-locked": {
-      kind: "audio-advance",
-      next: "deck-loading",
-      message: "Choices are locked",
-      audio: ["/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp3"]
-    },
-    "deck-loading": {
-      kind: "audio-advance",
-      next: "question-intro",
-      message: "Loading the round",
-      audio: ["/games/cosmic-trivia/audio/host/phases/phase-deck-loading-01.mp3"]
-    },
-    "question-intro": {
-      kind: "audio-advance",
-      next: "question-audio",
-      message: context => `Question ${Number(context.questionIndex || 0) + 1} is coming up`,
-      audio: context => pickVariant(QUESTION_INTRO_VARIANTS, `${context.roomCode || ""}:question-intro:${context.questionIndex || 0}:${context.playCount || 1}`),
-      segmentPauseMultiplier: 0.12
-    },
-    "question-audio": {
-      kind: "audio-advance",
-      next: "answering",
-      message: "",
-      audio: context => context.questionAudio ? [context.questionAudio] : []
-    },
-    answering: {
-      kind: "timer",
-      timerMs: 25_000,
-      next: "scoring",
-      message: context => Number(context.questionIndex || 0) === 0
-        ? "What do you think? Please answer on your phone"
-        : "Answer before time runs out",
-      audio: context => Number(context.questionIndex || 0) === 0
-        ? pickVariant(ANSWERING_VARIANTS, `${context.roomCode || ""}:answering:${context.questionIndex || 0}:${context.playCount || 1}`)
-        : []
-    },
-    scoring: {
-      kind: "audio-advance",
-      next: "next-question",
-      message: context => {
-        const winners = Number(context.lastResolution?.rewardCount || 0);
-        return winners > 0 ? "Scores are moving" : "No one got it right";
-      },
-      audio: context => {
-        const rewardCount = Number(context.lastResolution?.rewardCount || 0);
-        const seed = `${context.roomCode || ""}:scoring:${context.questionIndex || 0}:${context.playCount || 1}:${rewardCount}`;
-        return rewardCount > 0
-          ? pickVariant(SCORING_VARIANTS_POSITIVE, seed)
-          : pickVariant(SCORING_VARIANTS_NO_CORRECT, seed);
-      },
-      segmentPauseMultiplier: 0.3,
-      segmentPauseMaxMs: 2400
-    },
-    "next-question": {
-      kind: "audio-advance",
-      next: context => (context?.isLastQuestion ? "finale-intro" : "question-intro"),
-      message: context => (context?.isLastQuestion ? "Final scores are coming up" : "Next question coming up"),
-      audio: context => pickVariant(NEXT_QUESTION_VARIANTS, `${context.roomCode || ""}:next-question:${context.questionIndex || 0}:${context.playCount || 1}`),
-      segmentPauseMultiplier: 0.12
-    },
-    "finale-intro": {
-      kind: "audio-advance",
-      next: "complete",
-      message: "Wrapping up the leaderboard",
-      audio: ["/games/cosmic-trivia/audio/host/phases/phase-complete-prelude-01.mp3"],
-      segmentPauseMultiplier: 0.2,
-      segmentPauseMaxMs: 1800
-    },
-    complete: {
-      kind: "hold",
-      message: "Final scores",
-      audio: ["/games/cosmic-trivia/audio/host/phases/phase-complete-01.mp3"]
-    }
+function firstPlayableCue(cues = [], seed = "") {
+  for (const cue of cues) {
+    const audio = cueAudio(cue.cueKey, `${seed}:${cue.cueKey}`);
+    if (audio.length) return audio;
   }
-});
+  return [];
+}
+
+function phaseEntryAudio(phase, context = {}) {
+  return firstPlayableCue(getPhaseEntryCues(phase), cueSeed(context, `auto:${phase}`));
+}
+
+function eventAudio({ phase = "", eventKey = "" } = {}, context = {}) {
+  return firstPlayableCue(
+    getTriggeredCues({
+      triggerMode: "event-match",
+      phase,
+      eventKey
+    }),
+    cueSeed(context, eventKey)
+  );
+}
+
+function withPhaseEntryFallback(phase, audioSelector) {
+  return context => {
+    const configured = typeof audioSelector === "function" ? audioSelector(context) : [];
+    return configured.length ? configured : phaseEntryAudio(phase, context);
+  };
+}
+
+// Phase audio layer — merges shared timing/message schema with audio config.
+// kind/timerMs/message come from COSMIC_TRIVIA_PHASES and are not repeated here.
+const PHASE_AUDIO = {
+  preferences: {
+    audio: context => cueAudio(
+      "phase.preferences.selection.intro",
+      `${context.roomCode || ""}:${context.playCount || 1}:phase.preferences.selection.intro:${context.questionIndex || 0}`
+    )
+  },
+  "round-prep": {
+    audio: context => cueAudio("phase.round-prep.round.loading", cueSeed(context, "round-prep"))
+  },
+  "question-intro": {
+    audio: context => cueAudio(
+      "phase.question-intro.question.next",
+      `${context.roomCode || ""}:phase.question-intro.question.next:${context.questionIndex || 0}:${context.playCount || 1}`
+    ),
+    segmentPauseMultiplier: 0.12
+  },
+  "question-read": {
+    audio: context => context.questionAudio ? [context.questionAudio] : []
+  },
+  "answer-lock": {
+    audio: context => cueAudio("phase.answer-lock.answer.locked", cueSeed(context, "answer-lock"))
+  },
+  "between-questions": {
+    audio: context => cueAudio(
+      "phase.between-questions.transition.next",
+      `${context.roomCode || ""}:phase.between-questions.transition.next:${context.questionIndex || 0}:${context.playCount || 1}`
+    ),
+    segmentPauseMultiplier: 0.12
+  },
+  finale: {
+    audio: context => cueAudio("phase.finale.result.incoming", cueSeed(context, "finale")),
+    segmentPauseMultiplier: 0.2,
+    segmentPauseMaxMs: 1800
+  },
+  "post-game": {
+    audio: context => cueAudio("phase.post-game.result.outro", cueSeed(context, "post-game"))
+  }
+};
+
+const mergedPhases = Object.fromEntries(
+  Object.entries(COSMIC_TRIVIA_PHASES).map(([phase, base]) => {
+    const configured = PHASE_AUDIO[phase] || {};
+    return [
+      phase,
+      {
+        ...base,
+        ...configured,
+        audio: withPhaseEntryFallback(phase, configured.audio)
+      }
+    ];
+  })
+);
+
+const cosmicTriviaDirector = createDirectorFlow({ phases: mergedPhases });
 
 function cueSeed(context = {}, cueId = "") {
   return [
@@ -159,7 +102,8 @@ function cueSeed(context = {}, cueId = "") {
     cueId,
     context.questionIndex || 0,
     context.questionId || "",
-    context.rewardCount || 0
+    context.rewardCount || 0,
+    context.finalHype?.index || 0
   ].join(":");
 }
 
@@ -172,7 +116,9 @@ function phaseContext(runtime = {}) {
     playCount: Number(context.playCount || nextSnapshot.playCount || 1),
     questionIndex: Number(context.questionIndex ?? nextSnapshot.questionIndex ?? 0),
     questionId: String(nextSnapshot.questionId || ""),
-    rewardCount: Number(nextSnapshot.lastResolution?.rewardCount || context.lastResolution?.rewardCount || 0)
+    rewardCount: Number(nextSnapshot.lastResolution?.rewardCount || context.lastResolution?.rewardCount || 0),
+    scoreVisibility: context.scoreVisibility || nextSnapshot.scoreVisibility || "visible",
+    finalHype: context.finalHype || nextSnapshot.finalHype || null
   };
 }
 
@@ -189,34 +135,53 @@ function allAnsweredEarly(previousSnapshot, nextSnapshot) {
   return previousAnswered < expected && expected > 0 && nextAnswered >= expected && remainingMs > 0;
 }
 
+function scoreVisibilityJustHidden(previousSnapshot, nextSnapshot) {
+  return previousSnapshot?.scoreVisibility !== "hidden" && nextSnapshot?.scoreVisibility === "hidden";
+}
+
+function answeringTimeCrossed(previousSnapshot, nextSnapshot, thresholdMs) {
+  if (!previousSnapshot || !nextSnapshot) return false;
+  if (previousSnapshot.phase !== "answering" || nextSnapshot.phase !== "answering") return false;
+  if (!nextSnapshot.questionId || previousSnapshot.questionId !== nextSnapshot.questionId) return false;
+
+  const previousRemainingMs = Number(previousSnapshot.remainingMs || 0);
+  const nextRemainingMs = Number(nextSnapshot.remainingMs || 0);
+  return previousRemainingMs > thresholdMs && nextRemainingMs <= thresholdMs && nextRemainingMs > 0;
+}
+
 const reactiveDirector = createReactiveDirector({
   flow: cosmicTriviaDirector,
   rules: [
     {
-      id: "phase:interest-selecting",
-      when: runtime => runtime.phaseChanged && runtime.phase === "interest-selecting",
+      id: "phase:game-setup",
+      when: runtime => runtime.phaseChanged && runtime.phase === "game-setup",
+      select: runtime => {
+        const context = phaseContext(runtime);
+        const audio = phaseEntryAudio("game-setup", context);
+        if (!audio.length) return null;
+        return {
+          id: "game-setup.question-count.selection",
+          replayKey: `game-setup.question-count.selection:${cueSeed(context, "game-setup")}`,
+          audio
+        };
+      }
+    },
+    {
+      id: "phase:preferences",
+      when: runtime => runtime.phaseChanged && runtime.phase === "preferences",
       select: runtime => ({
-        id: "lobby.intro",
-        replayKey: `lobby.intro:${cueSeed(phaseContext(runtime), "lobby.intro")}`,
-        audio: lobbyIntroAudio(phaseContext(runtime))
+        id: "preferences.intro",
+        replayKey: `preferences.intro:${cueSeed(phaseContext(runtime), "preferences.intro")}`,
+        audio: cueAudio("phase.preferences.selection.intro", cueSeed(phaseContext(runtime), "preferences.intro"))
       })
     },
     {
-      id: "phase:preferences-locked",
-      when: runtime => runtime.phaseChanged && runtime.phase === "preferences-locked",
+      id: "phase:round-prep",
+      when: runtime => runtime.phaseChanged && runtime.phase === "round-prep",
       select: () => ({
-        id: "preferences.locked",
-        replayKey: "preferences.locked",
-        audio: ["/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp3"]
-      })
-    },
-    {
-      id: "phase:deck-loading",
-      when: runtime => runtime.phaseChanged && runtime.phase === "deck-loading",
-      select: () => ({
-        id: "deck.loading",
-        replayKey: "deck.loading",
-        audio: ["/games/cosmic-trivia/audio/host/phases/phase-deck-loading-01.mp3"]
+        id: "phase.round-prep.round.loading",
+        replayKey: "phase.round-prep.round.loading",
+        audio: cueAudio("phase.round-prep.round.loading", cueSeed(phaseContext(runtime), "round-prep"))
       })
     },
     {
@@ -225,12 +190,12 @@ const reactiveDirector = createReactiveDirector({
       select: runtime => ({
         id: "question.intro",
         replayKey: `question.intro:${cueSeed(phaseContext(runtime), "question.intro")}`,
-        audio: pickVariant(QUESTION_INTRO_VARIANTS, cueSeed(phaseContext(runtime), "question.intro"))
+        audio: cueAudio("phase.question-intro.question.next", cueSeed(phaseContext(runtime), "question.intro"))
       })
     },
     {
-      id: "phase:question-audio",
-      when: runtime => runtime.phaseChanged && runtime.phase === "question-audio",
+      id: "phase:question-read",
+      when: runtime => runtime.phaseChanged && runtime.phase === "question-read",
       select: runtime => ({
         id: "question.read",
         replayKey: `question.read:${cueSeed(phaseContext(runtime), "question.read")}`,
@@ -243,62 +208,113 @@ const reactiveDirector = createReactiveDirector({
       select: runtime => ({
         id: "answering.prompt.first-question",
         replayKey: `answering.prompt.first-question:${cueSeed(phaseContext(runtime), "answering-first")}`,
-        audio: pickVariant(ANSWERING_VARIANTS, cueSeed(phaseContext(runtime), "answering-first"))
+        audio: cueAudio("phase.answering.answer.open", cueSeed(phaseContext(runtime), "answering-first"))
       })
     },
     {
-      id: "event:answering:all-answered-early",
+      id: "phase:answering:answer:all-in",
       when: runtime => allAnsweredEarly(runtime.previousSnapshot, runtime.nextSnapshot),
       select: runtime => ({
-        id: "answering.all-answered-early",
-        replayKey: `answering.all-answered-early:${cueSeed(phaseContext(runtime), "all-answered-early")}`,
-        audio: pickVariant(ALL_ANSWERED_VARIANTS, cueSeed(phaseContext(runtime), "all-answered-early")),
+        id: "answering.answer.all-in",
+        replayKey: `answering.answer.all-in:${cueSeed(phaseContext(runtime), "answer-all-in")}`,
+        audio: cueAudio("phase.answering.answer.all-in", cueSeed(phaseContext(runtime), "answer-all-in")),
         maxLateStartMs: 2_500
       })
     },
     {
-      id: "phase:scoring:no-correct",
-      when: runtime => runtime.phaseChanged && runtime.phase === "scoring" && Number(runtime.context.lastResolution?.rewardCount || 0) <= 0,
+      id: "phase:answering:time:critical",
+      when: runtime => answeringTimeCrossed(runtime.previousSnapshot, runtime.nextSnapshot, 5_000),
+      select: runtime => {
+        const context = phaseContext(runtime);
+        const eventKey = "phase.answering.time.critical";
+        const audio = eventAudio({ phase: "answering", eventKey }, context);
+        if (!audio.length) return null;
+        return {
+          id: "answering.time.critical",
+          replayKey: `answering.time.critical:${cueSeed(context, "time-critical")}`,
+          audio,
+          maxLateStartMs: 1_200
+        };
+      }
+    },
+    {
+      id: "phase:answering:time:warning",
+      when: runtime => answeringTimeCrossed(runtime.previousSnapshot, runtime.nextSnapshot, 10_000),
+      select: runtime => {
+        const context = phaseContext(runtime);
+        const eventKey = "phase.answering.time.warning";
+        const audio = eventAudio({ phase: "answering", eventKey }, context);
+        if (!audio.length) return null;
+        return {
+          id: "answering.time.warning",
+          replayKey: `answering.time.warning:${cueSeed(context, "time-warning")}`,
+          audio,
+          maxLateStartMs: 1_800
+        };
+      }
+    },
+    {
+      id: "phase:reveal:no-correct",
+      when: runtime => runtime.phaseChanged && runtime.phase === "reveal" && Number(runtime.context.lastResolution?.rewardCount || 0) <= 0,
       select: runtime => ({
-        id: "scoring.no-correct",
-        replayKey: `scoring.no-correct:${cueSeed(phaseContext(runtime), "scoring-no-correct")}`,
-        audio: pickVariant(SCORING_VARIANTS_NO_CORRECT, cueSeed(phaseContext(runtime), "scoring-no-correct"))
+        id: "reveal.no-correct",
+        replayKey: `reveal.no-correct:${cueSeed(phaseContext(runtime), "reveal-no-correct")}`,
+        audio: cueAudio("phase.reveal.answer.no-one-correct", cueSeed(phaseContext(runtime), "reveal-no-correct"))
       })
     },
     {
-      id: "phase:scoring:positive",
-      when: runtime => runtime.phaseChanged && runtime.phase === "scoring",
+      id: "phase:reveal:positive",
+      when: runtime => runtime.phaseChanged && runtime.phase === "reveal" && Number(runtime.context.lastResolution?.rewardCount || 0) > 0,
       select: runtime => ({
-        id: "scoring.positive",
-        replayKey: `scoring.positive:${cueSeed(phaseContext(runtime), "scoring-positive")}`,
-        audio: pickVariant(SCORING_VARIANTS_POSITIVE, cueSeed(phaseContext(runtime), "scoring-positive"))
+        id: "reveal.positive",
+        replayKey: `reveal.positive:${cueSeed(phaseContext(runtime), "reveal-positive")}`,
+        audio: cueAudio("phase.reveal.answer.positive", cueSeed(phaseContext(runtime), "reveal-positive"))
       })
     },
     {
-      id: "phase:next-question",
-      when: runtime => runtime.phaseChanged && runtime.phase === "next-question",
+      id: "global:score:hidden:started",
+      when: runtime => scoreVisibilityJustHidden(runtime.previousSnapshot, runtime.nextSnapshot),
+      select: runtime => ({
+        id: "score.hidden.started",
+        replayKey: `score.hidden.started:${cueSeed(phaseContext(runtime), "score-hidden-start")}`,
+        audio: cueAudio("global.score.hidden.started", cueSeed(phaseContext(runtime), "score-hidden-start"))
+      })
+    },
+    {
+      id: "phase:between-questions",
+      when: runtime => runtime.phaseChanged && runtime.phase === "between-questions",
       select: runtime => ({
         id: "transition.next-question",
         replayKey: `transition.next-question:${cueSeed(phaseContext(runtime), "next-question")}`,
-        audio: pickVariant(NEXT_QUESTION_VARIANTS, cueSeed(phaseContext(runtime), "next-question"))
+        audio: cueAudio("phase.between-questions.transition.next", cueSeed(phaseContext(runtime), "next-question"))
       })
     },
     {
-      id: "phase:finale-intro",
-      when: runtime => runtime.phaseChanged && runtime.phase === "finale-intro",
+      id: "phase:final-hype",
+      when: runtime => runtime.phaseChanged && runtime.phase === "final-hype",
+      select: runtime => ({
+        id: "final-hype.summary-line",
+        replayKey: `final-hype.summary-line:${cueSeed(phaseContext(runtime), "final-hype")}:${phaseContext(runtime).finalHype?.index || 0}`,
+        audio: [],
+        duckMusic: false
+      })
+    },
+    {
+      id: "phase:finale",
+      when: runtime => runtime.phaseChanged && runtime.phase === "finale",
       select: () => ({
         id: "finale.intro",
         replayKey: "finale.intro",
-        audio: ["/games/cosmic-trivia/audio/host/phases/phase-complete-prelude-01.mp3"]
+        audio: cueAudio("phase.finale.result.incoming", cueSeed(phaseContext(runtime), "finale"))
       })
     },
     {
-      id: "phase:complete",
-      when: runtime => runtime.phaseChanged && runtime.phase === "complete",
+      id: "phase:post-game",
+      when: runtime => runtime.phaseChanged && runtime.phase === "post-game",
       select: () => ({
-        id: "complete.outro",
-        replayKey: "complete.outro",
-        audio: ["/games/cosmic-trivia/audio/host/phases/phase-complete-01.mp3"]
+        id: "post-game.outro",
+        replayKey: "post-game.outro",
+        audio: cueAudio("phase.post-game.result.outro", cueSeed(phaseContext(runtime), "post-game"))
       })
     }
   ]

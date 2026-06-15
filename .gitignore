@@ -5,3 +5,5 @@ __pycache__/
 dist
 build
 *.log
+*.sqlite-shm
+*.sqlite-wal

@@ -237,10 +237,15 @@ function flattenGroups() {
             group.title,
             group.subtitle,
             group.phase,
+            group.domain,
+            group.scope,
+            group.event,
+            ...(group.eventPath || []),
+            group.cueKey,
             group.category,
             ...(group.keywords || []),
             ...(group.tags || []),
-            ...(group.candidates || []).map(candidate => [candidate.title, candidate.label, candidate.text, candidate.fileName].join(" "))
+            ...(group.candidates || []).map(candidate => [candidate.title, candidate.label, candidate.text, candidate.fileName, candidate.event, candidate.cueKey].join(" "))
           ].join(" "))
         });
       }
@@ -292,6 +297,7 @@ function pathBaseName(value) {
 
 function nextGroupFileName(group) {
   const candidates = group?.candidates || [];
+  if (!candidates.length && group?.libraryType === "director") return "line-01.mp3";
   const parsed = candidates
     .map(candidate => {
       const fileName = pathBaseName(candidate.fileName || candidate.audioPath || "");
@@ -317,9 +323,13 @@ function createGroupCandidateDraft(group) {
   const fileName = nextGroupFileName(group);
   const sourceCandidate = group.candidates[group.candidates.length - 1] || group.candidates[0] || null;
   const sourceAudioPath = String(sourceCandidate?.audioPath || "");
+  const eventPath = Array.isArray(group.eventPath) && group.eventPath.length ? group.eventPath : [group.event || "default"];
+  const defaultAudioPath = group.libraryType === "director"
+    ? `/games/${group.projectId}/audio/host/director/${group.scope}/${group.domain || group.phase}/${eventPath.join("/")}/${fileName}`
+    : `/games/${group.projectId}/audio/${fileName}`;
   const nextAudioPath = sourceAudioPath
     ? `${sourceAudioPath.slice(0, sourceAudioPath.lastIndexOf("/") + 1)}${fileName}`
-    : `/games/${group.projectId}/audio/${fileName}`;
+    : defaultAudioPath;
   const id = `${group.id}:${fileName}`;
 
   return {
@@ -327,12 +337,18 @@ function createGroupCandidateDraft(group) {
     groupId: group.id,
     projectId: group.projectId,
     kind: sourceCandidate?.kind || (group.libraryType === "question" ? "question-candidate" : "director-candidate"),
-    title: fileName.replace(/\.mp3$/, ""),
+    title: fileName.replace(/\.(mp3|m4a|wav|aac|ogg|webm|mp4|mp5)$/i, ""),
     label: "New voice placeholder",
     phase: sourceCandidate?.phase || group.phase || null,
     phaseGroup: sourceCandidate?.phaseGroup || group.phase || null,
+    domain: sourceCandidate?.domain || group.domain || group.phase || null,
+    scope: sourceCandidate?.scope || group.scope || null,
+    event: sourceCandidate?.event || group.event || null,
+    eventPath,
+    cueKey: sourceCandidate?.cueKey || group.cueKey || null,
     fileName,
     audioPath: nextAudioPath,
+    canonicalAudioPath: nextAudioPath,
     filePath: null,
     text: "",
     modelId: sourceCandidate?.modelId || group.source?.modelId || "eleven_v3",
@@ -396,6 +412,7 @@ function groupReviewStatus(group) {
 function groupMatchesQuickView(group, quickView) {
   if (quickView === "all") return true;
   if (quickView === "unreviewed") {
+    if (group.libraryType === "director" && !group.candidates.length) return true;
     return group.candidates.some(candidate => effectiveCandidateStatus(candidate) === "unreviewed");
   }
   if (quickView === "approved") {
@@ -732,45 +749,204 @@ function renderMainRows() {
   if (!groups.length) {
     return `<div class="empty-state"><strong>No results</strong><span>Try clearing a filter or switching project/type.</span></div>`;
   }
-  return groups.map(group => {
-    if (group.libraryType === "question") {
-      return renderQuestionRows(group);
+  const directorGroups = groups.filter(group => group.libraryType === "director");
+  const questionGroups = groups.filter(group => group.libraryType === "question");
+  return [
+    renderDirectorTreeRows(directorGroups),
+    ...questionGroups.map(group => renderQuestionRows(group))
+  ].join("");
+}
+
+function directorScopeLabel(scope) {
+  return {
+    phase: "phase",
+    global: "global",
+    cross: "cross"
+  }[scope] || scope || "phase";
+}
+
+function directorScopeSortValue(scope) {
+  return { phase: 0, global: 1, cross: 2 }[scope] ?? 9;
+}
+
+function createEventPathNode(name) {
+  return {
+    name,
+    children: new Map(),
+    groups: [],
+    groupCount: 0,
+    fileCount: 0
+  };
+}
+
+function insertEventPath(root, group) {
+  const path = Array.isArray(group.eventPath) && group.eventPath.length
+    ? group.eventPath.map(item => String(item || "default"))
+    : [String(group.event || "default")];
+  let node = root;
+  for (const part of path) {
+    if (!node.children.has(part)) node.children.set(part, createEventPathNode(part));
+    node = node.children.get(part);
+    node.groupCount += 1;
+    node.fileCount += group.candidates.length;
+  }
+  node.groups.push(group);
+}
+
+function sortedEventNodes(node) {
+  return [...node.children.values()]
+    .sort((a, b) => String(a.name).localeCompare(String(b.name)))
+    .map(child => ({
+      ...child,
+      children: sortedEventNodes(child),
+      groups: child.groups.sort((a, b) => String(a.cueKey).localeCompare(String(b.cueKey)))
+    }));
+}
+
+function buildDirectorTree(groups) {
+  const projects = new Map();
+  for (const group of groups) {
+    const projectId = group.projectId || group.project?.id || "unknown";
+    if (!projects.has(projectId)) {
+      projects.set(projectId, {
+        project: group.project || { id: projectId, title: projectId },
+        scopes: new Map(),
+        groupCount: 0,
+        fileCount: 0
+      });
     }
-    const expanded = uiState.expandedGroups.includes(group.id);
-    const selected = uiState.selectedIds.includes(group.id);
-    const notesCount = (groupState(group.id).notes || []).length + group.candidates.reduce((sum, candidate) => sum + (candidateState(candidate.id).notes || []).length, 0);
-    return html`
-      <section class="record ${expanded ? "expanded" : ""}">
-        <div class="record-head ${selected ? "selected" : ""}">
-          <div class="record-leading">
-            <label class="check"><input type="checkbox" data-select-id="${escape(group.id)}" ${selected ? "checked" : ""} /></label>
+    const projectNode = projects.get(projectId);
+    const scope = group.scope || "phase";
+    const phaseOrDomain = group.domain || group.phase || group.category || "unknown";
+    if (!projectNode.scopes.has(scope)) {
+      projectNode.scopes.set(scope, {
+        scope,
+        domains: new Map(),
+        groupCount: 0,
+        fileCount: 0
+      });
+    }
+    const scopeNode = projectNode.scopes.get(scope);
+    if (!scopeNode.domains.has(phaseOrDomain)) {
+      scopeNode.domains.set(phaseOrDomain, {
+        phaseOrDomain,
+        eventRoot: createEventPathNode(phaseOrDomain),
+        groups: [],
+        groupCount: 0,
+        fileCount: 0
+      });
+    }
+    const domainNode = scopeNode.domains.get(phaseOrDomain);
+    domainNode.groups.push(group);
+    insertEventPath(domainNode.eventRoot, group);
+    domainNode.groupCount += 1;
+    domainNode.fileCount += group.candidates.length;
+    scopeNode.groupCount += 1;
+    scopeNode.fileCount += group.candidates.length;
+    projectNode.groupCount += 1;
+    projectNode.fileCount += group.candidates.length;
+  }
+
+  return [...projects.values()]
+    .sort((a, b) => String(a.project.title || a.project.id).localeCompare(String(b.project.title || b.project.id)))
+    .map(projectNode => ({
+      ...projectNode,
+      scopes: [...projectNode.scopes.values()]
+        .sort((a, b) => directorScopeSortValue(a.scope) - directorScopeSortValue(b.scope) || String(a.scope).localeCompare(String(b.scope)))
+        .map(scopeNode => ({
+          ...scopeNode,
+          domains: [...scopeNode.domains.values()]
+            .sort((a, b) => String(a.phaseOrDomain).localeCompare(String(b.phaseOrDomain)))
+            .map(domainNode => ({
+              ...domainNode,
+              eventTree: sortedEventNodes(domainNode.eventRoot),
+              groups: domainNode.groups.sort((a, b) => String(a.cueKey).localeCompare(String(b.cueKey)))
+            }))
+        }))
+    }));
+}
+
+function renderEventPathNodes(nodes, depth = 0) {
+  return nodes.map(node => html`
+    <section class="tree-event-node" style="--tree-depth:${depth}">
+      <div class="tree-event-head">
+        <span class="tree-kicker">${depth === 0 ? "Event" : "Subevent"}</span>
+        <strong>${escape(node.name)}</strong>
+        <span>${escape(`${node.groupCount || node.groups.length} events · ${node.fileCount || node.groups.reduce((sum, group) => sum + group.candidates.length, 0)} files`)}</span>
+      </div>
+      ${node.children?.length ? renderEventPathNodes(node.children, depth + 1) : ""}
+      ${node.groups.map(group => renderDirectorCueRow(group)).join("")}
+    </section>
+  `).join("");
+}
+
+function renderDirectorTreeRows(groups) {
+  if (!groups.length) return "";
+  return buildDirectorTree(groups).map(projectNode => html`
+    <section class="director-project-node">
+      <div class="tree-project-head">
+        <span class="tree-kicker">Project</span>
+        <strong>${escape(projectNode.project.title || projectNode.project.id)}</strong>
+        <span>${escape(`${projectNode.groupCount} events · ${projectNode.fileCount} files`)}</span>
+      </div>
+      ${projectNode.scopes.map(scopeNode => html`
+        <section class="tree-scope-node">
+          <div class="tree-scope-head">
+            <span class="tree-kicker">Scope</span>
+            <strong>${escape(directorScopeLabel(scopeNode.scope))}</strong>
+            <span>${escape(`${scopeNode.groupCount} events · ${scopeNode.fileCount} files`)}</span>
           </div>
-          <button class="record-main btn-link" data-open-group="${escape(group.id)}" type="button">
-            <span class="record-kicker">${escape(group.libraryType === "director" ? "Director voice" : "Question voice")} · ${escape(group.project.title)}</span>
-            <h3 class="record-title">${escape(group.title)}</h3>
-            <p class="record-subtitle">${escape(group.subtitle || group.phase || group.category || "Library group")}</p>
-            <div class="record-meta-line">
-              <span>${escape(group.phase || group.category || "—")}</span>
-              <span>${escape(renderDuration(group))}</span>
-              <span>${escape(timeAgo(group.updatedAt))}</span>
-              <span>${escape(String(notesCount))} notes</span>
-            </div>
-          </button>
-          <div class="record-details">
-            <div class="chips record-tags">${(groupMeta(group).slice(0, 3)).map(tag => `<span class="chip">${escape(tag)}</span>`).join("") || `<span class="tiny">No tags</span>`}</div>
+          ${scopeNode.domains.map(domainNode => html`
+            <section class="tree-domain-node">
+              <div class="tree-domain-head">
+                <span class="tree-kicker">${escape(scopeNode.scope === "phase" ? "Phase" : "Domain")}</span>
+                <strong>${escape(domainNode.phaseOrDomain)}</strong>
+                <span>${escape(`${domainNode.groupCount} events · ${domainNode.fileCount} files`)}</span>
+              </div>
+              ${renderEventPathNodes(domainNode.eventTree || [])}
+            </section>
+          `).join("")}
+        </section>
+      `).join("")}
+    </section>
+  `).join("");
+}
+
+function renderDirectorCueRow(group) {
+  const expanded = uiState.expandedGroups.includes(group.id);
+  const selected = uiState.selectedIds.includes(group.id);
+  const notesCount = (groupState(group.id).notes || []).length + group.candidates.reduce((sum, candidate) => sum + (candidateState(candidate.id).notes || []).length, 0);
+  return html`
+    <section class="record director-event-row ${expanded ? "expanded" : ""}">
+      <div class="record-head ${selected ? "selected" : ""}">
+        <div class="record-leading">
+          <label class="check"><input type="checkbox" data-select-id="${escape(group.id)}" ${selected ? "checked" : ""} /></label>
+        </div>
+        <button class="record-main btn-link" data-open-group="${escape(group.id)}" type="button">
+          <span class="record-kicker">Event · ${escape(group.event || "default")}</span>
+          <h3 class="record-title">${escape(group.event || group.title || "default")}</h3>
+          <p class="record-subtitle">${escape(group.cueKey || group.subtitle || "Director cue")}</p>
+          <div class="record-meta-line">
+            <span>${escape(`${group.projectId} / ${group.scope || "phase"} / ${group.domain || group.phase || "unknown"} / ${(group.eventPath || [group.event || "default"]).join(" / ")}`)}</span>
+            <span>${escape(renderDuration(group))}</span>
+            <span>${escape(timeAgo(group.updatedAt))}</span>
+            <span>${escape(String(notesCount))} notes</span>
           </div>
-          <div class="record-actions">
-            <div class="row-actions">
-              <button class="row-action" data-play-group="${escape(group.id)}" type="button">Play</button>
-              <button class="row-action" data-toggle-group="${escape(group.id)}" type="button">${expanded ? "Collapse" : "Expand"}</button>
-              <button class="row-action primary" data-add-group-candidate="${escape(group.id)}" type="button" title="Add a new voice to this group">+</button>
-            </div>
+        </button>
+        <div class="record-details">
+          <div class="chips record-tags">${(groupMeta(group).slice(0, 3)).map(tag => `<span class="chip">${escape(tag)}</span>`).join("") || `<span class="tiny">No tags</span>`}</div>
+        </div>
+        <div class="record-actions">
+          <div class="row-actions">
+            <button class="row-action" data-play-group="${escape(group.id)}" type="button">Play</button>
+            <button class="row-action" data-toggle-group="${escape(group.id)}" type="button">${expanded ? "Collapse" : "Expand"}</button>
+            <button class="row-action primary" data-add-group-candidate="${escape(group.id)}" type="button" title="Add a new voice to this event">+</button>
           </div>
         </div>
-        ${expanded ? renderCandidateRows(group) : ""}
-      </section>
-    `;
-  }).join("");
+      </div>
+      ${expanded ? renderCandidateRows(group) : ""}
+    </section>
+  `;
 }
 
 function renderQuestionRows(group) {
@@ -829,11 +1005,11 @@ function renderCandidateRows(group) {
           <button class="badge ${statusClass(status)}" data-set-candidate-status="${escape(candidate.id)}" data-status-cycle="true" type="button">${statusLabel(status)}</button>
         </div>
         <button class="candidate-main btn-link" data-open-candidate="${escape(candidate.id)}" data-group-id="${escape(group.id)}" type="button">
-          <span class="record-kicker">${escape(candidate.kind === "question-candidate" ? "Question clip" : "Director clip")} · ${escape(candidate.fileName)}</span>
+          <span class="record-kicker">${escape(candidate.kind === "question-candidate" ? "Question clip" : `Director clip · ${candidate.cueKey || group.cueKey || candidate.fileName}`)}</span>
           <h4 class="candidate-title">${escape(candidate.label || "New voice placeholder")}</h4>
           <p class="candidate-subtitle">${escape(candidate.title || candidate.fileName)}</p>
           <div class="record-meta-line">
-            <span>${escape(candidate.category || candidate.phase || "—")}</span>
+            <span>${escape(candidate.category || (candidate.scope ? `${candidate.scope} / ${candidate.domain || candidate.phase || "—"} / ${(candidate.eventPath || [candidate.event || "—"]).join(" / ")}` : (candidate.phase || "—")))}</span>
             <span>${escape(durationLabel(durationCache.get(candidate.audioPath) || 0))}</span>
             <span>${escape(timeAgo(candidate.updatedAt || group.updatedAt))}</span>
             <span>${escape(String((candidateState(candidate.id).notes || []).length))} notes</span>
@@ -889,7 +1065,7 @@ function renderFilters() {
       </div>
       <div class="filter-clusters">
         <details class="cluster" open>
-          <summary><strong>Phase</strong><span class="count">${phaseOptions.length}</span></summary>
+          <summary><strong>Phase / Domain</strong><span class="count">${phaseOptions.length}</span></summary>
           <div class="cluster-body">
             <div class="pill-group">
               ${phaseOptions.map(phase => `<button class="pill ${uiState.filterPhases.includes(phase) ? "active" : ""}" data-filter-toggle="phase" data-filter-value="${escape(phase)}" type="button">${escape(phase)}</button>`).join("")}
@@ -962,11 +1138,12 @@ function renderDetail() {
         <div class="detail-header">
           <span class="brand-eyebrow">Inspector</span>
           <h2>${escape(candidate ? (candidate.label || candidate.title || candidate.fileName || "") : group.title)}</h2>
-          <p class="muted">${escape(candidate ? (candidate.title || candidate.fileName || "") : group.subtitle || group.phase || group.category || "")}</p>
+          <p class="muted">${escape(candidate ? (candidate.cueKey || candidate.title || candidate.fileName || "") : group.subtitle || group.cueKey || group.phase || group.category || "")}</p>
         </div>
         <div class="detail-grid">
           <div class="detail-stat"><span>Project</span><strong>${escape(group.project.title)}</strong></div>
           <div class="detail-stat"><span>Type</span><strong>${escape(group.libraryType === "director" ? "Director" : "Question")}</strong></div>
+          ${group.libraryType === "director" ? `<div class="detail-stat"><span>Cue</span><strong>${escape(group.cueKey || "—")}</strong></div>` : ""}
           ${candidate ? `<div class="detail-stat"><span>State</span><strong>${escape(statusLabel(candidateStatus))}</strong></div>` : ""}
           <div class="detail-stat"><span>Files</span><strong>${escape(String(group.candidates.length))}</strong></div>
         </div>

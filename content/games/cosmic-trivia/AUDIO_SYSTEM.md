@@ -1,104 +1,121 @@
 # Cosmic Trivia Audio System
 
-这套结构把 Trivia 的声音拆成三层：
+Cosmic Trivia 的主持人语音不再是“按脚本顺序硬播”的文件列表，而是一套可复用的导演 cue 系统。核心思想是：游戏状态发出 phase、global、cross 事件，语音库按同一套结构提供可选台词。
 
-- `主持人语音`：固定流程提示，例如“请选择题目偏好”“请看题”“公布答案”
-- `题目语音`：每道题自己的题干语音，沿用题库里的 `questionAudio`
-- `声效`：转场、倒计时、答对、答错、结算等通用反馈
+## 系统边界
 
-## 资源目录
+这套规范只覆盖 `host director voice`。
 
-- `public/games/cosmic-trivia/audio/host/phases/`
-  - 放系统阶段主持人口播
-- `public/games/cosmic-trivia/audio/`
-  - 放题目标题语音，按题目 id 命名
-- `public/games/cosmic-trivia/audio/sfx/transitions/`
-  - 放进入下一阶段时的转场声
-- `public/games/cosmic-trivia/audio/sfx/countdown/`
-  - 放答题阶段的倒计时、紧张提示
-- `public/games/cosmic-trivia/audio/sfx/results/`
-  - 放答对、答错、计分、冠军揭晓
-- `public/games/cosmic-trivia/audio/music/`
-  - 放可循环的 BGM
+- `questionAudio`：题干语音，仍由题库字段维护。
+- `sfx`：转场、倒计时、得分、庆祝等声效。
+- `music`：循环背景音乐。
+- `host director voice`：由 cue registry 和 game director 触发。
 
-## 阶段建议
+## 统一结构
 
-### `interest-selecting`
+语音库和文件目录统一采用：
 
-- 主持人语音：欢迎、提示玩家在手机上选择偏好
-- 声效：轻量开场提示音
-- BGM：轻松等待态循环
+- `Cosmic Trivia > phase > <phase> > <eventPath...> > line-xx.mp3`
+- `Cosmic Trivia > global > <domain> > <eventPath...> > line-xx.mp3`
+- `Cosmic Trivia > cross > <domain> > <eventPath...> > line-xx.mp3`
 
-### `preferences-locked`
+文件路径镜像语义结构：
 
-- 主持人语音：偏好已锁定，马上开始
-- 声效：确认/锁定提示音
+- `public/games/cosmic-trivia/audio/host/director/phase/question-intro/question/next/line-01.mp3`
+- `public/games/cosmic-trivia/audio/host/director/global/score/hidden/started/line-01.mp3`
+- `public/games/cosmic-trivia/audio/host/director/cross/player/idle/filler/line-01.mp3`
 
-### `deck-loading`
+## Scope 定义
 
-- 主持人语音：正在抽取题目或准备题组
-- 声效：短转场、加载感 sweep
+- `phase`：阶段内的主线导演语音，例如进入答题、公布答案、更新分数。
+- `global`：整局范围的状态事件，例如玩家加入、分数隐藏开始、游戏兜底语音。
+- `cross`：可跨阶段插入的导演语音，例如等待、网络延迟、连对统计、气氛填充。
 
-### `question-intro`
+`event` 不再作为顶层 scope 使用。事件路径统一放在 `eventPath` 里。
 
-- 主持人语音：请看题 / 第一题 / 下一题来了
-- 声效：题目登场提示音
-- 备注：这一类高频短句建议准备多个版本，避免重复感太强
+## Cue Key
 
-### `question-audio`
+每条语音都有唯一 `cueKey`：
 
-- 主播放内容：每道题自己的题干语音
-- 备注：这是题库里的 `questionAudio`
-- 声效：尽量不叠加太强的效果，避免遮挡题干
+- `phase.<phase>.<eventPath...>`
+- `global.<domain>.<eventPath...>`
+- `cross.<domain>.<eventPath...>`
 
-### `answering`
+示例：
 
-- 主持人语音：请在手机上作答
-- 声效：开始答题提示音、倒计时 warning、最后 5 秒 danger
-- BGM：紧张答题循环
+- `phase.question-intro.question.next`
+- `phase.answering.answer.all-in`
+- `global.score.hidden.started`
+- `cross.stats.streak.detected`
 
-### `scoring`
+`cueKey` 是真相来源。文件名只表示变体序号。
 
-- 主持人语音：加分结算 / 排名变化
-- 声效：得分、上升名次、榜单刷新
-- 备注：如果没人答对，可以走幽默版语音；如果有人得分，可以走鼓励版语音
+## Registry 与生成
 
-### `next-question`
+编辑入口：
 
-- 主持人语音：准备下一题
-- 声效：短转场
+- `content/games/cosmic-trivia/director/cues.json`
 
-### `complete`
+生成入口：
 
-- 主持人语音：本局结束、公布冠军、感谢参与
-- 声效：胜利、掌声、收尾
-- BGM：结算/庆祝循环
+- `npm run build:trivia-director-cues`
 
-## 命名建议
+生成产物：
 
-- 阶段主持人语音：`phase-<phase-name>-<variant>.mp3`
-  - 例：`phase-question-intro-01.mp3`
-- 通用声效：`sfx-<group>-<purpose>.mp3`
-  - 例：`sfx-countdown-warning.mp3`
-- 题干语音：沿用题目 id
-  - 例：`core-space-001-question.mp3`
+- `public/games/cosmic-trivia/director/cue-library.generated.js`
 
-## 接入优先级
+生成产物不要手写修改。
 
-1. 题目专属音频优先于通用主持人口播
-2. 主持人语音优先于强声效
-3. 倒计时声效只在 `answering` 阶段触发
-4. `question-audio` 播放题库里的题干语音
+## Fallback
 
-机器可读映射见：
+运行时按下面顺序找语音：
 
-- `content/games/cosmic-trivia/audio/audio-stage-map.json`
-- `content/games/cosmic-trivia/audio/host-broadcast-scripts.md`
-- `content/games/cosmic-trivia/audio/tts-workflow.md`
-- `content/games/cosmic-trivia/audio/tts-manifest.json`
+1. 精确 cue。
+2. 当前 domain 的默认 fallback。
+3. `global.game.default`。
+4. 静默。
 
-Playback:
+静默是正常 fallback，不能阻塞游戏。
 
-- The host presentation now auto-plays the matching phase audio when `cosmic-trivia` changes phases.
-- Phase audio lives in `public/games/cosmic-trivia/audio/host/phases/`.
-- The question/answer voiceovers can be wired in later without changing the phase director structure. For now, the director reuses a single placeholder clip.
+## Trivia Phase
+
+当前 Trivia 官方阶段：
+
+- `game-setup`
+- `preferences`
+- `round-prep`
+- `question-intro`
+- `question-read`
+- `answering`
+- `answer-lock`
+- `reveal`
+- `scoring`
+- `between-questions`
+- `final-hype`
+- `finale`
+- `post-game`
+
+## 当前运行时 Cue
+
+- `phase.preferences.selection.intro`
+- `phase.round-prep.round.loading`
+- `phase.question-intro.question.next`
+- `phase.answering.answer.open`
+- `phase.answering.answer.all-in`
+- `phase.answer-lock.answer.locked`
+- `phase.reveal.answer.positive`
+- `phase.reveal.answer.no-one-correct`
+- `phase.scoring.score.update`
+- `phase.between-questions.transition.next`
+- `phase.finale.result.incoming`
+- `phase.post-game.result.outro`
+- `global.score.hidden.started`
+
+## 可扩展 Cue
+
+- `global.player.join.in`
+- `cross.player.idle.filler`
+- `cross.network.delay.filler`
+- `cross.stats.streak.detected`
+
+新增 cue 时，先加 registry，再放音频，再生成 cue library。

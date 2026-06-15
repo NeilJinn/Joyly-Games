@@ -18,7 +18,7 @@ export function launchCountdownSeconds(room) {
 export function waitingStatusLabel(player, room) {
   if (room?.launchCountdown?.endsAt) return `Starting in ${launchCountdownSeconds(room)}s`;
   if (player?.online === false) return "Waiting to reconnect";
-  if (player?.ready) return "Ready";
+  if (player?.ready) return "请等待所有玩家准备";
   return "Getting ready";
 }
 
