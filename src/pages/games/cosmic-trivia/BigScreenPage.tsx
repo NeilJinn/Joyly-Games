@@ -38,6 +38,80 @@ function Sidebar({ room, trivia }: { room: Room; trivia: CosmicTriviaState }) {
   );
 }
 
+function DevPanel({ code, room }: { code: string; room: Room }) {
+  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
+  const trivia = room.gameState as CosmicTriviaState | null;
+
+  async function call(path: string, body: Record<string, unknown> = {}) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await fetch(`/api/rooms/${code}/trivia/${path}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const btnBase = [
+    "w-full text-left px-[10px] py-[6px] rounded-[6px] text-[12px] font-[600]",
+    "bg-white/[.07] hover:bg-white/[.13] text-[var(--ink)] border border-white/[.1]",
+    "transition-colors disabled:opacity-40 cursor-pointer",
+  ].join(" ");
+
+  return (
+    <div className="fixed bottom-[16px] left-[16px] z-50 select-none">
+      {open && (
+        <div className="mb-[8px] w-[210px] rounded-[10px] border border-white/[.12] bg-[rgba(14,22,35,.92)] backdrop-blur-[12px] p-[10px] grid gap-[5px]">
+          <p className="text-[var(--muted)] text-[10px] font-[700] uppercase tracking-[1.5px] m-0 mb-[2px]">
+            Dev Tools
+          </p>
+          <button className={btnBase} disabled={busy} onClick={() => call("next")}>
+            → Next phase
+          </button>
+          <button className={btnBase} disabled={busy} onClick={() => call("tester/timer", { seconds: 3 })}>
+            ⏩ 3s left
+          </button>
+          <button className={btnBase} disabled={busy} onClick={() => call("tester/complete")}>
+            ✓ Auto-complete question
+          </button>
+          <button className={btnBase} disabled={busy} onClick={() => call("tester/selection", { playerId: null })}>
+            ✓ Lock all preferences
+          </button>
+          {trivia && room.players.length > 0 && (
+            <>
+              <p className="text-[var(--muted)] text-[10px] font-[700] uppercase tracking-[1.5px] m-0 mt-[4px] mb-[2px]">
+                +100 pts
+              </p>
+              {room.players.map((p) => (
+                <button
+                  key={p.id}
+                  className={btnBase}
+                  disabled={busy}
+                  onClick={() => call("tester/score", { playerId: p.id, points: 100 })}
+                >
+                  +100 → {p.nickname}
+                </button>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-[36px] h-[36px] rounded-full border border-white/[.15] bg-[rgba(14,22,35,.82)] backdrop-blur-[8px] text-[var(--muted)] hover:text-[var(--ink)] hover:border-white/[.3] transition-colors text-[16px] flex items-center justify-center cursor-pointer"
+        title="Dev tools"
+      >
+        {open ? "✕" : "⚙"}
+      </button>
+    </div>
+  );
+}
+
 export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) {
   const trivia = room.gameState as CosmicTriviaState | null;
   const [settingUp, setSettingUp] = useState(false);
@@ -85,19 +159,20 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
 
   if (phase === "post-game") {
     return (
-      <div className="flex flex-col items-center justify-center gap-[24px] p-[32px] min-h-full">
+      <div className="flex flex-col items-center justify-center gap-[24px] p-[32px] h-full">
         <WinnerBoard
           players={room.players}
           scores={trivia.scores}
           onPlayAgain={handleRestart}
         />
+        <DevPanel code={code} room={room} />
       </div>
     );
   }
 
   if (phase === "game-setup") {
     return (
-      <div className="flex flex-col items-center justify-center gap-[24px] p-[32px] min-h-full">
+      <div className="flex flex-col items-center justify-center gap-[24px] p-[32px] h-full">
         <div className="w-full max-w-[560px] grid gap-[20px]">
           <div>
             <h2 className="text-[var(--ink)] text-[28px] font-[800] m-0 mb-[8px]">
@@ -121,25 +196,29 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
             ))}
           </div>
         </div>
+        <DevPanel code={code} room={room} />
       </div>
     );
   }
 
   if (phase === "preferences") {
     return (
-      <div className="flex items-center gap-[32px] p-[32px] min-h-full">
-        <div className="flex-1 max-w-[560px] grid gap-[16px]">
-          <h2 className="text-[var(--ink)] text-[28px] font-[800] m-0">
-            Players are choosing their categories
-          </h2>
-          <p className="text-[var(--muted)] text-[15px] m-0">
-            {trivia.preferencePlayerIds.length} / {trivia.expectedPreferenceCount} locked in
-          </p>
-          {trivia.phaseEndsAt && (
-            <CountdownBar endsAt={trivia.phaseEndsAt} totalSecs={60} />
-          )}
+      <div className="flex items-center gap-[32px] p-[32px] h-full">
+        <div className="flex-1 flex items-center">
+          <div className="max-w-[560px] w-full grid gap-[16px]">
+            <h2 className="text-[var(--ink)] text-[28px] font-[800] m-0">
+              Players are choosing their categories
+            </h2>
+            <p className="text-[var(--muted)] text-[15px] m-0">
+              {trivia.preferencePlayerIds.length} / {trivia.expectedPreferenceCount} locked in
+            </p>
+            {trivia.phaseEndsAt && (
+              <CountdownBar endsAt={trivia.phaseEndsAt} totalSecs={60} />
+            )}
+          </div>
         </div>
         <Sidebar room={room} trivia={trivia} />
+        <DevPanel code={code} room={room} />
       </div>
     );
   }
@@ -159,7 +238,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
       "And the results are…";
 
     return (
-      <div className="flex items-center gap-[32px] p-[32px] min-h-full">
+      <div className="flex items-center gap-[32px] p-[32px] h-full">
         <div className="flex-1 flex items-center justify-center">
           <div className="max-w-[500px] text-center grid gap-[12px]">
             {(phase === "question-intro" || phase === "question-read") && (
@@ -171,6 +250,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
           </div>
         </div>
         <Sidebar room={room} trivia={trivia} />
+        <DevPanel code={code} room={room} />
       </div>
     );
   }
@@ -179,7 +259,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
   const isRevealPhase = phase === "reveal" || phase === "scoring" || phase === "between-questions";
 
   return (
-    <div className="flex items-start gap-[24px] p-[32px] min-h-full">
+    <div className="flex items-start gap-[24px] p-[32px] h-full">
       <div className="flex-1 grid gap-[16px]">
         <div className="flex items-center justify-between">
           <p className="text-[var(--muted)] text-[13px] m-0">
@@ -218,6 +298,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
         )}
       </div>
       <Sidebar room={room} trivia={trivia} />
+      <DevPanel code={code} room={room} />
     </div>
   );
 }

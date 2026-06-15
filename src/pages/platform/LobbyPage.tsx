@@ -88,7 +88,7 @@ export default function LobbyPage() {
 
   return (
     <motion.div
-      className="min-h-screen pt-[80px]"
+      className="min-h-screen pt-[52px]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -97,7 +97,7 @@ export default function LobbyPage() {
       <NavBar />
 
       {room.status === "playing" ? (
-        <div style={{ minHeight: "calc(100vh - 80px)" }} className="pt-[80px]">
+        <div style={{ height: "calc(100vh - 52px)" }}>
           <CosmicTriviaHost room={room} code={code!} />
         </div>
       ) : (
@@ -105,7 +105,7 @@ export default function LobbyPage() {
           className="grid"
           style={{
             gridTemplateColumns: "320px 1fr",
-            minHeight: "calc(100vh - 80px)",
+            minHeight: "calc(100vh - 52px)",
           }}
         >
           {/* Sidebar */}
