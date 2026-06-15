@@ -75,3 +75,57 @@ button {
   border: 0;
   cursor: pointer;
 }
+
+/* Game art backgrounds */
+.game-art {
+  height: 150px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-end;
+  border-bottom: 4px solid var(--outline);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 36%),
+    var(--panel-2);
+  background-size: cover;
+  background-position: center;
+}
+
+.game-art-cosmic-trivia {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 36%),
+    var(--cover-cosmic-trivia);
+  background-size: cover;
+  background-position: center;
+}
+
+.game-art-after-hours {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 36%),
+    var(--cover-after-hours);
+  background-size: cover;
+  background-position: center;
+}
+
+.game-art-pitch-storm {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 36%),
+    var(--cover-pitch-storm);
+  background-size: cover;
+  background-position: center;
+}
+
+.game-art-signal-lost {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 36%),
+    var(--cover-signal-lost);
+  background-size: cover;
+  background-position: center;
+}
+
+.game-art-fate-werewolf {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 36%),
+    var(--panel-2);
+  background-size: cover;
+  background-position: center;
+}
