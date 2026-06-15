@@ -153,6 +153,16 @@ export default function WaitingPage() {
               <p className="text-[#f67272] text-[13px] text-center m-0">{error}</p>
             )}
 
+            {!countdownActive && (
+              <button
+                type="button"
+                className="w-full min-h-[38px] rounded-[8px] border border-white/[.1] text-[var(--muted)] text-[12px] font-[700] bg-transparent hover:text-[var(--ink)] hover:border-white/[.2] transition-colors cursor-pointer"
+                onClick={() => navigate(`/join/${code}?edit=1`)}
+              >
+                Edit avatar
+              </button>
+            )}
+
             <div className="phone-mini">
               <span>{code}</span>
               <strong>{room?.selectedGame?.title ?? "Lobby"}</strong>

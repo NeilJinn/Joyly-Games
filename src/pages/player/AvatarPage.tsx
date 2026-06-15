@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import PhoneLayout from "../../components/player/PhoneLayout";
 import AvatarStack from "../../components/player/AvatarStack";
@@ -38,6 +38,8 @@ const ART_CLASS: Record<Tab, string> = {
 export default function AvatarPage() {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isEditMode = searchParams.get("edit") === "1";
   const setPlayer = usePlayerStore((s) => s.setPlayer);
   const setRoom = useRoomStore((s) => s.setRoom);
 
@@ -93,7 +95,7 @@ export default function AvatarPage() {
         setRoom(data.room);
 
         const identity = loadPlayerIdentity();
-        if (identity?.playerId && identity.nickname) {
+        if (!isEditMode && identity?.playerId && identity.nickname) {
           const savedAvatar = identity.avatar;
           if (savedAvatar?.characterId) {
             const joinRes = await fetch(`/api/rooms/${code}/join`, {
@@ -155,6 +157,19 @@ export default function AvatarPage() {
 
   function selectItem(tab: Tab, id: string | null) {
     setAvatar((prev) => ({ ...prev, [tab]: id }));
+  }
+
+  function handleRandomize() {
+    if (!catalog) return;
+    const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+    const hatPool: (string | null)[] = [null, ...catalog.hats.map((h) => h.id)];
+    const decPool: (string | null)[] = [null, ...catalog.decorations.map((d) => d.id)];
+    setAvatar({
+      characterId: pick(catalog.characters)?.id ?? null,
+      hatId: pick(hatPool),
+      decorationId: pick(decPool),
+      paletteId: pick([...PALETTES]).id,
+    });
   }
 
   function renderGrid(tab: Tab, items: AvatarCatalogItem[]) {
@@ -234,10 +249,10 @@ export default function AvatarPage() {
         <form className="phone-card grid gap-[18px]" onSubmit={handleSubmit}>
           <div>
             <h1 className="text-[var(--ink)] text-[22px] font-[800] m-0 mb-[6px]">
-              Join {code}
+              {isEditMode ? "Edit avatar" : `Join ${code}`}
             </h1>
             <p className="text-[var(--muted)] text-[14px] m-0">
-              Build your player and enter a nickname.
+              {isEditMode ? "Change your look for this room." : "Build your player and enter a nickname."}
             </p>
           </div>
 
@@ -263,6 +278,20 @@ export default function AvatarPage() {
                 </button>
               ))}
             </div>
+
+            {/* Randomize button */}
+            <button
+              type="button"
+              className={[
+                "w-full min-h-[40px] rounded-[10px] border border-white/[.1]",
+                "text-[var(--muted)] text-[13px] font-[700] cursor-pointer",
+                "bg-[rgba(255,248,232,.04)] hover:bg-[rgba(255,248,232,.08)] hover:text-[var(--ink)] transition-colors",
+              ].join(" ")}
+              onClick={handleRandomize}
+              disabled={!catalog}
+            >
+              ✦ Randomize
+            </button>
 
             {/* Item grid for active tab */}
             {catalog ? renderGrid(activeTab, tabItems) : catalogError ? (
@@ -325,7 +354,11 @@ export default function AvatarPage() {
 
           <Button variant="primary" className="w-full" type="submit" disabled={submitting || !avatar.characterId}>
             <Icon name="login" />
-            <span>{submitting ? "Joining…" : "Join room"}</span>
+            <span>
+              {submitting
+                ? isEditMode ? "Saving…" : "Joining…"
+                : isEditMode ? "Save changes" : "Join room"}
+            </span>
           </Button>
         </form>
       </PhoneLayout>
