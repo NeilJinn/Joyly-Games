@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import HomePage from "./pages/platform/HomePage";
 import GamesPage from "./pages/platform/GamesPage";
 import HowToPlayPage from "./pages/platform/HowToPlayPage";
@@ -15,10 +16,11 @@ import FateWerewolfBigScreen from "./pages/games/fate-werewolf/BigScreenPage";
 import FateWerewolfPhone from "./pages/games/fate-werewolf/PhonePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
-export default function App() {
+function AnimatedRoutes() {
+  const location = useLocation();
   return (
-    <BrowserRouter>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         {/* Platform — big screen */}
         <Route path="/" element={<HomePage />} />
         <Route path="/games" element={<GamesPage />} />
@@ -41,6 +43,14 @@ export default function App() {
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+    </AnimatePresence>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AnimatedRoutes />
     </BrowserRouter>
   );
 }
