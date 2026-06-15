@@ -1,15 +1,12 @@
 import type { GameConfig } from "./config";
+import type { AvatarSelection } from "./avatar";
 
 export type RoomStatus = "waiting" | "playing" | "complete" | "closed";
-
-export interface Avatar {
-  [key: string]: unknown;
-}
 
 export interface Player {
   id: string;
   nickname: string;
-  avatar: Avatar | null;
+  avatar: AvatarSelection | null;
   online: boolean;
   ready: boolean;
   lastSeen?: number;

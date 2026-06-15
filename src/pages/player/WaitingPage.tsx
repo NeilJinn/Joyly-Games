@@ -26,8 +26,6 @@ export default function WaitingPage() {
 
   const identity = loadPlayerIdentity();
   const playerId = identity?.playerId ?? null;
-  const color = identity?.color ?? "#78d45e";
-
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState("");
 
@@ -122,7 +120,7 @@ export default function WaitingPage() {
               style={{
                 width: "min(240px, 60vw)",
                 height: "min(240px, 60vw)",
-                background: `linear-gradient(135deg, ${color}33, rgba(17,24,33,.9))`,
+                background: "linear-gradient(135deg, #78d45e33, rgba(17,24,33,.9))",
                 boxShadow: `0 0 0 4px ${ringColor}, 0 0 24px ${ringColor}66`,
                 filter: currentPlayer?.online === false ? "grayscale(1)" : undefined,
               }}

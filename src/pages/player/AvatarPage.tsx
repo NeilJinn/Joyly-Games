@@ -52,13 +52,12 @@ export default function AvatarPage() {
           if (joinRes.ok) {
             const joinData = (await joinRes.json()) as { player: { id: string; nickname: string }; room: Room };
             setRoom(joinData.room);
-            setPlayer({ playerId: joinData.player.id, nickname: joinData.player.nickname, avatar: null, color: identity.color });
+            setPlayer({ playerId: joinData.player.id, nickname: joinData.player.nickname, avatar: null });
             navigate(`/waiting/${code}`, { replace: true });
             return;
           }
         }
         if (identity?.nickname) setNickname(identity.nickname);
-        if (identity?.color) setSelectedColor(identity.color);
       } catch {
         setRoomError("Could not load room. Check your connection.");
       }
@@ -84,8 +83,8 @@ export default function AvatarPage() {
         throw new Error(err.error ?? "Failed to join");
       }
       const data = (await res.json()) as { player: { id: string; nickname: string }; room: Room };
-      savePlayerIdentity({ playerId: data.player.id, nickname: data.player.nickname, avatar: null, color: selectedColor });
-      setPlayer({ playerId: data.player.id, nickname: data.player.nickname, avatar: null, color: selectedColor });
+      savePlayerIdentity({ playerId: data.player.id, nickname: data.player.nickname, avatar: null });
+      setPlayer({ playerId: data.player.id, nickname: data.player.nickname, avatar: null });
       setRoom(data.room);
       navigate(`/waiting/${code}`);
     } catch (err) {

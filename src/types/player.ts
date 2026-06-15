@@ -1,14 +1,15 @@
+import type { AvatarSelection } from "./avatar";
+
 export interface PlayerIdentity {
   playerId: string;
   nickname: string;
-  avatar: null;
-  color?: string;
+  avatar: AvatarSelection | null;
 }
 
 export interface PlayerPayload {
   playerId: string;
   nickname: string;
-  avatar: null;
+  avatar: AvatarSelection | null;
 }
 
 export const PLAYER_IDENTITY_KEY = "joylyPlayerIdentity";
