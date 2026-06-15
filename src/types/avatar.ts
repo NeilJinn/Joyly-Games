@@ -1,5 +1,5 @@
 export interface AvatarSelection {
-  characterId: string;
+  characterId: string | null;
   hatId: string | null;
   decorationId: string | null;
   paletteId: PaletteId;
@@ -35,6 +35,6 @@ export function paletteById(id: string) {
   return PALETTES.find((p) => p.id === id) ?? PALETTES[0];
 }
 
-export function defaultAvatar(characterId: string): AvatarSelection {
+export function defaultAvatar(characterId: string | null): AvatarSelection {
   return { characterId, hatId: null, decorationId: null, paletteId: PALETTES[0].id };
 }

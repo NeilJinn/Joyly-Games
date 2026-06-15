@@ -5,6 +5,8 @@ interface AvatarStackProps {
   avatar: AvatarSelection | null;
   size?: "small" | "normal" | "large" | "hero";
   ringColor?: string;
+  glowColor?: string;
+  greyscale?: boolean;
   className?: string;
 }
 
@@ -12,6 +14,8 @@ export default function AvatarStack({
   avatar,
   size = "normal",
   ringColor,
+  glowColor,
+  greyscale,
   className,
 }: AvatarStackProps) {
   const palette = paletteById(avatar?.paletteId ?? "teal");
@@ -19,6 +23,8 @@ export default function AvatarStack({
   const style = {
     "--avatar-fill": palette.fill,
     "--avatar-ring": ringColor ?? palette.ring,
+    "--avatar-glow": glowColor ? `${glowColor}66` : "transparent",
+    ...(greyscale ? { filter: "grayscale(1) drop-shadow(0 10px 18px rgba(0,0,0,.22))" } : {}),
   } as React.CSSProperties;
 
   const sizeClass = size === "normal" ? "" : size;

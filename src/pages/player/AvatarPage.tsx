@@ -47,7 +47,7 @@ export default function AvatarPage() {
   const [catalog, setCatalog] = useState<AvatarCatalog | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("characterId");
   const [avatar, setAvatar] = useState<AvatarSelection>({
-    characterId: "",
+    characterId: null,
     hatId: null,
     decorationId: null,
     paletteId: "teal",

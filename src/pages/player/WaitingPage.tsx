@@ -113,15 +113,13 @@ export default function WaitingPage() {
     >
       <PhoneLayout>
         <div className="phone-status">
-          <div
-            className="phone-status-avatar"
-            style={{ filter: currentPlayer?.online === false ? "drop-shadow(0 0 16px #8f99a666)" : `drop-shadow(0 0 20px ${ringColor}66)` }}
-          >
+          <div className="phone-status-avatar">
             <AvatarStack
               avatar={avatarToShow}
               size="hero"
               ringColor={ringColor}
-              className={currentPlayer?.online === false ? "[filter:grayscale(1)]" : undefined}
+              glowColor={currentPlayer?.online === false ? "#8f99a6" : ringColor}
+              greyscale={currentPlayer?.online === false}
             />
           </div>
 
