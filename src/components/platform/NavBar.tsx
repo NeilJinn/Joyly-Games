@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import Icon from "../ui/Icon";
 import Button from "../ui/Button";
 import { useAuthStore } from "../../stores/authStore";
+import AccountMenu from "./AccountMenu";
 
 const NAV_ITEMS = [
   { to: "/games", label: "Games" },
@@ -89,13 +90,13 @@ export default function NavBar({
           </>
         ) : (
           <>
-            <Button variant="primary" onClick={onPlay}>
-              <Icon name="play" />
-              <span>Play</span>
-            </Button>
-            <span className="text-[var(--muted)] text-[14px]">
-              {account?.displayName}
-            </span>
+            {onPlay && (
+              <Button variant="secondary" onClick={onPlay}>
+                <Icon name="play" />
+                <span>Play</span>
+              </Button>
+            )}
+            <AccountMenu />
           </>
         )}
       </nav>
