@@ -191,7 +191,12 @@ function playAudioSequence(
     const onSegmentEnd = () => {
       if (controller.stopped || refs.audioController !== controller) return
       void waitForMetadata(audio).then(() => {
-        const pauseMs = getDirectorSegmentPauseMs(plan as any, Number(audio.duration || 0), {
+        const pauseMs = getDirectorSegmentPauseMs({
+          segmentPauseMs: plan.segmentPauseMs ?? undefined,
+          segmentPauseMultiplier: plan.segmentPauseMultiplier ?? undefined,
+          segmentPauseMinMs: plan.segmentPauseMinMs ?? undefined,
+          segmentPauseMaxMs: plan.segmentPauseMaxMs ?? undefined,
+        }, Number(audio.duration || 0), {
           roomCode: code,
           playCount: snapshot.playCount,
           questionIndex: snapshot.questionIndex,

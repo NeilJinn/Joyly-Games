@@ -102,7 +102,7 @@ const cosmicTriviaFlow = createDirectorFlow({ phases: mergedPhases })
 
 function phaseContext(runtime: ReactiveDirectorRuntime): DirectorContext {
   const ctx = runtime.context || {}
-  const next = (runtime.nextSnapshot || {}) as any
+  const next: Partial<DirectorSnapshot> = runtime.nextSnapshot || {}
   const res = (next.lastResolution || ctx.lastResolution) as { rewards?: Record<string, number> } | null
   const rewardCount = res?.rewards
     ? Object.values(res.rewards).filter(v => v > 0).length
@@ -118,7 +118,7 @@ function phaseContext(runtime: ReactiveDirectorRuntime): DirectorContext {
     lastResolution: next.lastResolution || ctx.lastResolution || null,
     scoreVisibility: ctx.scoreVisibility || next.scoreVisibility || "visible",
     finalHype: ctx.finalHype || next.finalHype || null,
-    isFinalQuestion: Boolean(ctx.isFinalQuestion ?? next.isFinalQuestion),
+    isFinalQuestion: Boolean(ctx.isFinalQuestion),
   }
 }
 
