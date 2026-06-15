@@ -28,7 +28,7 @@ export default function NavBar({
   return (
     <header
       className={[
-        "h-[64px] flex items-center justify-between px-[28px]",
+        "h-[64px] flex items-center justify-between px-[16px] md:px-[28px]",
         "border-b border-white/[.07] bg-[rgba(14,22,35,.82)] backdrop-blur-[16px] z-20",
         floating ? "fixed inset-x-0 top-0" : "",
       ]
@@ -51,7 +51,7 @@ export default function NavBar({
           Joyly Games
         </Link>
 
-        <nav className="flex items-center gap-[6px] flex-wrap" aria-label="Site">
+        <nav className="hidden md:flex items-center gap-[6px] flex-wrap" aria-label="Site">
           {NAV_ITEMS.map((item) => {
             const active = location.pathname === item.to;
             return (
@@ -81,11 +81,11 @@ export default function NavBar({
           <>
             <Button variant="secondary" onClick={onSignIn}>
               <Icon name="login" />
-              <span>Sign in</span>
+              <span className="hidden sm:inline">Sign in</span>
             </Button>
             <Button variant="primary" onClick={onPlay}>
               <Icon name="play" />
-              <span>Play</span>
+              <span className="hidden sm:inline">Play</span>
             </Button>
           </>
         ) : (

@@ -35,7 +35,7 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
   return (
     <section
       className={[
-        "relative overflow-hidden min-h-[620px] px-[48px] pt-[44px] pb-[34px]",
+        "relative overflow-hidden min-h-[340px] lg:min-h-[620px] px-[20px] lg:px-[48px] pt-[32px] lg:pt-[44px] pb-[56px] lg:pb-[34px]",
         "[background:linear-gradient(180deg,rgba(9,18,28,.04),#0c0f14),var(--hero-paper)]",
         "bg-cover bg-center",
       ].join(" ")}
@@ -44,7 +44,7 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
       <AnimatePresence mode="wait">
         <motion.div
           key={game.id}
-          className="grid items-end gap-[36px] [grid-template-columns:minmax(0,1fr)_430px]"
+          className="grid items-end gap-[36px] grid-cols-1 lg:[grid-template-columns:minmax(0,1fr)_430px]"
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -24 }}
@@ -56,7 +56,7 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
               {game.players} · {game.genre}
             </Tag>
             <h1
-              className="max-w-[860px] my-[18px] mb-[28px] [font-size:clamp(46px,7vw,86px)] leading-[.98] mt-[18px]"
+              className="max-w-[860px] my-[18px] mb-[28px] [font-size:clamp(32px,7vw,86px)] leading-[.98] mt-[18px]"
             >
               {game.title}
             </h1>
@@ -74,8 +74,8 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
             </Button>
           </div>
 
-          {/* Right: featured game card */}
-          <div className="grid gap-[18px] p-[18px] border border-white/[.1] rounded-[8px] bg-[rgba(17,24,33,.9)] [box-shadow:var(--shadow)]">
+          {/* Right: featured game card — hidden on mobile */}
+          <div className="hidden lg:grid gap-[18px] p-[18px] border border-white/[.1] rounded-[8px] bg-[rgba(17,24,33,.9)] [box-shadow:var(--shadow)]">
             <div
               className={`h-[220px] rounded-[6px] game-art game-art-${game.id}`}
             />
@@ -92,7 +92,7 @@ export default function PromoRail({ games, onPlay }: PromoRailProps) {
 
       {/* Promo controls */}
       {featured.length > 1 && (
-        <div className="absolute left-[48px] right-[48px] bottom-[28px] z-[4] flex items-center justify-center gap-[14px]">
+        <div className="absolute left-[20px] right-[20px] lg:left-[48px] lg:right-[48px] bottom-[28px] z-[4] flex items-center justify-center gap-[14px]">
           <Button
             variant="icon"
             className="bg-[rgba(17,24,33,.82)]"

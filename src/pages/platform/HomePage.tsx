@@ -45,19 +45,19 @@ export default function HomePage() {
       {/* Action band */}
       <section
         className={[
-          "grid [grid-template-columns:minmax(0,1fr)_minmax(360px,440px)] items-start gap-[34px]",
-          "px-[48px] pt-[30px] pb-[46px]",
+          "grid grid-cols-1 lg:[grid-template-columns:minmax(0,1fr)_minmax(360px,440px)] items-start gap-[24px] lg:gap-[34px]",
+          "px-[20px] lg:px-[48px] pt-[24px] lg:pt-[30px] pb-[32px] lg:pb-[46px]",
           "[background:linear-gradient(180deg,#0c0f14,rgba(12,15,20,.96))]",
         ].join(" ")}
       >
         {/* Start a Jam + Join room */}
-        <div className="grid [grid-template-columns:minmax(220px,320px)_minmax(310px,460px)] items-stretch gap-[14px]">
+        <div className="grid grid-cols-1 sm:[grid-template-columns:minmax(220px,320px)_minmax(310px,460px)] items-stretch gap-[12px] lg:gap-[14px]">
           <CreateRoomButton onClick={() => handlePlay()} />
           <JoinRoomForm />
         </div>
 
-        {/* Pair device */}
-        <div className="relative pl-[28px] before:absolute before:left-0 before:top-[8px] before:bottom-[8px] before:w-[1px] before:bg-white/[.14]">
+        {/* Pair device — hidden on mobile */}
+        <div className="hidden lg:block relative pl-[28px] before:absolute before:left-0 before:top-[8px] before:bottom-[8px] before:w-[1px] before:bg-white/[.14]">
           <aside
             className={[
               "grid [grid-template-columns:46px_1fr] items-center gap-[12px] p-[12px] min-h-[92px]",
@@ -86,7 +86,7 @@ export default function HomePage() {
       </section>
 
       {/* Game Library */}
-      <section className="px-[48px] pt-[34px] pb-[60px]">
+      <section className="px-[20px] lg:px-[48px] pt-[28px] lg:pt-[34px] pb-[48px] lg:pb-[60px]">
         <div className="flex items-end justify-between gap-[20px] mb-[18px]">
           <div>
             <h2 className="m-0 text-[28px] font-[800] text-[var(--ink)]">
@@ -97,7 +97,7 @@ export default function HomePage() {
             </p>
           </div>
         </div>
-        <div className="grid [grid-template-columns:repeat(4,minmax(0,1fr))] gap-[16px]">
+        <div className="grid grid-cols-2 lg:[grid-template-columns:repeat(4,minmax(0,1fr))] gap-[12px] lg:gap-[16px]">
           {config.games.map((game) => (
             <GameCard
               key={game.id}
