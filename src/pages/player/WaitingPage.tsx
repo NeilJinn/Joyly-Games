@@ -1,7 +1,175 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import PhoneLayout from "../../components/player/PhoneLayout";
+import Button from "../../components/ui/Button";
+import Icon from "../../components/ui/Icon";
+import { useSSE } from "../../hooks/useSSE";
+import { useRoomStore } from "../../stores/roomStore";
+import { loadPlayerIdentity } from "../../types/player";
+import type { Player } from "../../types/room";
+
+function getInitials(nickname: string): string {
+  return nickname.slice(0, 2).toUpperCase();
+}
+
+function launchCountdownSeconds(endsAt?: number): number {
+  if (!endsAt) return 0;
+  return Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+}
+
 export default function WaitingPage() {
+  const { code } = useParams<{ code: string }>();
+  const navigate = useNavigate();
+  const room = useRoomStore((s) => s.room);
+  const setRoom = useRoomStore((s) => s.setRoom);
+
+  const identity = loadPlayerIdentity();
+  const playerId = identity?.playerId ?? null;
+  const color = identity?.color ?? "#78d45e";
+
+  const [toggling, setToggling] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!playerId) navigate(`/join/${code ?? ""}`, { replace: true });
+  }, [playerId, code, navigate]);
+
+  useEffect(() => {
+    if (!code || room?.code === code) return;
+    fetch(`/api/rooms/${code}`)
+      .then((r) => r.json())
+      .then((data: { room: typeof room }) => { if (data.room) setRoom(data.room); })
+      .catch(() => {});
+  }, [code, room?.code, setRoom]);
+
+  useSSE(code ?? null);
+
+  useEffect(() => {
+    if (room?.status === "playing") navigate(`/play/${code}`, { replace: true });
+  }, [room?.status, code, navigate]);
+
+  if (!playerId) return null;
+
+  const currentPlayer: Player | undefined = room?.players.find((p) => p.id === playerId);
+
+  const countdownEndsAt = room?.launchCountdown?.endsAt;
+  const countdownSecs = launchCountdownSeconds(countdownEndsAt);
+  const countdownActive = countdownSecs > 0;
+
+  const statusText = countdownActive
+    ? `Starting in ${countdownSecs}s`
+    : currentPlayer?.ready
+    ? "Ready"
+    : "Getting ready";
+
+  const ringColor = !currentPlayer || currentPlayer.online === false
+    ? "#8f99a6"
+    : currentPlayer.ready
+    ? "#78d45e"
+    : "#f4b04a";
+
+  const isReady = Boolean(currentPlayer?.ready);
+
+  async function handleToggleReady() {
+    if (!code || !playerId || toggling || countdownActive) return;
+    setToggling(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/rooms/${code}/players/${playerId}/ready`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ready: !isReady }),
+      });
+      if (!res.ok) throw new Error("Failed to update ready status");
+      const data = (await res.json()) as { room: typeof room };
+      if (data.room) setRoom(data.room);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setToggling(false);
+    }
+  }
+
+  if (room?.status === "closed") {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+        <PhoneLayout>
+          <div className="phone-card grid gap-[12px] text-center">
+            <div className="text-[48px]">✕</div>
+            <h1 className="text-[var(--ink)] text-[22px] font-[800] m-0">Room closed</h1>
+            <p className="text-[var(--muted)] text-[14px] m-0">Ask the host to create a new room.</p>
+          </div>
+        </PhoneLayout>
+      </motion.div>
+    );
+  }
+
+  const nickname = currentPlayer?.nickname ?? identity?.nickname ?? "Player";
+
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <p className="text-[var(--muted)]">Waiting — coming in Phase 4</p>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+    >
+      <PhoneLayout>
+        <div className="phone-status">
+          <div className="phone-status-avatar">
+            <div
+              className="rounded-full flex items-center justify-center text-[56px] font-[800] text-white"
+              style={{
+                width: "min(240px, 60vw)",
+                height: "min(240px, 60vw)",
+                background: `linear-gradient(135deg, ${color}33, rgba(17,24,33,.9))`,
+                boxShadow: `0 0 0 4px ${ringColor}, 0 0 24px ${ringColor}66`,
+                filter: currentPlayer?.online === false ? "grayscale(1)" : undefined,
+              }}
+            >
+              {getInitials(nickname)}
+            </div>
+          </div>
+
+          <div className="phone-status-copy">
+            <h1 className="text-[var(--ink)]">{nickname}</h1>
+            <span
+              className={["ready-chip", isReady ? "is-ready" : ""].join(" ")}
+            >
+              {statusText}
+            </span>
+          </div>
+
+          <div className="phone-status-panel">
+            {room?.status === "waiting" && (
+              <Button
+                variant="primary"
+                className="w-full"
+                disabled={toggling || countdownActive}
+                onClick={handleToggleReady}
+              >
+                <Icon name="check" />
+                <span>
+                  {countdownActive
+                    ? "Starting soon"
+                    : isReady
+                    ? "Ready"
+                    : "Tap when ready"}
+                </span>
+              </Button>
+            )}
+
+            {error && (
+              <p className="text-[#f67272] text-[13px] text-center m-0">{error}</p>
+            )}
+
+            <div className="phone-mini">
+              <span>{code}</span>
+              <strong>{room?.selectedGame?.title ?? "Lobby"}</strong>
+            </div>
+          </div>
+        </div>
+      </PhoneLayout>
+    </motion.div>
   );
 }
