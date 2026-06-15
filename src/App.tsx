@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import HomePage from "./pages/platform/HomePage";
 import GamesPage from "./pages/platform/GamesPage";
@@ -16,6 +17,19 @@ import CosmicTriviaPhone from "./pages/games/cosmic-trivia/PhonePage";
 import FateWerewolfBigScreen from "./pages/games/fate-werewolf/BigScreenPage";
 import FateWerewolfPhone from "./pages/games/fate-werewolf/PhonePage";
 import NotFoundPage from "./pages/NotFoundPage";
+
+function RoomCodeRedirect() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const roomCode = params.get("room");
+    if (roomCode) {
+      navigate(`/join/${roomCode.replace(/\D/g, "")}`, { replace: true });
+    }
+  }, [location.search, navigate]);
+  return null;
+}
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -52,6 +66,7 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <BrowserRouter>
+      <RoomCodeRedirect />
       <AnimatedRoutes />
     </BrowserRouter>
   );
