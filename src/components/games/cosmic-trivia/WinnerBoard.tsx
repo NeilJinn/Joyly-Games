@@ -1,3 +1,4 @@
+import AvatarStack from "../../player/AvatarStack";
 import type { Player } from "../../../types/room";
 
 interface WinnerBoardProps {
@@ -34,9 +35,7 @@ export default function WinnerBoard({ players, scores, onPlayAgain }: WinnerBoar
           >
             {i + 1}
           </span>
-          <div className="w-[38px] h-[38px] rounded-full flex-none flex items-center justify-center text-[13px] font-[800] text-white bg-[#1e2d3d]">
-            {player.nickname.slice(0, 2).toUpperCase()}
-          </div>
+          <AvatarStack avatar={player.avatar} size="normal" />
           <span className="flex-1 text-[var(--ink)] text-[18px] font-[700]">
             {player.nickname}
           </span>

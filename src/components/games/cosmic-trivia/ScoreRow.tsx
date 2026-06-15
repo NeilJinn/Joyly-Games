@@ -1,3 +1,4 @@
+import AvatarStack from "../../player/AvatarStack";
 import type { Player } from "../../../types/room";
 
 interface ScoreRowProps {
@@ -17,8 +18,6 @@ export default function ScoreRow({
   showScore,
   isRevealPhase,
 }: ScoreRowProps) {
-  const initials = player.nickname.slice(0, 2).toUpperCase();
-
   let statusColor = "rgba(255,255,255,.08)";
   if (isRevealPhase) statusColor = "rgba(255,255,255,.12)";
   else if (hasAnswered) statusColor = "rgba(120,212,94,.25)";
@@ -31,12 +30,11 @@ export default function ScoreRow({
       <span className="text-[var(--muted)] text-[12px] font-[700] w-[18px] text-center tabular-nums">
         {rank}
       </span>
-      <div
-        className="w-[30px] h-[30px] rounded-full flex-none flex items-center justify-center text-[11px] font-[800] text-white"
-        style={{ background: player.online === false ? "#333c46" : "#1e2d3d" }}
-      >
-        {initials}
-      </div>
+      <AvatarStack
+        avatar={player.avatar}
+        size="normal"
+        ringColor={player.online === false ? "#8f99a6" : undefined}
+      />
       <span className="flex-1 text-[var(--ink)] text-[13px] font-[600] truncate">
         {player.nickname}
       </span>

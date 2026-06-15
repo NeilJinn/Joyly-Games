@@ -2,16 +2,13 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import PhoneLayout from "../../components/player/PhoneLayout";
+import AvatarStack from "../../components/player/AvatarStack";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 import { useSSE } from "../../hooks/useSSE";
 import { useRoomStore } from "../../stores/roomStore";
 import { loadPlayerIdentity } from "../../types/player";
 import type { Player } from "../../types/room";
-
-function getInitials(nickname: string): string {
-  return nickname.slice(0, 2).toUpperCase();
-}
 
 function launchCountdownSeconds(endsAt?: number): number {
   if (!endsAt) return 0;
@@ -26,6 +23,7 @@ export default function WaitingPage() {
 
   const identity = loadPlayerIdentity();
   const playerId = identity?.playerId ?? null;
+
   const [toggling, setToggling] = useState(false);
   const [error, setError] = useState("");
 
@@ -68,6 +66,7 @@ export default function WaitingPage() {
     : "#f4b04a";
 
   const isReady = Boolean(currentPlayer?.ready);
+  const avatarToShow = currentPlayer?.avatar ?? identity?.avatar ?? null;
 
   async function handleToggleReady() {
     if (!code || !playerId || toggling || countdownActive) return;
@@ -115,25 +114,17 @@ export default function WaitingPage() {
       <PhoneLayout>
         <div className="phone-status">
           <div className="phone-status-avatar">
-            <div
-              className="rounded-full flex items-center justify-center text-[56px] font-[800] text-white"
-              style={{
-                width: "min(240px, 60vw)",
-                height: "min(240px, 60vw)",
-                background: "linear-gradient(135deg, #78d45e33, rgba(17,24,33,.9))",
-                boxShadow: `0 0 0 4px ${ringColor}, 0 0 24px ${ringColor}66`,
-                filter: currentPlayer?.online === false ? "grayscale(1)" : undefined,
-              }}
-            >
-              {getInitials(nickname)}
-            </div>
+            <AvatarStack
+              avatar={avatarToShow}
+              size="hero"
+              ringColor={ringColor}
+              className={currentPlayer?.online === false ? "[filter:grayscale(1)]" : undefined}
+            />
           </div>
 
           <div className="phone-status-copy">
             <h1 className="text-[var(--ink)]">{nickname}</h1>
-            <span
-              className={["ready-chip", isReady ? "is-ready" : ""].join(" ")}
-            >
+            <span className={["ready-chip", isReady ? "is-ready" : ""].join(" ")}>
               {statusText}
             </span>
           </div>
