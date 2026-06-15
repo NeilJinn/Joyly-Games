@@ -66,7 +66,7 @@ export function getDirectorSegmentPauseMs(
   const safeMultiplier = Number.isFinite(multiplier) ? multiplier : 0.12
   const safeMin = Number.isFinite(minMs) ? minMs : 180
   const safeMax = Number.isFinite(maxMs) ? maxMs : 1200
-  const base = Math.max(0, durationSeconds) * 1000 * safeMultiplier
+  const base = Math.max(0, Number(durationSeconds) || 0) * 1000 * safeMultiplier
   return clamp(base, safeMin, safeMax)
 }
 

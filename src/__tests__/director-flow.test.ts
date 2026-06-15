@@ -50,7 +50,9 @@ describe("getDirectorSegmentPauseMs", () => {
 describe("createDirectorFlow", () => {
   const flow = createDirectorFlow({
     phases: {
-      "game-setup": { kind: "hold", message: "Choose questions" },
+      "game-setup": { kind: "hold", message: "Choose questions", next: "preferences" },
+      "preferences": { kind: "timer", next: null },
+      "question-read": { kind: "audio-advance", next: ctx => `next-${ctx.suffix}` },
       "answering": {
         kind: "timer-and-audio",
         timerMs: 25_000,
@@ -74,6 +76,7 @@ describe("createDirectorFlow", () => {
   it("shouldAdvanceOnAudioEnd is true only for audio-advance kind", () => {
     expect(flow.shouldAdvanceOnAudioEnd("game-setup")).toBe(false)
     expect(flow.shouldAdvanceOnAudioEnd("answering")).toBe(false)
+    expect(flow.shouldAdvanceOnAudioEnd("question-read")).toBe(true)
   })
   it("shouldNotifyOnAudioEnd is true for audio-advance and timer-and-audio", () => {
     expect(flow.shouldNotifyOnAudioEnd("answering")).toBe(true)
@@ -92,5 +95,17 @@ describe("createDirectorFlow", () => {
   it("getDirectorTimerMs resolves number values", () => {
     expect(flow.getDirectorTimerMs("answering")).toBe(25_000)
     expect(flow.getDirectorTimerMs("game-setup")).toBeNull()
+  })
+  it("getDirectorNextPhase returns static string next", () => {
+    expect(flow.getDirectorNextPhase("game-setup")).toBe("preferences")
+  })
+  it("getDirectorNextPhase returns null when next is null", () => {
+    expect(flow.getDirectorNextPhase("preferences")).toBeNull()
+  })
+  it("getDirectorNextPhase calls function next with context", () => {
+    expect(flow.getDirectorNextPhase("question-read", { suffix: "foo" })).toBe("next-foo")
+  })
+  it("getDirectorNextPhase returns null for unknown phase", () => {
+    expect(flow.getDirectorNextPhase("unknown")).toBeNull()
   })
 })
