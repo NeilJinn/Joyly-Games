@@ -32,7 +32,7 @@ export default function ScoreRow({
       </span>
       <AvatarStack
         avatar={player.avatar}
-        size="normal"
+        size="small"
         ringColor={player.online === false ? "#8f99a6" : undefined}
       />
       <span className="flex-1 text-[var(--ink)] text-[13px] font-[600] truncate">

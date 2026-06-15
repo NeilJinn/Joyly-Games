@@ -301,8 +301,10 @@ button {
   flex-shrink: 0;
   filter: drop-shadow(0 10px 18px rgba(0,0,0,.22));
 }
+.avatar-stack.small { width: 30px; height: 30px; }
+.avatar-stack.small .avatar-ring { border-width: 3px; }
 .avatar-stack.large { width: 68px; height: 68px; }
-.avatar-stack.hero  { width: 144px; height: 144px; margin: 0 auto 14px; }
+.avatar-stack.hero  { width: min(220px, 56vw); height: min(220px, 56vw); margin: 0 auto 14px; }
 
 .avatar-core {
   position: absolute; inset: 9%;

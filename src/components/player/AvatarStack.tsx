@@ -3,7 +3,7 @@ import { paletteById } from "../../types/avatar";
 
 interface AvatarStackProps {
   avatar: AvatarSelection | null;
-  size?: "normal" | "large" | "hero";
+  size?: "small" | "normal" | "large" | "hero";
   ringColor?: string;
   className?: string;
 }

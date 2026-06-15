@@ -1,11 +1,8 @@
 import type { Player } from "../../types/room";
+import AvatarStack from "../player/AvatarStack";
 
 interface PlayerBubbleProps {
   player: Player;
-}
-
-function getInitials(nickname: string): string {
-  return nickname.slice(0, 2).toUpperCase();
 }
 
 export default function PlayerBubble({ player }: PlayerBubbleProps) {
@@ -31,15 +28,7 @@ export default function PlayerBubble({ player }: PlayerBubbleProps) {
           : "border-white/[.12]",
       ].join(" ")}
     >
-      {/* Avatar placeholder with colored ring */}
-      <div
-        className="w-[64px] h-[64px] rounded-full flex items-center justify-center text-[20px] font-[800] text-white bg-[rgba(17,24,33,.9)]"
-        style={{
-          boxShadow: `0 0 0 3px ${ringColor}, 0 0 12px ${ringColor}66`,
-        }}
-      >
-        {getInitials(player.nickname)}
-      </div>
+      <AvatarStack avatar={player.avatar} size="large" ringColor={ringColor} />
       <strong className="text-[var(--ink)] text-[14px] font-[800] leading-[1.2]">
         {player.nickname}
       </strong>

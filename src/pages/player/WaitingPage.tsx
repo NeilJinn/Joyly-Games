@@ -113,7 +113,10 @@ export default function WaitingPage() {
     >
       <PhoneLayout>
         <div className="phone-status">
-          <div className="phone-status-avatar">
+          <div
+            className="phone-status-avatar"
+            style={{ filter: currentPlayer?.online === false ? "drop-shadow(0 0 16px #8f99a666)" : `drop-shadow(0 0 20px ${ringColor}66)` }}
+          >
             <AvatarStack
               avatar={avatarToShow}
               size="hero"
