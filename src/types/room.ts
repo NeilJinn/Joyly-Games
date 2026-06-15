@@ -37,7 +37,7 @@ export interface Room {
   selectedGame: GameConfig | null;
   paymentMode: string;
   entitlement: RoomEntitlement;
-  launchCountdown: number | null;
+  launchCountdown: { endsAt: number } | null;
   gameSetup: unknown;
   gameState: unknown;
   createdAt: number;

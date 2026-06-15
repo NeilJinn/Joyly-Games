@@ -43,7 +43,9 @@ export default function LobbyControls({ room, onOpenGamePicker }: LobbyControlsP
   const canStart = onlineCount >= minPlayers && onlineCount <= maxPlayers;
   const canForceStart = totalCount >= minPlayers && totalCount <= maxPlayers;
   const allReady = canStart && readyCount === onlineCount && onlineCount > 0;
-  const countdownSeconds = room.launchCountdown ?? 0;
+  const countdownSeconds = room.launchCountdown
+    ? Math.max(0, Math.ceil((room.launchCountdown.endsAt - Date.now()) / 1000))
+    : 0;
   const countdownActive = countdownSeconds > 0;
 
   const startLabel = countdownActive

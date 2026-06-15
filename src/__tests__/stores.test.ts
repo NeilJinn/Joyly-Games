@@ -86,8 +86,8 @@ describe("playerStore", () => {
     expect(joinStatus).toBe("idle");
   });
 
-  it("setIdentity stores player info and marks joined", () => {
-    usePlayerStore.getState().setIdentity("p1", "Alice", "cat");
+  it("setPlayer stores player info and marks joined", () => {
+    usePlayerStore.getState().setPlayer({ playerId: "p1", nickname: "Alice", avatar: null });
     const { playerId, nickname, joinStatus } = usePlayerStore.getState();
     expect(playerId).toBe("p1");
     expect(nickname).toBe("Alice");
