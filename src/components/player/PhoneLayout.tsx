@@ -10,7 +10,7 @@ export default function PhoneLayout({ children }: PhoneLayoutProps) {
     <div className="phone-wrap">
       <header className="phone-topbar">
         <Link
-          to="/"
+          to="/join"
           className="flex items-center gap-[10px] text-[var(--ink)] font-[800] text-[16px] no-underline"
           aria-label="Home"
         >
