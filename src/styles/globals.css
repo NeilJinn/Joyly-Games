@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --bg: #0c0f14;
+  --panel: #172033;
+  --panel-2: #25324b;
+  --ink: #fff8e8;
+  --muted: #b8c8d2;
+  --line: #3c4962;
+  --green: #85d95f;
+  --cyan: #74d5e8;
+  --orange: #f7b84a;
+  --red: #ff7a59;
+  --violet: #c084fc;
+  --sun: #ffd166;
+  --outline: #09121c;
+  --cream-paper: #fff3df;
+  --paper-edge: rgba(255, 248, 232, 0.34);
+  --paper-shadow: 0 7px 0 rgba(3, 8, 14, 0.28), 0 18px 42px rgba(0, 0, 0, 0.28);
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+  --brand-mark: url("/assets/brand/joyly-logo.png");
+  --hero-paper: url("/assets/brand/paper-hills-dark.svg");
+  --cover-cosmic-trivia: url("/assets/games/cosmic-trivia/cover.svg");
+  --cover-after-hours: url("/assets/games/after-hours/cover.svg");
+  --cover-pitch-storm: url("/assets/games/pitch-storm/cover.svg");
+  --cover-signal-lost: url("/assets/games/signal-lost/cover.svg");
+  --cover-hot-seat: url("/assets/games/hot-seat/cover.svg");
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(255, 248, 232, 0.06) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 22%, rgba(255, 248, 232, 0.05) 0 1px, transparent 2px),
+    linear-gradient(135deg, rgba(116, 213, 232, 0.16) 0 12%, transparent 12% 100%),
+    linear-gradient(225deg, rgba(255, 209, 102, 0.18) 0 10%, transparent 10% 100%),
+    radial-gradient(circle at 12% 0%, rgba(255, 122, 89, 0.18), transparent 24rem),
+    linear-gradient(180deg, #17243b 0%, var(--bg) 52%, #090e17 100%);
+  color: var(--ink);
+  font-family: Inter, "Baloo 2", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+}
+
+html[data-device-view="mobile"] body {
+  background: #05070b;
+}
+
+html[data-device-view="mobile"] #root {
+  width: min(430px, 100vw);
+  min-height: 100vh;
+  margin: 0 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.55);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
