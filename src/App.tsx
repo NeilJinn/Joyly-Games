@@ -12,8 +12,6 @@ import JoinPage from "./pages/player/JoinPage";
 import AvatarPage from "./pages/player/AvatarPage";
 import WaitingPage from "./pages/player/WaitingPage";
 import InRoomPage from "./pages/player/InRoomPage";
-import CosmicTriviaBigScreen from "./pages/games/cosmic-trivia/BigScreenPage";
-import CosmicTriviaPhone from "./pages/games/cosmic-trivia/PhonePage";
 import FateWerewolfBigScreen from "./pages/games/fate-werewolf/BigScreenPage";
 import FateWerewolfPhone from "./pages/games/fate-werewolf/PhonePage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -52,8 +50,6 @@ function AnimatedRoutes() {
         <Route path="/waiting/:code" element={<WaitingPage />} />
 
         {/* Games */}
-        <Route path="/game/cosmic-trivia/:code" element={<CosmicTriviaBigScreen />} />
-        <Route path="/game/cosmic-trivia/:code/phone" element={<CosmicTriviaPhone />} />
         <Route path="/game/fate-werewolf/:code" element={<FateWerewolfBigScreen />} />
         <Route path="/game/fate-werewolf/:code/phone" element={<FateWerewolfPhone />} />
 

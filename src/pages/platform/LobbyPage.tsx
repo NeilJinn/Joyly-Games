@@ -5,6 +5,7 @@ import NavBar from "../../components/platform/NavBar";
 import LobbyControls from "../../components/platform/LobbyControls";
 import PlayerStage from "../../components/platform/PlayerStage";
 import GamePickerModal from "../../components/platform/GamePickerModal";
+import CosmicTriviaHost from "../games/cosmic-trivia/BigScreenPage";
 import { useSSE } from "../../hooks/useSSE";
 import { useRoomStore } from "../../stores/roomStore";
 import { useConfig } from "../../hooks/useConfig";
@@ -95,91 +96,97 @@ export default function LobbyPage() {
     >
       <NavBar />
 
-      <div
-        className="grid"
-        style={{
-          gridTemplateColumns: "320px 1fr",
-          minHeight: "calc(100vh - 64px)",
-        }}
-      >
-        {/* Sidebar */}
-        <aside
-          className={[
-            "flex flex-col gap-[20px] p-[24px]",
-            "border-r border-white/[.07] bg-[rgba(23,29,37,.74)]",
-          ].join(" ")}
+      {room.status === "playing" ? (
+        <div style={{ minHeight: "calc(100vh - 64px)" }} className="pt-[64px]">
+          <CosmicTriviaHost room={room} code={code!} />
+        </div>
+      ) : (
+        <div
+          className="grid"
+          style={{
+            gridTemplateColumns: "320px 1fr",
+            minHeight: "calc(100vh - 64px)",
+          }}
         >
-          <div>
-            <span className="block text-[11px] font-[700] tracking-[.06em] uppercase text-[var(--muted)] mb-[6px]">
-              Room code
-            </span>
-            <strong className="block text-[48px] font-[800] text-[var(--ink)] leading-[1] tracking-[4px]">
-              {room.code}
-            </strong>
-          </div>
-
-          <div className="p-[14px] bg-white rounded-[8px] max-w-[290px]">
-            <img
-              src={qrUrl}
-              alt="Scan to join room"
-              className="w-full h-auto block"
-              width={164}
-              height={164}
-            />
-          </div>
-
-          <a
-            href={joinUrl}
-            className="text-[13px] text-[var(--muted)] break-all hover:text-[var(--ink)] transition-colors"
-          >
-            {joinUrl}
-          </a>
-
-          <div className="mt-auto p-[12px] rounded-[8px] border border-white/[.07] bg-[rgba(17,24,33,.6)]">
-            <span className="block text-[11px] font-[700] tracking-[.06em] uppercase text-[var(--muted)] mb-[4px]">
-              Host phone control
-            </span>
-            <p className="text-[var(--muted)] text-[13px] m-0">
-              Sign in with {room.host.email} on your phone.
-            </p>
-          </div>
-        </aside>
-
-        {/* Main stage */}
-        <main className="flex flex-col gap-[20px] p-[28px]">
-          <LobbyControls
-            room={room}
-            onOpenGamePicker={() => setPickerOpen(true)}
-          />
-          <PlayerStage
-            players={room.players}
-            minPlayers={minPlayers}
-            maxPlayers={maxPlayers}
-          />
-          <button
+          {/* Sidebar */}
+          <aside
             className={[
-              "self-start inline-flex items-center gap-[8px]",
-              "min-h-[36px] px-[14px] rounded-[6px]",
-              "border border-white/[.12] bg-[rgba(17,24,33,.9)]",
-              "text-[var(--muted)] text-[13px] font-[700] cursor-pointer",
-              "hover:text-[var(--ink)] transition-colors",
+              "flex flex-col gap-[20px] p-[24px]",
+              "border-r border-white/[.07] bg-[rgba(23,29,37,.74)]",
             ].join(" ")}
-            type="button"
-            onClick={async () => {
-              await navigator.clipboard?.writeText(joinUrl).catch(() => {});
-            }}
           >
-            <svg
-              className="w-[14px] h-[14px] fill-none stroke-current [stroke-width:2] flex-none"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
+            <div>
+              <span className="block text-[11px] font-[700] tracking-[.06em] uppercase text-[var(--muted)] mb-[6px]">
+                Room code
+              </span>
+              <strong className="block text-[48px] font-[800] text-[var(--ink)] leading-[1] tracking-[4px]">
+                {room.code}
+              </strong>
+            </div>
+
+            <div className="p-[14px] bg-white rounded-[8px] max-w-[290px]">
+              <img
+                src={qrUrl}
+                alt="Scan to join room"
+                className="w-full h-auto block"
+                width={164}
+                height={164}
+              />
+            </div>
+
+            <a
+              href={joinUrl}
+              className="text-[13px] text-[var(--muted)] break-all hover:text-[var(--ink)] transition-colors"
             >
-              <path d="M20 9H11a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-            </svg>
-            Copy link
-          </button>
-        </main>
-      </div>
+              {joinUrl}
+            </a>
+
+            <div className="mt-auto p-[12px] rounded-[8px] border border-white/[.07] bg-[rgba(17,24,33,.6)]">
+              <span className="block text-[11px] font-[700] tracking-[.06em] uppercase text-[var(--muted)] mb-[4px]">
+                Host phone control
+              </span>
+              <p className="text-[var(--muted)] text-[13px] m-0">
+                Sign in with {room.host.email} on your phone.
+              </p>
+            </div>
+          </aside>
+
+          {/* Main stage */}
+          <main className="flex flex-col gap-[20px] p-[28px]">
+            <LobbyControls
+              room={room}
+              onOpenGamePicker={() => setPickerOpen(true)}
+            />
+            <PlayerStage
+              players={room.players}
+              minPlayers={minPlayers}
+              maxPlayers={maxPlayers}
+            />
+            <button
+              className={[
+                "self-start inline-flex items-center gap-[8px]",
+                "min-h-[36px] px-[14px] rounded-[6px]",
+                "border border-white/[.12] bg-[rgba(17,24,33,.9)]",
+                "text-[var(--muted)] text-[13px] font-[700] cursor-pointer",
+                "hover:text-[var(--ink)] transition-colors",
+              ].join(" ")}
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard?.writeText(joinUrl).catch(() => {});
+              }}
+            >
+              <svg
+                className="w-[14px] h-[14px] fill-none stroke-current [stroke-width:2] flex-none"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M20 9H11a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2zM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              Copy link
+            </button>
+          </main>
+        </div>
+      )}
 
       <GamePickerModal
         open={pickerOpen}
