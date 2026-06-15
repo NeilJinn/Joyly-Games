@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import PhoneLayout from "../../components/player/PhoneLayout";
+import AvatarStack from "../../components/player/AvatarStack";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 import { usePlayerStore } from "../../stores/playerStore";
@@ -11,12 +12,28 @@ import {
   makePlayerId,
   savePlayerIdentity,
 } from "../../types/player";
+import {
+  PALETTES,
+  defaultAvatar,
+  type AvatarCatalog,
+  type AvatarCatalogItem,
+  type AvatarSelection,
+} from "../../types/avatar";
 import type { Room } from "../../types/room";
 
-const COLORS = [
-  "#78d45e", "#5eb8d4", "#f4b04a", "#e05eb4",
-  "#5e82f4", "#f45e5e", "#5ef4d4", "#d4d45e",
-];
+type Tab = "characterId" | "hatId" | "decorationId";
+
+const TAB_LABELS: Record<Tab, string> = {
+  characterId: "Character",
+  hatId: "Hat",
+  decorationId: "Decoration",
+};
+
+const ART_CLASS: Record<Tab, string> = {
+  characterId: "cat-character",
+  hatId: "cat-hat",
+  decorationId: "cat-decoration",
+};
 
 export default function AvatarPage() {
   const { code } = useParams<{ code: string }>();
@@ -27,9 +44,31 @@ export default function AvatarPage() {
   const [room, setLocalRoom] = useState<Room | null>(null);
   const [roomError, setRoomError] = useState("");
   const [nickname, setNickname] = useState("");
-  const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+  const [catalog, setCatalog] = useState<AvatarCatalog | null>(null);
+  const [activeTab, setActiveTab] = useState<Tab>("characterId");
+  const [avatar, setAvatar] = useState<AvatarSelection>({
+    characterId: "",
+    hatId: null,
+    decorationId: null,
+    paletteId: "teal",
+  });
   const [submitting, setSubmitting] = useState(false);
   const [joinError, setJoinError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/avatar-catalog")
+      .then((r) => r.json())
+      .then((data: AvatarCatalog) => {
+        setCatalog(data);
+        const savedIdentity = loadPlayerIdentity();
+        if (savedIdentity?.avatar?.characterId) {
+          setAvatar(savedIdentity.avatar);
+        } else if (data.characters[0]) {
+          setAvatar(defaultAvatar(data.characters[0].id));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!code) return;
@@ -44,20 +83,26 @@ export default function AvatarPage() {
 
         const identity = loadPlayerIdentity();
         if (identity?.playerId && identity.nickname) {
+          const savedAvatar = identity.avatar ?? avatar;
           const joinRes = await fetch(`/api/rooms/${code}/join`, {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ playerId: identity.playerId, nickname: identity.nickname, avatar: null }),
+            body: JSON.stringify({
+              playerId: identity.playerId,
+              nickname: identity.nickname,
+              avatar: savedAvatar,
+            }),
           });
           if (joinRes.ok) {
             const joinData = (await joinRes.json()) as { player: { id: string; nickname: string }; room: Room };
             setRoom(joinData.room);
-            setPlayer({ playerId: joinData.player.id, nickname: joinData.player.nickname, avatar: null });
+            setPlayer({ playerId: joinData.player.id, nickname: joinData.player.nickname, avatar: savedAvatar });
             navigate(`/waiting/${code}`, { replace: true });
             return;
           }
         }
         if (identity?.nickname) setNickname(identity.nickname);
+        if (identity?.avatar) setAvatar(identity.avatar);
       } catch {
         setRoomError("Could not load room. Check your connection.");
       }
@@ -69,6 +114,7 @@ export default function AvatarPage() {
     if (!code || !room) return;
     const trimmed = nickname.trim();
     if (!trimmed) { setJoinError("Enter a nickname"); return; }
+    if (!avatar.characterId) { setJoinError("Pick a character"); return; }
     setSubmitting(true);
     setJoinError("");
     try {
@@ -76,15 +122,15 @@ export default function AvatarPage() {
       const res = await fetch(`/api/rooms/${code}/join`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ playerId, nickname: trimmed, avatar: null }),
+        body: JSON.stringify({ playerId, nickname: trimmed, avatar }),
       });
       if (!res.ok) {
         const err = (await res.json()) as { error?: string };
         throw new Error(err.error ?? "Failed to join");
       }
       const data = (await res.json()) as { player: { id: string; nickname: string }; room: Room };
-      savePlayerIdentity({ playerId: data.player.id, nickname: data.player.nickname, avatar: null });
-      setPlayer({ playerId: data.player.id, nickname: data.player.nickname, avatar: null });
+      savePlayerIdentity({ playerId: data.player.id, nickname: data.player.nickname, avatar });
+      setPlayer({ playerId: data.player.id, nickname: data.player.nickname, avatar });
       setRoom(data.room);
       navigate(`/waiting/${code}`);
     } catch (err) {
@@ -92,6 +138,46 @@ export default function AvatarPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function selectItem(tab: Tab, id: string | null) {
+    setAvatar((prev) => ({ ...prev, [tab]: id }));
+  }
+
+  function renderGrid(tab: Tab, items: AvatarCatalogItem[]) {
+    const isOptional = tab !== "characterId";
+    const currentVal = avatar[tab];
+    return (
+      <div className="avatar-choice-group">
+        <div className="avatar-choice-head">
+          <h2>{TAB_LABELS[tab]}</h2>
+          {isOptional && <span>Optional</span>}
+        </div>
+        <div className="avatar-choice-grid">
+          {isOptional && (
+            <button
+              type="button"
+              className={["avatar-choice-card none-card", currentVal === null ? "active" : ""].join(" ")}
+              onClick={() => selectItem(tab, null)}
+              aria-label="None"
+            />
+          )}
+          {items.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={["avatar-choice-card", currentVal === item.id ? "active" : ""].join(" ")}
+              onClick={() => selectItem(tab, item.id)}
+              aria-label={item.nameEn}
+            >
+              <div className={`avatar-choice-art ${ART_CLASS[tab]}`}>
+                <img src={item.src} alt={item.nameEn} />
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (roomError) {
@@ -122,6 +208,13 @@ export default function AvatarPage() {
     );
   }
 
+  const tabItems: AvatarCatalogItem[] =
+    activeTab === "characterId"
+      ? (catalog?.characters ?? [])
+      : activeTab === "hatId"
+      ? (catalog?.hats ?? [])
+      : (catalog?.decorations ?? []);
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
       <PhoneLayout>
@@ -131,10 +224,64 @@ export default function AvatarPage() {
               Join {code}
             </h1>
             <p className="text-[var(--muted)] text-[14px] m-0">
-              Choose your player name for this room.
+              Build your player and enter a nickname.
             </p>
           </div>
 
+          {/* Avatar composer */}
+          <div className="avatar-composer">
+            {/* Preview */}
+            <div className="avatar-preview-card">
+              <div className="avatar-preview-stage">
+                <AvatarStack avatar={avatar.characterId ? avatar : null} size="hero" />
+              </div>
+            </div>
+
+            {/* Category tabs */}
+            <div className="avatar-step-tabs">
+              {(["characterId", "hatId", "decorationId"] as Tab[]).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  className={["avatar-step-tab", activeTab === tab ? "active" : ""].join(" ")}
+                  onClick={() => setActiveTab(tab)}
+                >
+                  {TAB_LABELS[tab]}
+                </button>
+              ))}
+            </div>
+
+            {/* Item grid for active tab */}
+            {catalog ? renderGrid(activeTab, tabItems) : (
+              <div className="avatar-choice-group">
+                <p className="text-[var(--muted)] text-[13px] text-center py-[16px] m-0">Loading…</p>
+              </div>
+            )}
+
+            {/* Palette picker */}
+            <div className="grid gap-[8px]">
+              <span className="text-[#c8d4de] text-[13px] font-[700]">Color</span>
+              <div className="flex flex-wrap gap-[8px]">
+                {PALETTES.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={[
+                      "w-[34px] h-[34px] rounded-full border-[3px] cursor-pointer transition-[box-shadow]",
+                      avatar.paletteId === p.id
+                        ? "border-white [box-shadow:0_0_0_2px_rgba(255,255,255,.4)]"
+                        : "border-transparent",
+                    ].join(" ")}
+                    style={{ background: p.fill }}
+                    onClick={() => setAvatar((prev) => ({ ...prev, paletteId: p.id }))}
+                    aria-label={p.id}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Nickname */}
           <label className="grid gap-[8px]">
             <span className="text-[#c8d4de] text-[13px] font-[700]">Nickname</span>
             <input
@@ -149,37 +296,15 @@ export default function AvatarPage() {
               placeholder="Alex"
               value={nickname}
               onChange={(e) => { setNickname(e.target.value); setJoinError(""); }}
-              autoFocus
               autoComplete="nickname"
             />
           </label>
-
-          <div className="grid gap-[8px]">
-            <span className="text-[#c8d4de] text-[13px] font-[700]">Pick a color</span>
-            <div className="flex flex-wrap gap-[10px]">
-              {COLORS.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  className={[
-                    "w-[36px] h-[36px] rounded-full border-[3px] cursor-pointer transition-[box-shadow]",
-                    selectedColor === color
-                      ? "border-white [box-shadow:0_0_0_2px_rgba(255,255,255,.4)]"
-                      : "border-transparent",
-                  ].join(" ")}
-                  style={{ background: color }}
-                  onClick={() => setSelectedColor(color)}
-                  aria-label={`Color ${color}`}
-                />
-              ))}
-            </div>
-          </div>
 
           {joinError && (
             <p className="text-[#f67272] text-[13px] m-0">{joinError}</p>
           )}
 
-          <Button variant="primary" className="w-full" type="submit" disabled={submitting}>
+          <Button variant="primary" className="w-full" type="submit" disabled={submitting || !avatar.characterId}>
             <Icon name="login" />
             <span>{submitting ? "Joining…" : "Join room"}</span>
           </Button>

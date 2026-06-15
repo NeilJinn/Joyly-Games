@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   paletteById,
-  PALETTES,
   defaultAvatar,
   type AvatarSelection,
 } from "../types/avatar";
