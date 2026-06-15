@@ -21,19 +21,13 @@ export interface CueDefinition {
 
 const cueVariants = CUE_VARIANTS as Record<string, string[]>
 const directorCues = DIRECTOR_CUES as CueDefinition[]
-export const CUE_FALLBACK_ORDER: string[] =
-  (DIRECTOR_CUE_REGISTRY as { defaults?: { fallbackOrder?: string[] } }).defaults?.fallbackOrder || []
 
 const CUES_BY_KEY = new Map<string, CueDefinition>(
   directorCues.map(cue => [cue.cueKey, cue])
 )
 
-function canonicalCueKey(cueKey: string): string {
-  return cueKey
-}
-
 function domainDefaultKey(cueKey: string): string | null {
-  const cue = CUES_BY_KEY.get(canonicalCueKey(cueKey))
+  const cue = CUES_BY_KEY.get(cueKey)
   const scope = cue?.scope || String(cueKey).split(".")[0]
   const domain = cue?.domain || String(cueKey).split(".")[1]
   if (scope === "phase") {
@@ -47,23 +41,22 @@ function domainDefaultKey(cueKey: string): string | null {
 }
 
 function fallbackKeys(cueKey: string): string[] {
-  const canonical = canonicalCueKey(cueKey)
-  const cue = CUES_BY_KEY.get(canonical)
+  const cue = CUES_BY_KEY.get(cueKey)
   const policyFallbacks = Array.isArray(cue?.policy?.fallback)
-    ? (cue.policy.fallback as string[]).map(canonicalCueKey)
+    ? (cue.policy.fallback as unknown[]).filter((f): f is string => typeof f === "string")
     : []
-  return [canonical, ...policyFallbacks, domainDefaultKey(canonical), "global.game.default"].filter(
+  return [cueKey, ...policyFallbacks, domainDefaultKey(cueKey), "global.game.default"].filter(
     (k): k is string => k !== null
   )
 }
 
 export function getCue(cueKey: string): CueDefinition | null {
-  return CUES_BY_KEY.get(canonicalCueKey(cueKey)) || null
+  return CUES_BY_KEY.get(cueKey) || null
 }
 
 export function getCueVariants(cueKey: string): string[] {
   for (const key of fallbackKeys(cueKey)) {
-    const variants = cueVariants[canonicalCueKey(key)] || []
+    const variants = cueVariants[key] || []
     if (variants.length) return variants
   }
   return []
@@ -95,8 +88,8 @@ export function getTriggeredCues({
       const trigger = cue.trigger || {}
       if (trigger.enabled === false) return false
       if (triggerMode && trigger.mode !== triggerMode) return false
-      if (phase && trigger.phase && trigger.phase !== phase) return false
-      if (eventKey && trigger.eventKey && trigger.eventKey !== eventKey) return false
+      if (phase && trigger.phase !== phase) return false
+      if (eventKey && trigger.eventKey !== eventKey) return false
       if (scope && cue.scope !== scope) return false
       if (domain && cue.domain !== domain) return false
       return true

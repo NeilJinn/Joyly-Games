@@ -47,8 +47,8 @@ describe("getCueVariants", () => {
   it("returns array for known cue key", () => {
     expect(Array.isArray(getCueVariants("phase.question-intro.question.next"))).toBe(true)
   })
-  it("returns empty for cue with no audio files", () => {
-    expect(getCueVariants("phase.scoring.score.update")).toEqual([])
+  it("returns empty array for unknown cue key", () => {
+    expect(getCueVariants("nonexistent.cue.key.xyz")).toEqual([])
   })
 })
 
@@ -60,9 +60,11 @@ describe("getPhaseEntryCues", () => {
 })
 
 describe("getTriggeredCues", () => {
-  it("filters by triggerMode", () => {
+  it("filters by triggerMode - every result matches the filter", () => {
     const manual = getTriggeredCues({ triggerMode: "manual" })
     const phaseEntry = getTriggeredCues({ triggerMode: "phase-entry" })
+    expect(manual.every(c => c.trigger.mode === "manual")).toBe(true)
+    expect(phaseEntry.every(c => c.trigger.mode === "phase-entry")).toBe(true)
     expect(manual.length + phaseEntry.length).toBeGreaterThan(0)
   })
 })
