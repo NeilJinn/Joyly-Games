@@ -27,7 +27,7 @@ export default function HomePage() {
 
   return (
     <motion.main
-      className="min-h-screen pt-[64px]"
+      className="min-h-screen pt-[80px]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

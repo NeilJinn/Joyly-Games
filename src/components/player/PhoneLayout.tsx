@@ -15,17 +15,8 @@ export default function PhoneLayout({ children }: PhoneLayoutProps) {
           aria-label="Home"
         >
           <span
-            className="w-[36px] h-[36px] flex-none overflow-hidden rounded-[9px]"
+            className="w-[36px] h-[36px] flex-none overflow-hidden rounded-[9px] [background:var(--brand-mark,#78d45e)_center/contain_no-repeat] text-transparent [text-indent:-999px] [filter:drop-shadow(0_3px_4px_rgba(0,0,0,.28))]"
             aria-hidden="true"
-            style={{
-              background: "var(--brand-mark, #78d45e) center/contain no-repeat",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              fontWeight: 800,
-              fontSize: 18,
-            }}
           >
             J
           </span>

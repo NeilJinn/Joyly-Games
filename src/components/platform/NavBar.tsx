@@ -28,7 +28,7 @@ export default function NavBar({
   return (
     <header
       className={[
-        "h-[64px] flex items-center justify-between px-[16px] md:px-[28px]",
+        "h-[80px] flex items-center justify-between px-[16px] md:px-[28px]",
         "border-b border-white/[.07] bg-[rgba(14,22,35,.82)] backdrop-blur-[16px] z-20",
         floating ? "fixed inset-x-0 top-0" : "",
       ]
@@ -39,11 +39,11 @@ export default function NavBar({
       <div className="flex items-center gap-[24px] min-w-0">
         <Link
           to="/"
-          className="flex items-center gap-[12px] text-[var(--ink)] font-[800] text-[18px] no-underline"
+          className="flex items-center gap-[14px] text-[var(--ink)] font-[800] text-[27px] no-underline"
           aria-label="Home"
         >
           <span
-            className="w-[42px] h-[42px] block flex-none overflow-hidden rounded-[11px] [background:var(--brand-mark)_center/contain_no-repeat] text-transparent [text-indent:-999px] [filter:drop-shadow(0_5px_5px_rgba(0,0,0,.28))]"
+            className="w-[63px] h-[63px] block flex-none overflow-hidden rounded-[16px] [background:var(--brand-mark)_center/contain_no-repeat] text-transparent [text-indent:-999px] [filter:drop-shadow(0_5px_5px_rgba(0,0,0,.28))]"
             aria-hidden="true"
           >
             J

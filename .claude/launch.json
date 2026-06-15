@@ -6,6 +6,13 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["serve", "-l", "5555", "/Users/neil/Downloads/Werewolf_img"],
       "port": 5555
+    },
+    {
+      "name": "react-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173,
+      "autoPort": false
     }
   ]
 }
