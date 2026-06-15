@@ -25,6 +25,7 @@ export interface CosmicQuestion {
   correctAnswer: string | null;
   fact: string;
   category: string;
+  questionAudio?: string;
 }
 
 export interface CosmicPlayerState {
