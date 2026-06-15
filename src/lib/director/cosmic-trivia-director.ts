@@ -126,6 +126,7 @@ function allAnsweredEarly(prev: DirectorSnapshot | null, next: DirectorSnapshot 
   if (!prev || !next) return false
   if (prev.phase !== "answering" || next.phase !== "answering") return false
   if (!next.questionId || prev.questionId !== next.questionId) return false
+  if (prev.expectedAnswerCount !== next.expectedAnswerCount) return false
   return prev.answersCount < next.expectedAnswerCount &&
     next.expectedAnswerCount > 0 &&
     next.answersCount >= next.expectedAnswerCount &&
@@ -194,6 +195,14 @@ const reactiveDirector = createReactiveDirector({
       },
     },
     {
+      id: "phase:answering:generic",
+      when: r => r.phaseChanged && r.phase === "answering" && Number(r.context.questionIndex || 0) > 0,
+      select: r => {
+        const ctx = phaseContext(r)
+        return { id: "answering.prompt.generic", replayKey: `answering.prompt.generic:${cueSeed(ctx, "answering-generic")}`, audio: cueAudio("phase.answering.answer.open", cueSeed(ctx, "answering-generic")) }
+      },
+    },
+    {
       id: "phase:answering:answer:all-in",
       when: r => allAnsweredEarly(r.previousSnapshot, r.nextSnapshot),
       select: r => {
@@ -223,7 +232,12 @@ const reactiveDirector = createReactiveDirector({
     },
     {
       id: "phase:reveal:no-correct",
-      when: r => r.phaseChanged && r.phase === "reveal" && Number((phaseContext(r).rewardCount as number) || 0) <= 0,
+      when: r => {
+        if (!r.phaseChanged || r.phase !== "reveal") return false
+        const res = r.nextSnapshot?.lastResolution as { rewards?: Record<string, number> } | null
+        const rewardCount = res?.rewards ? Object.values(res.rewards).filter(v => v > 0).length : 0
+        return rewardCount <= 0
+      },
       select: r => {
         const ctx = phaseContext(r)
         return { id: "reveal.no-correct", replayKey: `reveal.no-correct:${cueSeed(ctx, "reveal-no-correct")}`, audio: cueAudio("phase.reveal.answer.no-one-correct", cueSeed(ctx, "reveal-no-correct")) }
@@ -231,7 +245,12 @@ const reactiveDirector = createReactiveDirector({
     },
     {
       id: "phase:reveal:positive",
-      when: r => r.phaseChanged && r.phase === "reveal" && Number((phaseContext(r).rewardCount as number) || 0) > 0,
+      when: r => {
+        if (!r.phaseChanged || r.phase !== "reveal") return false
+        const res = r.nextSnapshot?.lastResolution as { rewards?: Record<string, number> } | null
+        const rewardCount = res?.rewards ? Object.values(res.rewards).filter(v => v > 0).length : 0
+        return rewardCount > 0
+      },
       select: r => {
         const ctx = phaseContext(r)
         return { id: "reveal.positive", replayKey: `reveal.positive:${cueSeed(ctx, "reveal-positive")}`, audio: cueAudio("phase.reveal.answer.positive", cueSeed(ctx, "reveal-positive")) }

@@ -1,6 +1,6 @@
 import { pickVariant } from "./flow"
 // @ts-ignore — generated data file without TypeScript annotations
-import { CUE_VARIANTS, DIRECTOR_CUES, DIRECTOR_CUE_REGISTRY } from "./cosmic-trivia-cue-library.generated"
+import { CUE_VARIANTS, DIRECTOR_CUES } from "./cosmic-trivia-cue-library.generated"
 
 export interface CueDefinition {
   cueKey: string
