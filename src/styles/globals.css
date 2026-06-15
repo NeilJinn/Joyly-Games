@@ -197,3 +197,99 @@ button {
   0%, 100% { transform: rotate(15deg); }
   50% { transform: rotate(-15deg); }
 }
+
+/* ── Phone / Player pages ─────────────────────────────────────── */
+.phone-wrap {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 84px 20px 20px;
+  background: linear-gradient(180deg, #111821, #090d12);
+  overflow-x: hidden;
+}
+
+.phone-topbar {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 64px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(14, 22, 35, .88);
+  backdrop-filter: blur(14px);
+}
+
+.phone-flow {
+  width: min(440px, 100%);
+  display: grid;
+  gap: 14px;
+}
+
+.phone-card {
+  max-width: 440px;
+  padding: 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  background: rgba(17, 24, 33, .92);
+  box-shadow: var(--shadow);
+  position: relative;
+  z-index: 1;
+}
+
+.phone-status {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: center;
+}
+
+.phone-status-avatar {
+  width: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.phone-status-copy {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.phone-status-copy h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.ready-chip {
+  font-weight: 900;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.ready-chip.is-ready {
+  color: #78d45e;
+}
+
+.phone-status-panel {
+  width: 100%;
+  display: grid;
+  gap: 8px;
+}
+
+.phone-mini {
+  margin-top: 8px;
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.phone-mini strong {
+  color: var(--ink);
+  font-size: 14px;
+}
