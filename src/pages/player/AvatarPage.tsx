@@ -52,6 +52,7 @@ export default function AvatarPage() {
     decorationId: null,
     paletteId: "teal",
   });
+  const [catalogError, setCatalogError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [joinError, setJoinError] = useState("");
 
@@ -61,13 +62,23 @@ export default function AvatarPage() {
       .then((data: AvatarCatalog) => {
         setCatalog(data);
         const savedIdentity = loadPlayerIdentity();
-        if (savedIdentity?.avatar?.characterId) {
-          setAvatar(savedIdentity.avatar);
+        const savedAv = savedIdentity?.avatar;
+        const charValid = savedAv?.characterId &&
+          data.characters.some((c) => c.id === savedAv.characterId);
+        if (charValid && savedAv) {
+          const hatValid = !savedAv.hatId || data.hats.some((h) => h.id === savedAv.hatId);
+          const decValid = !savedAv.decorationId || data.decorations.some((d) => d.id === savedAv.decorationId);
+          setAvatar({
+            characterId: savedAv.characterId,
+            hatId: hatValid ? savedAv.hatId : null,
+            decorationId: decValid ? savedAv.decorationId : null,
+            paletteId: savedAv.paletteId,
+          });
         } else if (data.characters[0]) {
           setAvatar(defaultAvatar(data.characters[0].id));
         }
       })
-      .catch(() => {});
+      .catch(() => { setCatalogError(true); });
   }, []);
 
   useEffect(() => {
@@ -83,22 +94,24 @@ export default function AvatarPage() {
 
         const identity = loadPlayerIdentity();
         if (identity?.playerId && identity.nickname) {
-          const savedAvatar = identity.avatar ?? avatar;
-          const joinRes = await fetch(`/api/rooms/${code}/join`, {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              playerId: identity.playerId,
-              nickname: identity.nickname,
-              avatar: savedAvatar,
-            }),
-          });
-          if (joinRes.ok) {
-            const joinData = (await joinRes.json()) as { player: { id: string; nickname: string }; room: Room };
-            setRoom(joinData.room);
-            setPlayer({ playerId: joinData.player.id, nickname: joinData.player.nickname, avatar: savedAvatar });
-            navigate(`/waiting/${code}`, { replace: true });
-            return;
+          const savedAvatar = identity.avatar;
+          if (savedAvatar?.characterId) {
+            const joinRes = await fetch(`/api/rooms/${code}/join`, {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                playerId: identity.playerId,
+                nickname: identity.nickname,
+                avatar: savedAvatar,
+              }),
+            });
+            if (joinRes.ok) {
+              const joinData = (await joinRes.json()) as { player: { id: string; nickname: string }; room: Room };
+              setRoom(joinData.room);
+              setPlayer({ playerId: joinData.player.id, nickname: joinData.player.nickname, avatar: savedAvatar });
+              navigate(`/waiting/${code}`, { replace: true });
+              return;
+            }
           }
         }
         if (identity?.nickname) setNickname(identity.nickname);
@@ -252,7 +265,13 @@ export default function AvatarPage() {
             </div>
 
             {/* Item grid for active tab */}
-            {catalog ? renderGrid(activeTab, tabItems) : (
+            {catalog ? renderGrid(activeTab, tabItems) : catalogError ? (
+              <div className="avatar-choice-group">
+                <p className="text-[#f67272] text-[13px] text-center py-[16px] m-0">
+                  Could not load avatars. Please reload the page.
+                </p>
+              </div>
+            ) : (
               <div className="avatar-choice-group">
                 <p className="text-[var(--muted)] text-[13px] text-center py-[16px] m-0">Loading…</p>
               </div>
