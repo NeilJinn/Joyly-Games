@@ -129,3 +129,71 @@ button {
   background-size: cover;
   background-position: center;
 }
+
+/* ── Stage floor ─────────────────────────────────────────────── */
+.stage-floor {
+  position: relative;
+  overflow: hidden;
+  min-height: 560px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #0a1520 0%, #081018 100%);
+  border: 1px solid rgba(255,255,255,.07);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.stage-floor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.stage-floor::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(120,212,94,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.stage-light {
+  position: absolute;
+  width: 360px;
+  height: 600px;
+  opacity: .14;
+  transform-origin: top center;
+  background: linear-gradient(180deg, rgba(255,255,255,.6) 0%, transparent 100%);
+  clip-path: polygon(40% 0%, 60% 0%, 100% 100%, 0% 100%);
+}
+
+.stage-light.one {
+  top: -80px;
+  left: -60px;
+  animation: sweep-one 8s ease-in-out infinite;
+}
+
+.stage-light.two {
+  top: -80px;
+  right: -60px;
+  animation: sweep-two 9s ease-in-out infinite 1.5s;
+}
+
+@keyframes sweep-one {
+  0%, 100% { transform: rotate(-15deg); }
+  50% { transform: rotate(15deg); }
+}
+
+@keyframes sweep-two {
+  0%, 100% { transform: rotate(15deg); }
+  50% { transform: rotate(-15deg); }
+}
