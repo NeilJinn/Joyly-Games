@@ -15,7 +15,6 @@ beforeEach(() => {
   usePlayerStore.setState({
     playerId: null,
     nickname: "",
-    avatarKey: "",
     joinStatus: "idle",
     joinError: "",
   });

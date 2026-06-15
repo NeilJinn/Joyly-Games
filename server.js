@@ -29,6 +29,8 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
+const distDir = path.join(__dirname, "dist");
+const useReactBuild = existsSync(path.join(distDir, "index.html"));
 const jmsDir = path.join(__dirname, "packages", "jms");
 const cosmicTriviaMusicDir = path.join(publicDir, "games", "cosmic-trivia", "audio", "music");
 const port = Number(process.env.PORT || 4173);
@@ -394,6 +396,37 @@ async function serveStaticDir(req, res, rootDir, {
 
 async function serveStatic(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
+
+  if (useReactBuild) {
+    // React SPA: serve real files from dist/, fall back to index.html for all other paths
+    const requested = decodeURIComponent(url.pathname);
+    const filePath = path.normalize(path.join(distDir, requested));
+    if (filePath.startsWith(distDir) && existsSync(filePath) && !statSync(filePath).isDirectory()) {
+      const ext = path.extname(filePath);
+      const types = {
+        ".html": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "text/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".svg": "image/svg+xml",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".ico": "image/x-icon",
+        ".woff2": "font/woff2",
+        ".woff": "font/woff",
+      };
+      res.writeHead(200, { "content-type": types[ext] || "application/octet-stream" });
+      if (req.method === "HEAD") { res.end(); return; }
+      res.end(await readFile(filePath));
+    } else {
+      // SPA fallback — let React Router handle the route
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+      if (req.method === "HEAD") { res.end(); return; }
+      res.end(await readFile(path.join(distDir, "index.html")));
+    }
+    return;
+  }
+
   if (marketingPaths.has(url.pathname)) {
     return serveStaticDir({
       url: "/index.html",

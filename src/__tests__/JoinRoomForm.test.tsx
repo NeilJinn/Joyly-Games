@@ -10,7 +10,7 @@ vi.mock("react-router-dom", async () => {
 });
 
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+(globalThis as unknown as { fetch: typeof fetch }).fetch = mockFetch;
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -23,7 +23,7 @@ export default function NavBar({
   onPlay,
 }: NavBarProps) {
   const location = useLocation();
-  const { isSignedIn, account } = useAuthStore();
+  const { isSignedIn } = useAuthStore();
 
   return (
     <header
