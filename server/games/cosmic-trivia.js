@@ -140,6 +140,18 @@ export async function setCosmicTriviaTesterTimer(room, seconds = 0) {
   return { status: 200 };
 }
 
+export async function testerAnswerCorrect(room, playerId) {
+  await ensureCosmicTriviaState(room);
+  const state = stateKey(room);
+  if (state.phase !== "answering") return { status: 409, error: "Not in answering phase" };
+  const player = room.players.get(String(playerId || ""));
+  if (!player) return { status: 404, error: "Player not found" };
+  const questions = room.gameContent?.questions || [];
+  const question = questions[Math.min(Math.max(state.questionIndex || 0, 0), Math.max(questions.length - 1, 0))] || null;
+  if (!question?.correctAnswer) return { status: 409, error: "No correct answer available" };
+  return answerCosmicTrivia(room, player.id, question.correctAnswer);
+}
+
 export async function addCosmicTriviaTesterScore(room, playerId, points = 0) {
   await ensureCosmicTriviaState(room);
   const state = stateKey(room);
@@ -234,6 +246,7 @@ export const cosmicTriviaRuntime = {
   testerSelect: setCosmicTriviaTesterSelection,
   testerTimer: setCosmicTriviaTesterTimer,
   testerScore: addCosmicTriviaTesterScore,
+  testerAnswerCorrect,
   testerComplete: completeCosmicTrivia,
   directorAudioStatus,
   directorAudioStarted,

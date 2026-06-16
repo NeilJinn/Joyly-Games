@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Effect Demo — GLTF Models</title>
+
+  <!--
+  ★ 运行方式：需要 HTTP 服务，不能直接双击打开
+     在项目根目录执行：python3 -m http.server 8000
+     然后访问：http://localhost:8000/demo-camera-effect-3d.html
+
+  ★ 放置模型：把你的 .glb 文件放在此 HTML 同目录，
+     然后在下方 CONFIG.modelFiles 里填写文件名。
+  -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body { width: 100vw; height: 100vh; overflow: hidden; background: #0e0620; }
+    canvas { display: block; }
+
+    .ui {
+      position: fixed; bottom: 0; left: 0; right: 0; padding: 20px 28px;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      pointer-events: none; z-index: 10;
+    }
+    .label {
+      color: rgba(255,255,255,0.25); font-family: 'SF Mono', monospace;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    }
+    .badge {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px; padding: 6px 14px; color: rgba(255,255,255,0.4);
+      font-family: system-ui, sans-serif; font-size: 11px;
+    }
+
+    #overlay {
+      position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; z-index: 100;
+      background: #0e0620; transition: opacity 0.6s;
+    }
+    #overlay.fade-out { opacity: 0; pointer-events: none; }
+
+    .overlay-content {
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      max-width: 480px; text-align: center; padding: 0 24px;
+    }
+    .overlay-title {
+      color: rgba(255,255,255,0.6); font-family: system-ui, sans-serif;
+      font-size: 14px; letter-spacing: 0.5px;
+    }
+    .overlay-sub {
+      color: rgba(255,255,255,0.3); font-family: 'SF Mono', monospace;
+      font-size: 11px; line-height: 1.8;
+    }
+    .overlay-sub code {
+      background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 4px;
+      font-size: 11px;
+    }
+    .progress-bar {
+      width: 220px; height: 2px; background: rgba(255,255,255,0.1); border-radius: 1px;
+    }
+    .progress-fill {
+      height: 100%; background: #FFC107; border-radius: 1px;
+      width: 0%; transition: width 0.3s ease;
+    }
+
+    /* ── 控制面板 ── */
+    #controls {
+      position: fixed; bottom: 52px; right: 24px; z-index: 20;
+      display: none; flex-direction: column; gap: 10px; align-items: flex-end;
+    }
+    .ctrl-row {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .ctrl-toggle {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px; padding: 6px 14px; color: rgba(255,255,255,0.4);
+      font-family: 'SF Mono', monospace; font-size: 11px; letter-spacing: 0.5px;
+      cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s;
+      user-select: none;
+    }
+    .ctrl-toggle.on {
+      background: rgba(255,193,7,0.18); border-color: rgba(255,193,7,0.5);
+      color: #FFC107;
+    }
+    .ctrl-label {
+      color: rgba(255,255,255,0.25); font-family: 'SF Mono', monospace;
+      font-size: 11px; letter-spacing: 1px;
+    }
+    .ctrl-card {
+      display: flex; flex-direction: column; gap: 8px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 10px 14px; width: 200px;
+    }
+    .ctrl-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .ctrl-card-modes { display: flex; gap: 4px; }
+    .ctrl-toggle.sm { padding: 3px 10px; font-size: 10px; }
+    .ctrl-slider-row {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .ctrl-slider-header {
+      display: flex; justify-content: space-between;
+    }
+    input[type=range].tilt-slider {
+      width: 100%; accent-color: #FFC107; cursor: pointer;
+      -webkit-appearance: none; height: 2px;
+      background: rgba(255,255,255,0.15); border-radius: 1px; outline: none;
+    }
+    input[type=range].tilt-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: #FFC107; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="ui">
+  <span class="label">Demo A3 · POLA Style · GLTF Models</span>
+  <span class="badge">自建模型 · 摄像机穿越花海</span>
+</div>
+
+<div id="controls"></div>
+
+<div id="overlay">
+  <div class="overlay-content">
+    <div class="overlay-title" id="overlay-title">正在加载模型…</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="overlay-sub" id="overlay-sub"></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// ─── file:// 协议检测 ───────────────────────────────────────
+if (location.protocol === 'file:') {
+  document.getElementById('overlay-title').textContent = '⚠️ 需要通过 HTTP 服务打开';
+  document.getElementById('overlay-sub').innerHTML =
+    '在项目根目录运行：<br><br>' +
+    '<code>python3 -m http.server 8000</code><br><br>' +
+    '然后访问<br><code>http://localhost:8000/demo-camera-effect-3d.html</code>';
+  throw new Error('file:// protocol not supported');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ★ 配置区 — 只需修改这里
+// ═══════════════════════════════════════════════════════════
+
+const CONFIG = {
+  // 每个模型的配置。file 放在此 HTML 同目录下。
+  // constrainRotation: true  → 花朵模式（Y轴360°自转，XZ轴±25°倾斜）
+  // constrainRotation: false → 全随机旋转（适合彩纸/confetti 等无方向感的模型）
+  models: [
+    // scatterMode: 'field'（默认）→ 随机散布在路径周围
+    // scatterMode: 'path'        → 均匀沿路径排列，紧贴曲线
+    // scatterRadius / scatterY / baseScale 不填则使用下方全局值
+    { file: 'flower.glb',   instances: 80, constrainRotation: true,  bloomSpin: true,  label: '花朵' },
+    { file: 'confetti.glb', instances: 80, constrainRotation: false, bloomSpin: false, label: '彩带', colorMode: 'all' },
+    { file: 'leaf.glb',     instances: 60, constrainRotation: false, bloomSpin: false, label: '叶子', colorMode: 'leaf' },
+  ],
+
+  // 有旋转限制的模型的最大倾斜角（度）
+  maxTilt: 25,
+
+  // true  → 用下方 POLA 色盘随机染色（覆盖模型原有颜色）
+  // false → 保留模型本身的材质颜色
+  colorTint: true,
+
+  // 摄像机一圈的时长（秒）
+  cycleDuration: 28,
+
+  // 实例在路径周围的散布半径 [min, max]
+  scatterRadius: [60, 380],
+
+  // 花朵基础缩放（模型原始尺寸 × 这个值 × 60%~130% 随机浮动）
+  baseScale: 30,
+
+  // 有渐变色的花朵比例（0~1）
+  gradientChance: 0.25,
+
+  // 渐变沿哪个本地轴（对应 Blender 建模方向）：'x' | 'y' | 'z'
+  // Blender 默认 Z 朝上 → 导出 GLTF 后变成 Y，所以默认 'y'
+  gradientAxis: 'y',
+};
+
+// 叶子色盘（绿色系）
+const LEAF_COLORS = [0x00A99D, 0x00877D, 0x4ECDC4, 0x2D6A4F, 0x52B788];
+
+// POLA 色盘：花瓣 + 配套花蕊颜色（成对，保证对比度）
+const PETAL_PAIRS = [
+  { petal: 0xE8392A, stamen: 0xFFC107 }, // 红 + 黄
+  { petal: 0xF26522, stamen: 0xFFC107 }, // 橙 + 黄
+  { petal: 0xFFC107, stamen: 0xE8392A }, // 黄 + 红
+  { petal: 0x1B3D8F, stamen: 0xF9C0C0 }, // 深蓝 + 浅粉
+  { petal: 0xF9C0C0, stamen: 0x1B3D8F }, // 浅粉 + 深蓝
+  { petal: 0xFFFFFF, stamen: 0xFFC107 }, // 白 + 黄
+  { petal: 0xF4A7A7, stamen: 0xFFC107 }, // 浅粉 + 黄
+  { petal: 0xE8795E, stamen: 0x1B3D8F }, // 三文鱼红 + 深蓝
+  { petal: 0xD95B43, stamen: 0x1B3D8F }, // 珊瑚红 + 深蓝
+];
+
+// 彩带色盘：花瓣色 + 花蕊色 + 叶子色 合并
+const ALL_COLORS = [
+  ...PETAL_PAIRS.flatMap(p => [p.petal, p.stamen]),
+  ...LEAF_COLORS,
+];
+
+
+// ═══════════════════════════════════════════════════════════
+//  渲染器 + 场景
+// ═══════════════════════════════════════════════════════════
+
+const renderer = new THREE.WebGLRenderer({
+  canvas: document.getElementById('canvas'),
+  antialias: true,
+});
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+// NoToneMapping 让 MeshBasicMaterial 的颜色直出，不经过曝光压缩，才能还原 POLA 的纯饱和色
+renderer.toneMapping = THREE.NoToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0e0620);
+scene.fog = new THREE.FogExp2(0x0e0620, 0.00038);
+
+const camera = new THREE.PerspectiveCamera(68, window.innerWidth / window.innerHeight, 0.5, 5000);
+
+
+// ═══════════════════════════════════════════════════════════
+//  摄像机路径（CatmullRom 闭合曲线）
+// ═══════════════════════════════════════════════════════════
+
+const curve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(   0,    0,    0),
+  new THREE.Vector3(-350,  110,  -600),
+  new THREE.Vector3( 240,  -80, -1200),
+  new THREE.Vector3( 460,  180, -1800),
+  new THREE.Vector3(-290, -120, -2400),
+  new THREE.Vector3(-420,   90, -3000),
+  new THREE.Vector3( 140,  -40, -3600),
+  new THREE.Vector3(   0,    0, -4200),
+], true, 'catmullrom', 0.5);
+
+// ═══════════════════════════════════════════════════════════
+//  模型加载 + 实例散布
+// ═══════════════════════════════════════════════════════════
+
+function loadGLTF(loader, url) {
+  return new Promise((resolve, reject) => {
+    loader.load(url, gltf => resolve(gltf.scene), undefined, reject);
+  });
+}
+
+// 把模型所有材质转换为 MeshBasicMaterial（无光照，纯色插画感）
+function convertToFlat(model) {
+  model.traverse(node => {
+    if (!node.isMesh) return;
+    const src = Array.isArray(node.material) ? node.material : [node.material];
+    const flat = src.map(m => new THREE.MeshBasicMaterial({
+      color: m.color ? m.color.clone() : new THREE.Color(0xffffff),
+      name: m.name,
+      side: THREE.DoubleSide,
+    }));
+    node.material = flat.length === 1 ? flat[0] : flat;
+  });
+}
+
+// 深克隆模型（独立材质，支持后续染色）
+function deepClone(template) {
+  const clone = template.clone(true);
+  clone.traverse(node => {
+    if (node.isMesh && node.material) {
+      node.material = Array.isArray(node.material)
+        ? node.material.map(m => m.clone())
+        : node.material.clone();
+    }
+  });
+  return clone;
+}
+
+// 计算花瓣网格在指定轴上的深度范围（用于渐变归一化）
+function getPetalDepthRange(model) {
+  const axis = CONFIG.gradientAxis; // 'x' | 'y' | 'z'
+  const getter = axis === 'x' ? 'getX' : axis === 'y' ? 'getY' : 'getZ';
+  let lo = Infinity, hi = -Infinity;
+  model.traverse(node => {
+    if (!node.isMesh) return;
+    const mats = Array.isArray(node.material) ? node.material : [node.material];
+    if (!mats.some(m => /petal/i.test(m.name))) return;
+    const pos = node.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const v = pos[getter](i);
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+  });
+  return { lo: isFinite(lo) ? lo : 0, hi: isFinite(hi) ? hi : 1 };
+}
+
+// 花瓣深度渐变 ShaderMaterial（外层 → 内层高光，无光照）
+function makePetalGradient(colorOuter, colorInner, lo, hi) {
+  const axis = CONFIG.gradientAxis;
+  // GLSL 里直接读 position.x / .y / .z
+  const posComp = axis === 'x' ? 'position.x' : axis === 'y' ? 'position.y' : 'position.z';
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uOuter: { value: new THREE.Color(colorOuter) },
+      uInner: { value: new THREE.Color(colorInner) },
+      uLo:    { value: lo },
+      uHi:    { value: hi },
+    },
+    vertexShader: `
+      varying float vDepth;
+      void main() {
+        vDepth = ${posComp};
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uOuter;
+      uniform vec3 uInner;
+      uniform float uLo;
+      uniform float uHi;
+      varying float vDepth;
+      void main() {
+        float t = clamp((vDepth - uLo) / (uHi - uLo), 0.0, 1.0);
+        t = t * t; // ease-in：高光集中在顶部
+        gl_FragColor = vec4(mix(uOuter, uInner, t), 1.0);
+      }
+    `,
+    side: THREE.DoubleSide,
+  });
+}
+
+// 渐变版染色：花瓣换 ShaderMaterial，花蕊/叶子保持纯色
+function applyGradient(obj, pair, range) {
+  obj.traverse(node => {
+    if (!node.isMesh) return;
+    const src = Array.isArray(node.material) ? node.material : [node.material];
+    const next = src.map(m => {
+      if (/petal/i.test(m.name))  return makePetalGradient(pair.petal, pair.stamen, range.lo, range.hi);
+      if (/stamen/i.test(m.name)) { m.color.set(pair.stamen); return m; }
+      if (/leaf/i.test(m.name))   { m.color.set(pair.stamen); return m; }
+      m.color.set(pair.petal);
+      return m;
+    });
+    node.material = next.length === 1 ? next[0] : next;
+  });
+}
+
+// 按材质名分别染色：petal → 随机 POLA 花色，stamen/leaf → 配套色
+function applyColor(obj, pair) {
+  obj.traverse(node => {
+    if (!node.isMesh) return;
+    const mats = Array.isArray(node.material) ? node.material : [node.material];
+    mats.forEach(m => {
+      if (/petal/i.test(m.name))  { m.color = new THREE.Color(pair.petal);  return; }
+      if (/stamen/i.test(m.name)) { m.color = new THREE.Color(pair.stamen); return; }
+      if (/leaf/i.test(m.name))   { m.color = new THREE.Color(pair.stamen); return; }
+      m.color = new THREE.Color(pair.petal);
+    });
+  });
+}
+
+// 单色染色（用于叶子等只需一种颜色的模型）
+function applyColorAll(obj, hex) {
+  const color = new THREE.Color(hex);
+  obj.traverse(node => {
+    if (!node.isMesh) return;
+    const mats = Array.isArray(node.material) ? node.material : [node.material];
+    mats.forEach(m => { m.color.set(color); });
+  });
+}
+
+// 绽放进场动画：morph 从 Key1（小球）→ Basis（绽放）+ scale 弹出 + Y 轴自旋
+// 必须在旋转设置完成后调用，这样才能以最终角度为基准做自旋
+function bloomIn(obj, targetScale, delay, spin = true) {
+  let hasMorph = false;
+  obj.traverse(n => {
+    if (!n.isMesh || !n.morphTargetInfluences?.length) return;
+    n.morphTargetInfluences[0] = 1;
+    hasMorph = true;
+  });
+
+  obj.scale.setScalar(targetScale * 0.05);
+
+  gsap.to(obj.scale, {
+    x: targetScale, y: targetScale, z: targetScale,
+    duration: 3.6, delay,
+    ease: 'elastic.out(1, 0.55)',
+  });
+
+  if (spin) {
+    const targetY = obj.rotation.y;
+    obj.rotation.y = targetY - Math.PI * 3;
+    gsap.to(obj.rotation, {
+      y: targetY,
+      duration: 3.2, delay,
+      ease: 'power2.out',
+    });
+  }
+
+  if (hasMorph) {
+    obj.traverse(n => {
+      if (!n.isMesh || !n.morphTargetInfluences?.length) return;
+      gsap.to(n.morphTargetInfluences, {
+        0: 0,
+        duration: 2.7, delay,
+        ease: 'power3.out',
+      });
+    });
+  }
+}
+
+// Box-Muller 高斯分布（均值 0，标准差 sigma）
+function gaussian(sigma) {
+  const u = 1 - Math.random(), v = Math.random();
+  return sigma * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+
+// 在路径周围散布模型实例（modelCfg 控制数量和旋转方式）
+function scatter(template, modelCfg, depthRange) {
+  const mode = modelCfg.scatterMode ?? 'field';
+  for (let i = 0; i < modelCfg.instances; i++) {
+    // 根据模式确定路径上的参考点 t
+    let t;
+    if (mode === 'path') {
+      t = i / modelCfg.instances;
+    } else if (mode === 'cluster') {
+      const n = modelCfg.clusterCount ?? 5;
+      t = Math.floor(Math.random() * n) / n;
+    } else {
+      t = (i / modelCfg.instances + Math.random() * (0.8 / modelCfg.instances)) % 1;
+    }
+    const pathPos = curve.getPoint(t);
+    const obj = deepClone(template);
+
+    if (CONFIG.colorTint) {
+      if (modelCfg.colorMode === 'leaf') {
+        applyColorAll(obj, LEAF_COLORS[Math.floor(Math.random() * LEAF_COLORS.length)]);
+      } else if (modelCfg.colorMode === 'all') {
+        applyColorAll(obj, ALL_COLORS[Math.floor(Math.random() * ALL_COLORS.length)]);
+      } else {
+        const pair = PETAL_PAIRS[Math.floor(Math.random() * PETAL_PAIRS.length)];
+        if (Math.random() < CONFIG.gradientChance) {
+          applyGradient(obj, pair, depthRange);
+        } else {
+          applyColor(obj, pair);
+        }
+      }
+    }
+
+    const radii   = modelCfg.scatterRadius ?? CONFIG.scatterRadius;
+    const spreadY = modelCfg.scatterY ?? (mode === 'path' ? 40 : mode === 'cluster' ? 80 : 320);
+    const angle   = Math.random() * Math.PI * 2;
+
+    if (mode === 'cluster') {
+      // 高斯分布：密度从团簇中心向外自然衰减
+      const sigma = radii[1] * 0.45;
+      const r = Math.abs(gaussian(sigma));
+      obj.position.set(
+        pathPos.x + Math.cos(angle) * r,
+        pathPos.y + gaussian(spreadY * 0.35),
+        pathPos.z + Math.sin(angle) * r,
+      );
+    } else {
+      const radius = radii[0] + Math.random() * (radii[1] - radii[0]);
+      obj.position.set(
+        pathPos.x + Math.cos(angle) * radius,
+        pathPos.y + (Math.random() - 0.5) * spreadY,
+        pathPos.z + Math.sin(angle) * radius * (mode === 'path' ? 1 : 0.2) + (Math.random() - 0.5) * spreadY * 0.25,
+      );
+    }
+
+    const base = modelCfg.baseScale ?? CONFIG.baseScale;
+    const s = base * (0.6 + Math.random() * 0.7);
+
+    if (modelCfg.constrainRotation) {
+      const tilt = CONFIG.maxTilt * Math.PI / 180;
+      obj.rotation.y = Math.random() * Math.PI * 2;
+      obj.rotation.x = (Math.random() - 0.5) * 2 * tilt;
+      obj.rotation.z = (Math.random() - 0.5) * 2 * tilt;
+    } else {
+      obj.rotation.x = Math.random() * Math.PI * 2;
+      obj.rotation.y = Math.random() * Math.PI * 2;
+      obj.rotation.z = Math.random() * Math.PI * 2;
+    }
+
+    bloomIn(obj, s, Math.random() * 4, modelCfg.bloomSpin);
+
+    modelGroups[modelCfg.file].add(obj);
+  }
+}
+
+// ─── 按模型分组 + 重新散布支持 ────────────────────────────────
+const modelGroups = {}; // file → THREE.Group
+const modelData   = []; // { cfg, template, depthRange }
+
+CONFIG.models.forEach(cfg => {
+  const g = new THREE.Group();
+  scene.add(g);
+  modelGroups[cfg.file] = g;
+});
+
+function rescatterModel(cfg) {
+  const entries = modelData.filter(d => d.cfg === cfg);
+  if (!entries.length) return;
+  const g = modelGroups[cfg.file];
+  while (g.children.length) g.remove(g.children[0]);
+  entries.forEach(({ template, depthRange }) => scatter(template, cfg, depthRange));
+}
+
+// ─── 加载所有模型 ──────────────────────────────────────────
+
+const loader = new GLTFLoader();
+const overlayEl   = document.getElementById('overlay');
+const titleEl     = document.getElementById('overlay-title');
+const subEl       = document.getElementById('overlay-sub');
+const progressEl  = document.getElementById('progress-fill');
+
+let loadedCount = 0;
+const total = CONFIG.models.length;
+
+const loadPromises = CONFIG.models.map(modelCfg =>
+  loadGLTF(loader, `./${modelCfg.file}`)
+    .then(scene => {
+      loadedCount++;
+      progressEl.style.width = `${(loadedCount / total) * 100}%`;
+      return { scene, cfg: modelCfg };
+    })
+    .catch(err => {
+      console.warn(`无法加载 ${modelCfg.file}:`, err);
+      subEl.textContent = `找不到 ${modelCfg.file}，请将模型文件放在此 HTML 同目录下`;
+      return null;
+    })
+);
+
+// 从 gltf.scene 提取独立对象模板。
+// 如果 Blender 场景里有多个顶层对象，每个单独散布；只有一个则整体散布。
+function extractTemplates(gltfScene) {
+  const children = gltfScene.children.filter(c => {
+    let hasMesh = false;
+    c.traverse(n => { if (n.isMesh) hasMesh = true; });
+    return hasMesh;
+  });
+  return children.length > 1
+    ? children.map(c => deepClone(c))
+    : [gltfScene];
+}
+
+Promise.all(loadPromises).then(results => {
+  const valid = results.filter(Boolean);
+
+  if (valid.length === 0) {
+    titleEl.textContent = '❌ 没有模型可以加载';
+    subEl.innerHTML =
+      '请将 GLB 文件放在此 HTML 同目录，<br>并在 CONFIG.models 里填写文件名';
+    return;
+  }
+
+  // 每个文件里的每个顶层对象分别散布，携带各自的 modelCfg
+  valid.flatMap(({ scene, cfg }) =>
+    extractTemplates(scene).map(t => ({ template: t, cfg }))
+  ).forEach(({ template, cfg }) => {
+    const depthRange = getPetalDepthRange(template);
+    convertToFlat(template);
+    modelData.push({ cfg, template, depthRange });
+    scatter(template, cfg, depthRange);
+  });
+
+  buildControls();
+
+  // 淡出 loading
+  overlayEl.classList.add('fade-out');
+  setTimeout(() => { overlayEl.style.display = 'none'; }, 700);
+
+  startAnimation();
+}).catch(err => {
+  console.error('加载失败:', err);
+  titleEl.textContent = '❌ 加载出错';
+  subEl.textContent = err.message || String(err);
+});
+
+// ─── 控制面板 UI ───────────────────────────────────────────
+function makeSlider(label, min, max, step, value, onInput) {
+  const row = document.createElement('div');
+  row.className = 'ctrl-slider-row';
+  const hdr = document.createElement('div');
+  hdr.className = 'ctrl-slider-header';
+  const lbl = document.createElement('span');
+  lbl.className = 'ctrl-label';
+  lbl.textContent = label;
+  const val = document.createElement('span');
+  val.className = 'ctrl-label';
+  val.textContent = String(value);
+  hdr.appendChild(lbl); hdr.appendChild(val);
+  const sl = document.createElement('input');
+  sl.type = 'range'; sl.className = 'tilt-slider';
+  sl.min = min; sl.max = max; sl.step = step; sl.value = value;
+  sl.addEventListener('input', () => { val.textContent = sl.value; onInput(Number(sl.value)); });
+  row.appendChild(hdr); row.appendChild(sl);
+  return row;
+}
+
+function buildControls() {
+  const panel = document.getElementById('controls');
+  panel.style.display = 'flex';
+
+  // ── 显示开关 ──
+  const toggleRow = document.createElement('div');
+  toggleRow.className = 'ctrl-row';
+  CONFIG.models.forEach(cfg => {
+    if (!modelGroups[cfg.file]) return;
+    const btn = document.createElement('button');
+    btn.className = 'ctrl-toggle on';
+    btn.textContent = cfg.label || cfg.file;
+    btn.addEventListener('click', () => {
+      const g = modelGroups[cfg.file];
+      g.visible = !g.visible;
+      btn.classList.toggle('on', g.visible);
+    });
+    toggleRow.appendChild(btn);
+  });
+  panel.appendChild(toggleRow);
+
+  // ── 每个模型的散布控制卡 ──
+  CONFIG.models.forEach(cfg => {
+    if (!modelGroups[cfg.file]) return;
+
+    const card = document.createElement('div');
+    card.className = 'ctrl-card';
+
+    // 标题 + 模式切换
+    const cardHdr = document.createElement('div');
+    cardHdr.className = 'ctrl-card-header';
+    const nameLbl = document.createElement('span');
+    nameLbl.className = 'ctrl-label';
+    nameLbl.textContent = cfg.label || cfg.file;
+    cardHdr.appendChild(nameLbl);
+
+    const modeWrap = document.createElement('div');
+    modeWrap.className = 'ctrl-card-modes';
+    const fieldBtn   = document.createElement('button');
+    fieldBtn.className = 'ctrl-toggle sm' + (cfg.scatterMode == null || cfg.scatterMode === 'field' ? ' on' : '');
+    fieldBtn.textContent = '散布';
+    const pathBtn    = document.createElement('button');
+    pathBtn.className = 'ctrl-toggle sm' + (cfg.scatterMode === 'path' ? ' on' : '');
+    pathBtn.textContent = '路径';
+    const clusterBtn = document.createElement('button');
+    clusterBtn.className = 'ctrl-toggle sm' + (cfg.scatterMode === 'cluster' ? ' on' : '');
+    clusterBtn.textContent = '团簇';
+
+    // 团簇数滑块（只在 cluster 模式下显示）
+    const clusterSlider = makeSlider('团簇数', 1, 20, 1, cfg.clusterCount ?? 5, v => {
+      cfg.clusterCount = v;
+      rescatterModel(cfg);
+    });
+    clusterSlider.style.display = cfg.scatterMode === 'cluster' ? '' : 'none';
+
+    const setMode = mode => {
+      cfg.scatterMode = mode;
+      fieldBtn.classList.toggle('on',   mode === 'field' || mode == null);
+      pathBtn.classList.toggle('on',    mode === 'path');
+      clusterBtn.classList.toggle('on', mode === 'cluster');
+      clusterSlider.style.display = mode === 'cluster' ? '' : 'none';
+      rescatterModel(cfg);
+    };
+    fieldBtn.addEventListener('click',   () => setMode('field'));
+    pathBtn.addEventListener('click',    () => setMode('path'));
+    clusterBtn.addEventListener('click', () => setMode('cluster'));
+    modeWrap.appendChild(fieldBtn); modeWrap.appendChild(pathBtn); modeWrap.appendChild(clusterBtn);
+    cardHdr.appendChild(modeWrap);
+    card.appendChild(cardHdr);
+
+    // 半径 slider
+    const initRadius = (cfg.scatterRadius ?? CONFIG.scatterRadius)[1];
+    card.appendChild(makeSlider('半径', 0, 400, 1, initRadius, v => {
+      cfg.scatterRadius = [0, v];
+      rescatterModel(cfg);
+    }));
+
+    // Y 扩散 slider
+    const mode0 = cfg.scatterMode ?? 'field';
+    const initY = cfg.scatterY ?? (mode0 === 'path' ? 40 : mode0 === 'cluster' ? 80 : 320);
+    card.appendChild(makeSlider('扩散 Y', 0, 400, 1, initY, v => {
+      cfg.scatterY = v;
+      rescatterModel(cfg);
+    }));
+
+    card.appendChild(clusterSlider);
+
+    panel.appendChild(card);
+  });
+
+  // ── 旋转限制（花朵专用）──
+  const constrained = CONFIG.models.filter(c => c.constrainRotation);
+  if (constrained.length > 0) {
+    const card = document.createElement('div');
+    card.className = 'ctrl-card';
+    card.appendChild(makeSlider('旋转限制', 0, 90, 1, CONFIG.maxTilt, v => {
+      CONFIG.maxTilt = v;
+      constrained.forEach(c => rescatterModel(c));
+    }));
+    panel.appendChild(card);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  摄像机动画
+// ═══════════════════════════════════════════════════════════
+
+function startAnimation() {
+  const progress = { t: 0 };
+  gsap.to(progress, { t: 1, duration: CONFIG.cycleDuration, ease: 'none', repeat: -1 });
+
+  const _pos  = new THREE.Vector3();
+  const _look = new THREE.Vector3();
+  let tick = 0;
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    tick += 0.006;
+
+    curve.getPoint(progress.t % 1, _pos);
+    curve.getPoint((progress.t + 0.024) % 1, _look);
+    camera.position.copy(_pos);
+    camera.lookAt(_look);
+
+    // 轻微呼吸晃动
+    camera.rotation.z += Math.sin(tick * 0.5)  * 0.002;
+    camera.rotation.x += Math.sin(tick * 0.33) * 0.0008;
+
+    renderer.render(scene, camera);
+  })();
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

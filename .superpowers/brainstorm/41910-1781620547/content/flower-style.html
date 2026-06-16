@@ -1,0 +1,117 @@
+<h2>花卉元素的视觉风格？</h2>
+<p class="subtitle">这决定了 demo 的整体美学基调</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="sakura" onclick="toggleSelect(this)">
+    <div class="card-image" style="height:160px;background:#fff0f5;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+      <svg viewBox="0 0 200 140" width="200" height="140" xmlns="http://www.w3.org/2000/svg">
+        <!-- Sakura petals -->
+        <g opacity="0.9">
+          <ellipse cx="100" cy="70" rx="18" ry="9" fill="#ffb7c5" transform="rotate(0 100 70)"/>
+          <ellipse cx="100" cy="70" rx="18" ry="9" fill="#ffc8d6" transform="rotate(72 100 70)"/>
+          <ellipse cx="100" cy="70" rx="18" ry="9" fill="#ffafc0" transform="rotate(144 100 70)"/>
+          <ellipse cx="100" cy="70" rx="18" ry="9" fill="#ffbdcc" transform="rotate(216 100 70)"/>
+          <ellipse cx="100" cy="70" rx="18" ry="9" fill="#ffc2d0" transform="rotate(288 100 70)"/>
+          <circle cx="100" cy="70" r="6" fill="#ffe0ea"/>
+        </g>
+        <!-- floating petals -->
+        <ellipse cx="40" cy="30" rx="10" ry="5" fill="#ffb7c5" opacity="0.7" transform="rotate(30 40 30)"/>
+        <ellipse cx="160" cy="50" rx="8" ry="4" fill="#ffc8d6" opacity="0.6" transform="rotate(-20 160 50)"/>
+        <ellipse cx="70" cy="110" rx="9" ry="4.5" fill="#ffafc0" opacity="0.8" transform="rotate(50 70 110)"/>
+        <ellipse cx="150" cy="100" rx="7" ry="3.5" fill="#ffbdcc" opacity="0.5" transform="rotate(-40 150 100)"/>
+        <ellipse cx="25" cy="90" rx="8" ry="4" fill="#ffc2d0" opacity="0.6" transform="rotate(15 25 90)"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>🌸 樱花飘落</h3>
+      <p>柔和粉色花瓣，飘落感，日式唯美。轻盈、浪漫，适合温柔的游戏氛围。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="geometric" onclick="toggleSelect(this)">
+    <div class="card-image" style="height:160px;background:#0d0d1a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+      <svg viewBox="0 0 200 140" width="200" height="140" xmlns="http://www.w3.org/2000/svg">
+        <!-- Geometric neon flower -->
+        <g>
+          <polygon points="100,40 112,68 142,68 119,86 128,114 100,96 72,114 81,86 58,68 88,68" fill="none" stroke="#a78bfa" stroke-width="1.5" opacity="0.9"/>
+          <polygon points="100,52 108,70 128,70 113,81 119,99 100,88 81,99 87,81 72,70 92,70" fill="#7c3aed" opacity="0.3"/>
+          <circle cx="100" cy="70" r="8" fill="#c4b5fd" opacity="0.8"/>
+        </g>
+        <!-- floating particles -->
+        <polygon points="40,25 44,33 52,33 46,38 48,46 40,41 32,46 34,38 28,33 36,33" fill="none" stroke="#818cf8" stroke-width="1" opacity="0.6"/>
+        <circle cx="165" cy="45" r="4" fill="#a78bfa" opacity="0.5"/>
+        <polygon points="155,90 158,97 165,97 160,101 162,108 155,104 148,108 150,101 145,97 152,97" fill="none" stroke="#c4b5fd" stroke-width="1" opacity="0.4"/>
+        <circle cx="35" cy="100" r="3" fill="#818cf8" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>💠 几何霓虹</h3>
+      <p>几何线框花朵，霓虹色，科幻感。适合宇宙/科技主题的 Trivia 游戏。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="abstract" onclick="toggleSelect(this)">
+    <div class="card-image" style="height:160px;background:#0a1628;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+      <svg viewBox="0 0 200 140" width="200" height="140" xmlns="http://www.w3.org/2000/svg">
+        <!-- Abstract glowing orb flowers -->
+        <defs>
+          <radialGradient id="g1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="g2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#34d399" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="g3" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#f472b6" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#ec4899" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="100" cy="70" r="35" fill="url(#g1)"/>
+        <circle cx="45" cy="40" r="20" fill="url(#g2)"/>
+        <circle cx="155" cy="100" r="25" fill="url(#g3)"/>
+        <circle cx="160" cy="35" r="12" fill="url(#g2)" opacity="0.6"/>
+        <circle cx="35" cy="105" r="15" fill="url(#g1)" opacity="0.5"/>
+        <!-- star sparks -->
+        <circle cx="100" cy="70" r="3" fill="white" opacity="0.9"/>
+        <circle cx="45" cy="40" r="2" fill="white" opacity="0.8"/>
+        <circle cx="155" cy="100" r="2.5" fill="white" opacity="0.7"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>✨ 发光粒子云</h3>
+      <p>抽象光晕球体，彩色渐变，像星云里的光点。梦幻、游戏感强，无特定花形。</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="botanical" onclick="toggleSelect(this)">
+    <div class="card-image" style="height:160px;background:#0f1a0a;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+      <svg viewBox="0 0 200 140" width="200" height="140" xmlns="http://www.w3.org/2000/svg">
+        <!-- Botanical illustration style -->
+        <g stroke="#4ade80" stroke-width="1.2" fill="none">
+          <!-- stem -->
+          <path d="M100 120 Q95 90 100 60" opacity="0.8"/>
+          <!-- leaves -->
+          <path d="M100 95 Q115 85 120 70 Q108 82 100 95" fill="#166534" opacity="0.6"/>
+          <path d="M100 85 Q85 75 80 60 Q92 72 100 85" fill="#166534" opacity="0.6"/>
+          <!-- flower -->
+          <ellipse cx="100" cy="52" rx="12" ry="6" fill="#86efac" opacity="0.8" transform="rotate(0 100 52)"/>
+          <ellipse cx="100" cy="52" rx="12" ry="6" fill="#4ade80" opacity="0.7" transform="rotate(60 100 52)"/>
+          <ellipse cx="100" cy="52" rx="12" ry="6" fill="#86efac" opacity="0.8" transform="rotate(120 100 52)"/>
+          <circle cx="100" cy="52" r="5" fill="#fbbf24" opacity="0.9"/>
+        </g>
+        <!-- small floating petals -->
+        <ellipse cx="50" cy="40" rx="7" ry="3.5" fill="#86efac" opacity="0.5" transform="rotate(25 50 40)"/>
+        <ellipse cx="160" cy="60" rx="6" ry="3" fill="#4ade80" opacity="0.4" transform="rotate(-30 160 60)"/>
+        <ellipse cx="140" cy="110" rx="8" ry="4" fill="#86efac" opacity="0.6" transform="rotate(40 140 110)"/>
+      </svg>
+    </div>
+    <div class="card-body">
+      <h3>🌿 植物插画</h3>
+      <p>手绘风格植物，绿色系，自然有机。清新、生命感，适合知识类游戏。</p>
+    </div>
+  </div>
+
+</div>

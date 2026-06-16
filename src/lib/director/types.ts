@@ -61,14 +61,17 @@ export interface DirectorSnapshot {
   questionId: string
   playCount: number
   questionIndex: number
+  questionCount: number
   questionAudio: string
-  lastResolution: { correctAnswerId: string; fact: string; rewards: Record<string, number> } | null
+  lastResolution: Record<string, unknown> | null
   answersCount: number
   expectedAnswerCount: number
+  preferenceCount: number
+  expectedPreferenceCount: number
   remainingMs: number
   scoreVisibility: string
   scoreboardVisible: boolean
-  finalHype: { current: { text: string } | null } | null
+  finalHype: { current: { text: string; kind: string } | null; index?: number } | null
 }
 
 export interface NormalizedCue {

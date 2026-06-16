@@ -1202,6 +1202,21 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/tester\/answer-correct$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.testerAnswerCorrect) return sendJson(res, 404, { error: "Tester mode is not available" });
+      const result = await runtime.testerAnswerCorrect(room, body.playerId);
+      if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
+      broadcast(code);
+      sendJson(res, 200, { trivia: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/trivia\/tester\/complete$/)) {
       const code = url.pathname.split("/")[3];
       const room = rooms.get(code);

@@ -659,16 +659,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "All right, space cadets, let's keep this quiz comet moving.",
       "transcriptSegments": [
         "All right, space cadets, let's keep this quiz comet moving."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781644737641
     },
     "phase.game-setup.question-count.selection.line-01": {
       "id": "phase.game-setup.question-count.selection.line-01",
@@ -879,16 +877,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "I'm assembling the round now. Please enjoy this brief moment of false confidence.",
       "transcriptSegments": [
         "I'm assembling the round now. Please enjoy this brief moment of false confidence."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645660182
     },
     "phase.round-prep.round.loading.line-02": {
       "id": "phase.round-prep.round.loading.line-02",
@@ -917,16 +913,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Questions are loading. Somewhere, a spreadsheet just got very nervous.",
       "transcriptSegments": [
         "Questions are loading. Somewhere, a spreadsheet just got very nervous."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645660773
     },
     "phase.question-intro.question.next.line-01": {
       "id": "phase.question-intro.question.next.line-01",
@@ -1459,16 +1453,16 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
+      "status": "approved",
       "tags": [
         "regenerate"
       ],
       "notes": [],
-      "transcript": "And the correct answer is... please act surprised if needed.",
+      "transcript": "And the correct answer is [Giggles]... please act surprised if needed.",
       "transcriptSegments": [
-        "And the correct answer is... please act surprised if needed."
+        "And the correct answer is [Giggles]... please act surprised if needed."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645629148
     },
     "phase.reveal.answer.positive.line-02": {
       "id": "phase.reveal.answer.positive.line-02",
@@ -1497,16 +1491,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Let's reveal the answer and see whose confidence was accidentally correct.",
       "transcriptSegments": [
         "Let's reveal the answer and see whose confidence was accidentally correct."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645640288
     },
     "phase.reveal.answer.no-one-correct.line-01": {
       "id": "phase.reveal.answer.no-one-correct.line-01",
@@ -1535,16 +1527,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Nobody got it. The question wins this round and is being very smug about it.",
       "transcriptSegments": [
         "Nobody got it. The question wins this round and is being very smug about it."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645656546
     },
     "phase.reveal.answer.no-one-correct.line-02": {
       "id": "phase.reveal.answer.no-one-correct.line-02",
@@ -1573,16 +1563,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Not a single correct answer. Somewhere, trivia is cackling into a tiny microphone.",
       "transcriptSegments": [
         "Not a single correct answer. Somewhere, trivia is cackling into a tiny microphone."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645657040
     },
     "phase.reveal.answer.everyone-correct.line-01": {
       "id": "phase.reveal.answer.everyone-correct.line-01",
@@ -1611,16 +1599,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Everybody got it right. Suspiciously competent, all of you.",
       "transcriptSegments": [
         "Everybody got it right. Suspiciously competent, all of you."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645656206
     },
     "phase.reveal.answer.only-one-correct.line-01": {
       "id": "phase.reveal.answer.only-one-correct.line-01",
@@ -1649,16 +1635,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Only one player got that right. One hero, surrounded by confident fiction.",
       "transcriptSegments": [
         "Only one player got that right. One hero, surrounded by confident fiction."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645659528
     },
     "phase.scoring.score.update.line-01": {
       "id": "phase.scoring.score.update.line-01",
@@ -1687,16 +1671,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Scores are updating. Please keep all victory dances inside the vehicle.",
       "transcriptSegments": [
         "Scores are updating. Please keep all victory dances inside the vehicle."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645663203
     },
     "phase.scoring.score.update.line-02": {
       "id": "phase.scoring.score.update.line-02",
@@ -1725,16 +1707,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Points are being counted by highly trained imaginary interns.",
       "transcriptSegments": [
         "Points are being counted by highly trained imaginary interns."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645664161
     },
     "phase.scoring.score.hidden-update.line-01": {
       "id": "phase.scoring.score.hidden-update.line-01",
@@ -1763,16 +1743,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Scores are changing behind the curtain. The curtain is feeling powerful.",
       "transcriptSegments": [
         "Scores are changing behind the curtain. The curtain is feeling powerful."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645662769
     },
     "phase.scoring.leader.new.line-01": {
       "id": "phase.scoring.leader.new.line-01",
@@ -1801,16 +1779,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "We have a new leader. The leaderboard just rearranged its furniture.",
       "transcriptSegments": [
         "We have a new leader. The leaderboard just rearranged its furniture."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645661357
     },
     "phase.scoring.leader.new.line-02": {
       "id": "phase.scoring.leader.new.line-02",
@@ -1839,16 +1815,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "First place has changed hands. Politely, but with consequences.",
       "transcriptSegments": [
         "First place has changed hands. Politely, but with consequences."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645661944
     },
     "phase.scoring.rank.big-jump.line-01": {
       "id": "phase.scoring.rank.big-jump.line-01",
@@ -1877,16 +1851,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Somebody just rocketed up the rankings. Please secure your loose expectations.",
       "transcriptSegments": [
         "Somebody just rocketed up the rankings. Please secure your loose expectations."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645662346
     },
     "phase.between-questions.transition.next.line-01": {
       "id": "phase.between-questions.transition.next.line-01",
@@ -1987,16 +1959,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "At one point, only one player got the answer right. Mysterious. Impressive. Slightly annoying.",
       "transcriptSegments": [
         "At one point, only one player got the answer right. Mysterious. Impressive. Slightly annoying."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645653183
     },
     "phase.final-hype.summary.everyone-missed.line-01": {
       "id": "phase.final-hype.summary.everyone-missed.line-01",
@@ -2025,16 +1995,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "One question completely wiped the room. A clean sweep, but rude.",
       "transcriptSegments": [
         "One question completely wiped the room. A clean sweep, but rude."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645652660
     },
     "phase.final-hype.summary.best-streak.line-01": {
       "id": "phase.final-hype.summary.best-streak.line-01",
@@ -2063,16 +2031,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Someone put together a streak tonight. I'm not naming names, but their ego knows.",
       "transcriptSegments": [
         "Someone put together a streak tonight. I'm not naming names, but their ego knows."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645651780
     },
     "phase.final-hype.summary.close-finish.line-01": {
       "id": "phase.final-hype.summary.close-finish.line-01",
@@ -2101,16 +2067,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "This finish is close enough to make the scoreboard breathe into a paper bag.",
       "transcriptSegments": [
         "This finish is close enough to make the scoreboard breathe into a paper bag."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645652317
     },
     "phase.final-hype.summary.round-energy.line-01": {
       "id": "phase.final-hype.summary.round-energy.line-01",
@@ -2139,16 +2103,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "This round had twists, turns, and at least one answer that looked legally questionable.",
       "transcriptSegments": [
         "This round had twists, turns, and at least one answer that looked legally questionable."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645653695
     },
     "phase.finale.result.incoming.line-01": {
       "id": "phase.finale.result.incoming.line-01",
@@ -2177,16 +2139,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Final results are coming up. Please prepare your gracious winner face, just in case.",
       "transcriptSegments": [
         "Final results are coming up. Please prepare your gracious winner face, just in case."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645654212
     },
     "phase.finale.result.incoming.line-02": {
       "id": "phase.finale.result.incoming.line-02",
@@ -2215,16 +2175,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Time for the final ranking. May the scoreboard be merciful and well-lit.",
       "transcriptSegments": [
         "Time for the final ranking. May the scoreboard be merciful and well-lit."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645654753
     },
     "phase.post-game.result.outro.line-01": {
       "id": "phase.post-game.result.outro.line-01",
@@ -2253,16 +2211,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "That's the game. You brought knowledge, guesses, and a surprising amount of confidence.",
       "transcriptSegments": [
         "That's the game. You brought knowledge, guesses, and a surprising amount of confidence."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645655114
     },
     "phase.post-game.result.outro.line-02": {
       "id": "phase.post-game.result.outro.line-02",
@@ -2291,16 +2247,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Cosmic Trivia is complete. Please return all borrowed brain cells to the front desk.",
       "transcriptSegments": [
         "Cosmic Trivia is complete. Please return all borrowed brain cells to the front desk."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645655678
     },
     "global.score.hidden.started.line-01": {
       "id": "global.score.hidden.started.line-01",
@@ -2329,16 +2283,16 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
+      "status": "approved",
       "tags": [
         "regenerate"
       ],
       "notes": [],
-      "transcript": "From here on, scores are hidden. Suspense has entered the chat.",
+      "transcript": "From here on, scores are hidden.[Joking] Suspense has entered the chat.",
       "transcriptSegments": [
-        "From here on, scores are hidden. Suspense has entered the chat."
+        "From here on, scores are hidden.[Joking] Suspense has entered the chat."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645650841
     },
     "global.score.hidden.started.line-02": {
       "id": "global.score.hidden.started.line-02",
@@ -2367,16 +2321,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
-      "transcript": "The scoreboard is going undercover. You'll see the truth at the end.",
+      "transcript": "The scoreboard is now going undercover. You'll see the truth at the end.",
       "transcriptSegments": [
-        "The scoreboard is going undercover. You'll see the truth at the end."
+        "The scoreboard is now going undercover. You'll see the truth at the end."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645651205
     },
     "global.player.join.in.line-01": {
       "id": "global.player.join.in.line-01",
@@ -2405,16 +2357,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "A new player joined. The chaos budget has been increased.",
       "transcriptSegments": [
         "A new player joined. The chaos budget has been increased."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645650468
     },
     "cross.game.final-question-armed.line-01": {
       "id": "cross.game.final-question-armed.line-01",
@@ -2442,16 +2392,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
-      "transcript": "The final question is ready and probably wearing a sunglasses chilling on the beach.",
+      "transcript": "The final question is ready and probably wearing a sunglasses [laugh] ...and chilling on the beach. [whisper] I'm jealous",
       "transcriptSegments": [
-        "The final question is ready and probably wearing a sunglasses chilling on the beach."
+        "The final question is ready and probably wearing a sunglasses [laugh] ...and chilling on the beach. [whisper] I'm jealous"
       ],
-      "updatedAt": 1781476639741
+      "updatedAt": 1781645515358
     },
     "cross.game.final-question-ended.line-01": {
       "id": "cross.game.final-question-ended.line-01",
@@ -2479,14 +2427,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
+      "status": "approved",
       "tags": [],
       "notes": [],
       "transcript": "The final question is done. Now we let suspense do its weird little dance.",
       "transcriptSegments": [
         "The final question is done. Now we let suspense do its weird little dance."
       ],
-      "updatedAt": 1781476640788
+      "updatedAt": 1781643459657
     },
     "cross.player.disconnected.line-01": {
       "id": "cross.player.disconnected.line-01",
@@ -2514,16 +2462,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
-      "transcript": "A player blipped out for a moment. Classic space internet behavior.",
+      "transcript": "A player blipped out for a moment. [joking] Classic space internet behavior.",
       "transcriptSegments": [
-        "A player blipped out for a moment. Classic space internet behavior."
+        "A player blipped out for a moment. [joking] Classic space internet behavior."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645533370
     },
     "cross.player.reconnected.line-01": {
       "id": "cross.player.reconnected.line-01",
@@ -2551,16 +2497,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "They're back. The signal survived its side quest.",
       "transcriptSegments": [
         "They're back. The signal survived its side quest."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645649042
     },
     "cross.player.idle.filler.line-01": {
       "id": "cross.player.idle.filler.line-01",
@@ -2589,16 +2533,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Still waiting on a few taps. No rush, except for the very real rush.",
       "transcriptSegments": [
         "Still waiting on a few taps. No rush, except for the very real rush."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645645121
     },
     "cross.player.idle.filler.line-02": {
       "id": "cross.player.idle.filler.line-02",
@@ -2627,16 +2569,16 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
+      "status": "approved",
       "tags": [
         "regenerate"
       ],
       "notes": [],
-      "transcript": "Someone is still choosing. Maybe it's wisdom. Maybe it's snacks.",
+      "transcript": "Someone is still choosing. [charming]Maybe it's wisdom. Maybe it's snacks.",
       "transcriptSegments": [
-        "Someone is still choosing. Maybe it's wisdom. Maybe it's snacks."
+        "Someone is still choosing. [charming]Maybe it's wisdom. Maybe it's snacks."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645648539
     },
     "cross.network.delay.filler.line-01": {
       "id": "cross.network.delay.filler.line-01",
@@ -2665,14 +2607,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
+      "status": "approved",
       "tags": [],
       "notes": [],
       "transcript": "The signal is squeezing through an asteroid belt. Very normal technology.",
       "transcriptSegments": [
         "The signal is squeezing through an asteroid belt. Very normal technology."
       ],
-      "updatedAt": 1781476638022
+      "updatedAt": 1781643466211
     },
     "cross.stats.streak.detected.line-01": {
       "id": "cross.stats.streak.detected.line-01",
@@ -2701,16 +2643,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Someone has a streak going. I won't say who, but the scoreboard is whispering.",
       "transcriptSegments": [
         "Someone has a streak going. I won't say who, but the scoreboard is whispering."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781645649844
     },
     "global.host.pause.line-01": {
       "id": "global.host.pause.line-01",
@@ -2738,16 +2678,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Game paused. Everybody freeze in your most intelligent pose.",
       "transcriptSegments": [
         "Game paused. Everybody freeze in your most intelligent pose."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781644744399
     },
     "global.host.resume.line-01": {
       "id": "global.host.resume.line-01",
@@ -2775,16 +2713,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "And we're back. Please resume pretending this was all under control.",
       "transcriptSegments": [
         "And we're back. Please resume pretending this was all under control."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781644752398
     },
     "global.network.unstable.line-01": {
       "id": "global.network.unstable.line-01",
@@ -2812,16 +2748,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "The network is wobbling. Give it a second to remember its job.",
       "transcriptSegments": [
         "The network is wobbling. Give it a second to remember its job."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781644769301
     },
     "global.network.recovered.line-01": {
       "id": "global.network.recovered.line-01",
@@ -2849,16 +2783,14 @@
       "priority": 100,
       "active": true,
       "placeholder": true,
-      "status": "unreviewed",
-      "tags": [
-        "regenerate"
-      ],
+      "status": "approved",
+      "tags": [],
       "notes": [],
       "transcript": "Signal recovered. Technology has decided to participate again.",
       "transcriptSegments": [
         "Signal recovered. Technology has decided to participate again."
       ],
-      "updatedAt": 1781440000000
+      "updatedAt": 1781644763316
     },
     "cosmic-trivia-questions:question:core-books-001:question": {
       "id": "cosmic-trivia-questions:question:core-books-001:question",
@@ -3090,6 +3022,17 @@
         "Changing the question count? Bold strategy. \n\n[Whisper]The quiz machine is pretending not to judge."
       ],
       "updatedAt": 1781476894784
+    },
+    "phase.reveal.answer.only-two-correct.line-01": {
+      "id": "phase.reveal.answer.only-two-correct.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Oh ohh, We have two correct anwsers.",
+      "transcriptSegments": [
+        "Oh ohh, We have two correct anwsers."
+      ],
+      "updatedAt": 1781645558562
     }
   },
   "customTags": [

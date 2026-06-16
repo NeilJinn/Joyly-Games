@@ -133,6 +133,29 @@ function allAnsweredEarly(prev: DirectorSnapshot | null, next: DirectorSnapshot 
     next.remainingMs > 0
 }
 
+function allPreferencesLocked(prev: DirectorSnapshot | null, next: DirectorSnapshot | null): boolean {
+  if (!prev || !next) return false
+  if (prev.phase !== "preferences" || next.phase !== "preferences") return false
+  if (!next.expectedPreferenceCount || next.expectedPreferenceCount <= 0) return false
+  return prev.preferenceCount < next.expectedPreferenceCount &&
+    next.preferenceCount >= next.expectedPreferenceCount
+}
+
+function questionCountChanged(prev: DirectorSnapshot | null, next: DirectorSnapshot | null): boolean {
+  if (!prev || !next) return false
+  if (prev.phase !== "game-setup" || next.phase !== "game-setup") return false
+  return prev.questionCount !== next.questionCount
+}
+
+function finalHypeSummaryChanged(prev: DirectorSnapshot | null, next: DirectorSnapshot | null): boolean {
+  if (!next || next.phase !== "final-hype") return false
+  const nextText = (next.finalHype?.current as { text?: string } | null)?.text
+  if (!nextText) return false
+  if (!prev || prev.phase !== "final-hype") return true
+  const prevText = (prev.finalHype?.current as { text?: string } | null)?.text
+  return prevText !== nextText
+}
+
 function answeringTimeCrossed(prev: DirectorSnapshot | null, next: DirectorSnapshot | null, thresholdMs: number): boolean {
   if (!prev || !next) return false
   if (prev.phase !== "answering" || next.phase !== "answering") return false
@@ -154,11 +177,29 @@ const reactiveDirector = createReactiveDirector({
       },
     },
     {
+      id: "phase:game-setup:count-changed",
+      when: r => questionCountChanged(r.previousSnapshot, r.nextSnapshot),
+      select: r => {
+        const ctx = phaseContext(r)
+        const audio = eventAudio({ phase: "game-setup", eventKey: "phase.game-setup.question-count.2nd-selection" }, ctx)
+        if (!audio.length) return null
+        return { id: "game-setup.count-changed", replayKey: `game-setup.count-changed:${cueSeed(ctx, "count-changed")}:${r.nextSnapshot?.questionCount ?? ""}`, audio, maxLateStartMs: 2_000 }
+      },
+    },
+    {
       id: "phase:preferences",
       when: r => r.phaseChanged && r.phase === "preferences",
       select: r => {
         const ctx = phaseContext(r)
         return { id: "preferences.intro", replayKey: `preferences.intro:${cueSeed(ctx, "preferences.intro")}`, audio: cueAudio("phase.preferences.selection.intro", cueSeed(ctx, "preferences.intro")) }
+      },
+    },
+    {
+      id: "phase:preferences:all-locked",
+      when: r => allPreferencesLocked(r.previousSnapshot, r.nextSnapshot),
+      select: r => {
+        const ctx = phaseContext(r)
+        return { id: "preferences.all-locked", replayKey: `preferences.all-locked:${cueSeed(ctx, "prefs-done")}`, audio: cueAudio("phase.preferences.selection.done", cueSeed(ctx, "prefs-done")), maxLateStartMs: 2_500 }
       },
     },
     {
@@ -174,7 +215,9 @@ const reactiveDirector = createReactiveDirector({
       when: r => r.phaseChanged && r.phase === "question-intro",
       select: r => {
         const ctx = phaseContext(r)
-        return { id: "question.intro", replayKey: `question.intro:${cueSeed(ctx, "question.intro")}`, audio: cueAudio("phase.question-intro.question.next", cueSeed(ctx, "question.intro")) }
+        const isFinal = Boolean(r.context.isFinalQuestion)
+        const cueKey = isFinal ? "phase.question-intro.question.final" : "phase.question-intro.question.next"
+        return { id: "question.intro", replayKey: `question.intro:${cueSeed(ctx, "question.intro")}`, audio: cueAudio(cueKey, cueSeed(ctx, "question.intro")) }
       },
     },
     {
@@ -231,25 +274,71 @@ const reactiveDirector = createReactiveDirector({
       },
     },
     {
-      id: "phase:reveal:no-correct",
+      id: "phase:scoring",
+      when: r => r.phaseChanged && r.phase === "scoring",
+      select: r => {
+        const ctx = phaseContext(r)
+        const isHidden = ctx.scoreVisibility === "hidden"
+        const cueKey = isHidden ? "phase.scoring.score.hidden-update" : "phase.scoring.score.update"
+        return { id: "scoring.update", replayKey: `scoring.update:${cueSeed(ctx, "scoring")}`, audio: cueAudio(cueKey, cueSeed(ctx, "scoring")) }
+      },
+    },
+    {
+      id: "phase:reveal:no-one-correct",
       when: r => {
         if (!r.phaseChanged || r.phase !== "reveal") return false
-        const res = r.nextSnapshot?.lastResolution as { rewards?: Record<string, number> } | null
-        const rewardCount = res?.rewards ? Object.values(res.rewards).filter(v => v > 0).length : 0
-        return rewardCount <= 0
+        const res = r.nextSnapshot?.lastResolution as { noOneCorrect?: boolean; rewardCount?: number } | null
+        return !!(res?.noOneCorrect || (res !== null && res !== undefined && (res.rewardCount ?? -1) === 0))
       },
       select: r => {
         const ctx = phaseContext(r)
-        return { id: "reveal.no-correct", replayKey: `reveal.no-correct:${cueSeed(ctx, "reveal-no-correct")}`, audio: cueAudio("phase.reveal.answer.no-one-correct", cueSeed(ctx, "reveal-no-correct")) }
+        return { id: "reveal.no-one-correct", replayKey: `reveal.no-one-correct:${cueSeed(ctx, "reveal-no-correct")}`, audio: cueAudio("phase.reveal.answer.no-one-correct", cueSeed(ctx, "reveal-no-correct")) }
+      },
+    },
+    {
+      id: "phase:reveal:everyone-correct",
+      when: r => {
+        if (!r.phaseChanged || r.phase !== "reveal") return false
+        const res = r.nextSnapshot?.lastResolution as { everyoneCorrect?: boolean } | null
+        return !!res?.everyoneCorrect
+      },
+      select: r => {
+        const ctx = phaseContext(r)
+        return { id: "reveal.everyone-correct", replayKey: `reveal.everyone-correct:${cueSeed(ctx, "reveal-everyone")}`, audio: cueAudio("phase.reveal.answer.everyone-correct", cueSeed(ctx, "reveal-everyone")) }
+      },
+    },
+    {
+      id: "phase:reveal:only-one-correct",
+      when: r => {
+        if (!r.phaseChanged || r.phase !== "reveal") return false
+        const res = r.nextSnapshot?.lastResolution as { rewardCount?: number; noOneCorrect?: boolean; everyoneCorrect?: boolean } | null
+        if (!res || res.noOneCorrect || res.everyoneCorrect) return false
+        return (res.rewardCount ?? -1) === 1
+      },
+      select: r => {
+        const ctx = phaseContext(r)
+        return { id: "reveal.only-one-correct", replayKey: `reveal.only-one-correct:${cueSeed(ctx, "reveal-one")}`, audio: cueAudio("phase.reveal.answer.only-one-correct", cueSeed(ctx, "reveal-one")) }
+      },
+    },
+    {
+      id: "phase:reveal:only-two-correct",
+      when: r => {
+        if (!r.phaseChanged || r.phase !== "reveal") return false
+        const res = r.nextSnapshot?.lastResolution as { rewardCount?: number; noOneCorrect?: boolean; everyoneCorrect?: boolean } | null
+        if (!res || res.noOneCorrect || res.everyoneCorrect) return false
+        return (res.rewardCount ?? -1) === 2
+      },
+      select: r => {
+        const ctx = phaseContext(r)
+        return { id: "reveal.only-two-correct", replayKey: `reveal.only-two-correct:${cueSeed(ctx, "reveal-two")}`, audio: cueAudio("phase.reveal.answer.only-two-correct", cueSeed(ctx, "reveal-two")) }
       },
     },
     {
       id: "phase:reveal:positive",
       when: r => {
         if (!r.phaseChanged || r.phase !== "reveal") return false
-        const res = r.nextSnapshot?.lastResolution as { rewards?: Record<string, number> } | null
-        const rewardCount = res?.rewards ? Object.values(res.rewards).filter(v => v > 0).length : 0
-        return rewardCount > 0
+        const res = r.nextSnapshot?.lastResolution as { rewardCount?: number; noOneCorrect?: boolean } | null
+        return !!(res && !res.noOneCorrect && (res.rewardCount ?? 0) > 0)
       },
       select: r => {
         const ctx = phaseContext(r)
@@ -266,10 +355,15 @@ const reactiveDirector = createReactiveDirector({
     },
     {
       id: "phase:final-hype",
-      when: r => r.phaseChanged && r.phase === "final-hype",
+      when: r => finalHypeSummaryChanged(r.previousSnapshot, r.nextSnapshot),
       select: r => {
         const ctx = phaseContext(r)
-        return { id: "final-hype.summary-line", replayKey: `final-hype.summary-line:${cueSeed(ctx, "final-hype")}`, audio: [], duckMusic: false }
+        const hype = ctx.finalHype as { current?: { kind?: string } | null } | null
+        const kind = hype?.current?.kind || "round-energy"
+        const cueKey = `phase.final-hype.summary.${kind}`
+        const audio = cueAudio(cueKey, cueSeed(ctx, `final-hype.${kind}`))
+        const safeAudio = audio.length ? audio : cueAudio("phase.final-hype.summary.round-energy", cueSeed(ctx, "final-hype.round-energy"))
+        return { id: `final-hype.${kind}`, replayKey: `final-hype.${kind}:${cueSeed(ctx, `final-hype.${kind}`)}`, audio: safeAudio, duckMusic: false }
       },
     },
     {

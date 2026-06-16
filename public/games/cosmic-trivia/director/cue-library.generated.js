@@ -32,7 +32,7 @@ export const DIRECTOR_CUE_REGISTRY = {
           "path": "/games/cosmic-trivia/audio/host/director/cross/game/final-question-armed/line-01.mp3",
           "text": "The final question is armed and probably wearing sunglasses.",
           "placeholder": false,
-          "regenerate": true
+          "regenerate": false
         }
       ]
     },
@@ -105,7 +105,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "cross.player.disconnected.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/player/disconnected/line-01.mp3",
+          "text": "A player blipped out for a moment. Classic space internet behavior.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "cross.player.idle.filler",
@@ -124,7 +132,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "cross.player.idle.filler.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/player/idle/filler/line-01.mp3",
+          "text": "Still waiting on a few taps. No rush, except for the very real rush.",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "cross.player.idle.filler.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/player/idle/filler/line-02.mp3",
+          "text": "Someone is still choosing. Maybe it's wisdom. Maybe it's snacks.",
+          "placeholder": false,
+          "regenerate": true
+        }
+      ]
     },
     {
       "cueKey": "cross.player.reconnected",
@@ -142,7 +165,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "cross.player.reconnected.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/player/reconnected/line-01.mp3",
+          "text": "They're back. The signal survived its side quest.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "cross.stats.streak.detected",
@@ -161,7 +192,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "cross.stats.streak.detected.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/detected/line-01.mp3",
+          "text": "Someone has a streak going. I won't say who, but the scoreboard is whispering.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "global.game.default",
@@ -179,7 +218,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "global.game.default.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/game/default/line-01.mp3",
+          "text": "All right, space cadets, let's keep this quiz comet moving.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "global.host.pause",
@@ -197,7 +244,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "global.host.pause.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/host/pause/line-01.mp3",
+          "text": "Game paused. Everybody freeze in your most intelligent pose.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "global.host.resume",
@@ -215,7 +270,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "global.host.resume.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/host/resume/line-01.mp3",
+          "text": "And we're back. Please resume pretending this was all under control.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "global.network.recovered",
@@ -233,7 +296,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "global.network.recovered.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/network/recovered/line-01.mp3",
+          "text": "Signal recovered. Technology has decided to participate again.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "global.network.unstable",
@@ -251,7 +322,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "global.network.unstable.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/network/unstable/line-01.mp3",
+          "text": "The network is wobbling. Give it a second to remember its job.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "global.player.join.in",
@@ -270,7 +349,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "global.player.join.in.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/player/join/in/line-01.mp3",
+          "text": "A new player joined. The chaos budget has been increased.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "global.score.hidden.started",
@@ -289,7 +376,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "global.score.hidden.started.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/score/hidden/started/line-01.mp3",
+          "text": "From here on, scores are hidden. Suspense has entered the chat.",
+          "placeholder": false,
+          "regenerate": true
+        },
+        {
+          "id": "global.score.hidden.started.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/global/score/hidden/started/line-02.mp3",
+          "text": "The scoreboard is going undercover. You'll see the truth at the end.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.answer-lock.answer.locked",
@@ -512,7 +614,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.best-streak.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/best-streak/line-01.mp3",
+          "text": "Someone put together a streak tonight. I'm not naming names, but their ego knows.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.final-hype.summary.close-finish",
@@ -531,7 +641,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.close-finish.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/close-finish/line-01.mp3",
+          "text": "This finish is close enough to make the scoreboard breathe into a paper bag.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.final-hype.summary.everyone-missed",
@@ -550,7 +668,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.everyone-missed.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/everyone-missed/line-01.mp3",
+          "text": "One question completely wiped the room. A clean sweep, but rude.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.final-hype.summary.only-one-correct",
@@ -569,7 +695,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.only-one-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/only-one-correct/line-01.mp3",
+          "text": "At one point, only one player got the answer right. Mysterious. Impressive. Slightly annoying.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.final-hype.summary.round-energy",
@@ -588,7 +722,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.final-hype.summary.round-energy.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/final-hype/summary/round-energy/line-01.mp3",
+          "text": "This round had twists, turns, and at least one answer that looked legally questionable.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.finale.result.incoming",
@@ -607,7 +749,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.finale.result.incoming.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/finale/result/incoming/line-01.mp3",
+          "text": "Final results are coming up. Please prepare your gracious winner face, just in case.",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "phase.finale.result.incoming.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/finale/result/incoming/line-02.mp3",
+          "text": "Time for the final ranking. May the scoreboard be merciful and well-lit.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.game-setup.question-count.2nd-selection",
@@ -687,7 +844,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.post-game.result.outro.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/post-game/result/outro/line-01.mp3",
+          "text": "That's the game. You brought knowledge, guesses, and a surprising amount of confidence.",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "phase.post-game.result.outro.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/post-game/result/outro/line-02.mp3",
+          "text": "Cosmic Trivia is complete. Please return all borrowed brain cells to the front desk.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.preferences.selection.done",
@@ -819,6 +991,33 @@ export const DIRECTOR_CUE_REGISTRY = {
       ]
     },
     {
+      "cueKey": "phase.reveal.answer.only-two-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "eventPath": [
+        "answer",
+        "only-two-correct"
+      ],
+      "purpose": "两人答对",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.reveal.answer.only-two-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/only-two-correct/line-01.mp3",
+          "text": "Oh ohh, We have two correct anwsers.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
       "cueKey": "phase.reveal.answer.everyone-correct",
       "scope": "phase",
       "domain": "reveal",
@@ -835,7 +1034,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.reveal.answer.everyone-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/everyone-correct/line-01.mp3",
+          "text": "Everybody got it right. Suspiciously competent, all of you.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.reveal.answer.no-one-correct",
@@ -854,7 +1061,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.reveal.answer.no-one-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/no-one-correct/line-01.mp3",
+          "text": "Nobody got it. The question wins this round and is being very smug about it.",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "phase.reveal.answer.no-one-correct.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/no-one-correct/line-02.mp3",
+          "text": "Not a single correct answer. Somewhere, trivia is cackling into a tiny microphone.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.reveal.answer.only-one-correct",
@@ -873,7 +1095,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.reveal.answer.only-one-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/only-one-correct/line-01.mp3",
+          "text": "Only one player got that right. One hero, surrounded by confident fiction.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.reveal.answer.positive",
@@ -892,7 +1122,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.reveal.answer.positive.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/positive/line-01.mp3",
+          "text": "And the correct answer is... please act surprised if needed.",
+          "placeholder": false,
+          "regenerate": true
+        },
+        {
+          "id": "phase.reveal.answer.positive.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/positive/line-02.mp3",
+          "text": "Let's reveal the answer and see whose confidence was accidentally correct.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.round-prep.round.loading",
@@ -911,7 +1156,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.round-prep.round.loading.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/round-prep/round/loading/line-01.mp3",
+          "text": "I'm assembling the round now. Please enjoy this brief moment of false confidence.",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "phase.round-prep.round.loading.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/round-prep/round/loading/line-02.mp3",
+          "text": "Questions are loading. Somewhere, a spreadsheet just got very nervous.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.scoring.leader.new",
@@ -930,7 +1190,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.scoring.leader.new.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/leader/new/line-01.mp3",
+          "text": "We have a new leader. The leaderboard just rearranged its furniture.",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "phase.scoring.leader.new.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/leader/new/line-02.mp3",
+          "text": "First place has changed hands. Politely, but with consequences.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.scoring.rank.big-jump",
@@ -949,7 +1224,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.scoring.rank.big-jump.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/rank/big-jump/line-01.mp3",
+          "text": "Somebody just rocketed up the rankings. Please secure your loose expectations.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.scoring.score.hidden-update",
@@ -968,7 +1251,15 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.scoring.score.hidden-update.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/score/hidden-update/line-01.mp3",
+          "text": "Scores are changing behind the curtain. The curtain is feeling powerful.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     },
     {
       "cueKey": "phase.scoring.score.update",
@@ -987,7 +1278,22 @@ export const DIRECTOR_CUE_REGISTRY = {
         "priority": 100,
         "enabled": true
       },
-      "variants": []
+      "variants": [
+        {
+          "id": "phase.scoring.score.update.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/score/update/line-01.mp3",
+          "text": "Scores are updating. Please keep all victory dances inside the vehicle.",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "phase.scoring.score.update.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/scoring/score/update/line-02.mp3",
+          "text": "Points are being counted by highly trained imaginary interns.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
     }
   ]
 };

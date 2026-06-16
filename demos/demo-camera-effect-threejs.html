@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Camera Effect Demo — A: Three.js</title>
+
+  <!-- Three.js via CDN (global build) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <!-- GSAP 驱动摄像机路径进度 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: #03000d;
+    }
+    canvas { display: block; }
+
+    .ui {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 20px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .label {
+      color: rgba(255,255,255,0.22);
+      font-family: 'SF Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .badge {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 6px 14px;
+      color: rgba(255,255,255,0.35);
+      font-family: system-ui, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div class="ui">
+  <span class="label">Demo A · Three.js · Real 3D Camera Path</span>
+  <span class="badge">摄像机沿曲线路径穿越花海</span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  配置区
+// ═══════════════════════════════════════════════════════════
+
+const CONFIG = {
+  flowerCount:      320,   // 花的总数
+  bgFlowerCount:    60,    // 背景大花（远景虚化感）
+  sparkCount:       200,   // 环境光点
+  cameraFov:        72,    // 摄像机视角（度）
+  cameraDuration:   24,    // 一圈时长（秒）
+  cameraSwayAmt:    0.003, // 摄像机呼吸晃动幅度
+  fogDensity:       0.0006,// 雾浓度（控制景深感）
+  pathRadius:       420,   // 花朵围绕路径的散布半径
+};
+
+const COLORS = [
+  '#ff6b9d', '#ff85c2', '#f472b6',   // 粉红
+  '#e879f9', '#c026d3', '#d946ef',   // 紫
+  '#a78bfa', '#818cf8', '#6366f1',   // 蓝紫
+  '#38bdf8', '#60a5fa',              // 蓝
+  '#fbbf24', '#fb923c',              // 金橙
+  '#34d399', '#2dd4bf',              // 青绿
+];
+
+// ═══════════════════════════════════════════════════════════
+//  花卉纹理生成器（canvas → Three.js texture）
+//  ── 只改这个函数就能换成彩带 / 星形 / 其他形状 ──
+// ═══════════════════════════════════════════════════════════
+
+function createFlowerTexture(hexColor, size = 128) {
+  const c  = document.createElement('canvas');
+  c.width  = size;
+  c.height = size;
+  const ctx = c.getContext('2d');
+  const cx = size / 2, cy = size / 2;
+  const r  = size * 0.38;
+
+  // 外层光晕
+  const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, size / 2);
+  glow.addColorStop(0,   hexColor + '55');
+  glow.addColorStop(0.5, hexColor + '18');
+  glow.addColorStop(1,   hexColor + '00');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, size, size);
+
+  // 6 片花瓣
+  for (let i = 0; i < 6; i++) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(i * Math.PI / 3);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(-r * 0.3, -r * 0.35, -r * 0.28, -r * 0.88, 0, -r);
+    ctx.bezierCurveTo( r * 0.28, -r * 0.88,  r * 0.3,  -r * 0.35, 0, 0);
+    ctx.fillStyle = hexColor + 'dd';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // 花心
+  const center = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.24);
+  center.addColorStop(0, '#ffffff');
+  center.addColorStop(0.6, hexColor + 'cc');
+  center.addColorStop(1,   hexColor + '66');
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.24, 0, Math.PI * 2);
+  ctx.fillStyle = center;
+  ctx.fill();
+
+  return new THREE.CanvasTexture(c);
+}
+
+// 环境光点纹理
+function createSparkTexture(size = 32) {
+  const c   = document.createElement('canvas');
+  c.width   = size;
+  c.height  = size;
+  const ctx  = c.getContext('2d');
+  const cx   = size / 2;
+  const grd  = ctx.createRadialGradient(cx, cx, 0, cx, cx, cx);
+  grd.addColorStop(0, 'rgba(255,255,255,0.9)');
+  grd.addColorStop(0.3, 'rgba(200,180,255,0.5)');
+  grd.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Three.js 场景
+// ═══════════════════════════════════════════════════════════
+
+const canvas   = document.getElementById('canvas');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x03000d);
+scene.fog = new THREE.FogExp2(0x03000d, CONFIG.fogDensity);
+
+const camera = new THREE.PerspectiveCamera(
+  CONFIG.cameraFov,
+  window.innerWidth / window.innerHeight,
+  1,
+  6000
+);
+
+// ═══════════════════════════════════════════════════════════
+//  摄像机路径 — CatmullRom 样条（closed = true 无缝循环）
+// ═══════════════════════════════════════════════════════════
+
+const PATH_POINTS = [
+  new THREE.Vector3(   0,    0,    0),
+  new THREE.Vector3(-380,  130, -650),
+  new THREE.Vector3( 250,  -90, -1300),
+  new THREE.Vector3( 480,  200, -1950),
+  new THREE.Vector3(-200, -130, -2600),
+  new THREE.Vector3(-450,  100, -3250),
+  new THREE.Vector3( 150,  -50, -3900),
+  new THREE.Vector3(   0,    0, -4550),
+];
+
+const curve = new THREE.CatmullRomCurve3(PATH_POINTS, true, 'catmullrom', 0.5);
+
+// ═══════════════════════════════════════════════════════════
+//  花卉 Sprites（每朵始终面向摄像机）
+// ═══════════════════════════════════════════════════════════
+
+// 预生成每个颜色的纹理和材质
+const flowerMaterials = COLORS.map(color =>
+  new THREE.SpriteMaterial({
+    map:          createFlowerTexture(color),
+    transparent:  true,
+    depthWrite:   false,
+    blending:     THREE.AdditiveBlending,
+  })
+);
+
+const sprites = [];
+
+function addFlowers(count, scaleRange, alphaRange, radiusRange) {
+  for (let i = 0; i < count; i++) {
+    const t       = Math.random();
+    const pathPos = curve.getPoint(t);
+    const mat     = flowerMaterials[Math.floor(Math.random() * flowerMaterials.length)].clone();
+    mat.opacity   = alphaRange[0] + Math.random() * (alphaRange[1] - alphaRange[0]);
+
+    const sprite = new THREE.Sprite(mat);
+
+    // 在路径附近随机散布（柱形区域）
+    const radius = radiusRange[0] + Math.random() * (radiusRange[1] - radiusRange[0]);
+    const angle  = Math.random() * Math.PI * 2;
+    sprite.position.set(
+      pathPos.x + Math.cos(angle) * radius,
+      pathPos.y + (Math.random() - 0.5) * 350,
+      pathPos.z + Math.sin(angle) * radius * 0.25 + (Math.random() - 0.5) * 120,
+    );
+
+    const scale = scaleRange[0] + Math.random() * (scaleRange[1] - scaleRange[0]);
+    sprite.scale.set(scale, scale, 1);
+
+    scene.add(sprite);
+    sprites.push({
+      sprite,
+      rotSpeed: (Math.random() - 0.5) * 0.006,
+    });
+  }
+}
+
+// 近景花（小而清晰）
+addFlowers(CONFIG.flowerCount,    [18, 75],  [0.6, 0.95], [80,  320]);
+// 远景大花（大而朦胧，营造景深感）
+addFlowers(CONFIG.bgFlowerCount,  [80, 200], [0.1, 0.3],  [350, 600]);
+
+// ═══════════════════════════════════════════════════════════
+//  环境光点（Stars / 粒子）
+// ═══════════════════════════════════════════════════════════
+
+const sparkTex = createSparkTexture();
+const sparkGeo = new THREE.BufferGeometry();
+const sparkPos = new Float32Array(CONFIG.sparkCount * 3);
+
+for (let i = 0; i < CONFIG.sparkCount; i++) {
+  const t   = Math.random();
+  const pos = curve.getPoint(t);
+  sparkPos[i * 3]     = pos.x + (Math.random() - 0.5) * 1200;
+  sparkPos[i * 3 + 1] = pos.y + (Math.random() - 0.5) * 600;
+  sparkPos[i * 3 + 2] = pos.z + (Math.random() - 0.5) * 400;
+}
+
+sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+
+const sparkMat = new THREE.PointsMaterial({
+  map:         sparkTex,
+  size:        8,
+  transparent: true,
+  depthWrite:  false,
+  blending:    THREE.AdditiveBlending,
+  opacity:     0.5,
+});
+
+scene.add(new THREE.Points(sparkGeo, sparkMat));
+
+// ═══════════════════════════════════════════════════════════
+//  摄像机路径动画 — GSAP 驱动进度，requestAnimationFrame 渲染
+// ═══════════════════════════════════════════════════════════
+
+const progress = { t: 0 };
+gsap.to(progress, {
+  t:        1,
+  duration: CONFIG.cameraDuration,
+  ease:     'none',
+  repeat:   -1,
+});
+
+const _camPos  = new THREE.Vector3();
+const _lookPos = new THREE.Vector3();
+
+let clock = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  clock += 0.008;
+
+  // 摄像机跟随曲线
+  curve.getPoint(progress.t % 1, _camPos);
+  curve.getPoint((progress.t + 0.028) % 1, _lookPos);
+
+  camera.position.copy(_camPos);
+  camera.lookAt(_lookPos);
+
+  // 呼吸式晃动 —— 模拟手持摄像机
+  camera.rotation.z += Math.sin(clock * 0.6)  * CONFIG.cameraSwayAmt;
+  camera.rotation.x += Math.sin(clock * 0.45) * CONFIG.cameraSwayAmt * 0.4;
+
+  // 花朵缓慢自转
+  for (const { sprite, rotSpeed } of sprites) {
+    sprite.material.rotation += rotSpeed;
+  }
+
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// ═══════════════════════════════════════════════════════════
+//  响应式
+// ═══════════════════════════════════════════════════════════
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

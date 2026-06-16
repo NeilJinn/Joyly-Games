@@ -34,13 +34,22 @@ export interface CosmicPlayerState {
 }
 
 export interface CosmicLastResolution {
-  correctAnswerId: string;
-  fact: string;
-  rewards: Record<string, number>;
+  questionId: string;
+  questionText: string;
+  correctAnswer: string;
+  rewardCount: number;
+  answeredCount: number;
+  winnerIds: string[];
+  everyoneCorrect: boolean;
+  noOneCorrect: boolean;
+  scoredAt: number;
 }
 
 export interface CosmicFinalHype {
-  current: { text: string } | null;
+  current: { text: string; kind: string } | null;
+  index?: number;
+  total?: number;
+  remaining?: number;
 }
 
 export interface CosmicTriviaState {

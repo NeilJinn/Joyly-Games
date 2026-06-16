@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import type { Room } from "../types/room"
 import type { CosmicTriviaState } from "../types/cosmic-trivia"
 import { getReactiveAudioPlan } from "../lib/director/cosmic-trivia-director"
 import { getDirectorSegmentPauseMs } from "../lib/director/flow"
 import type { DirectorAudioPlan, DirectorSnapshot, DirectorContext } from "../lib/director/types"
+import { useEmojiParticles } from "./useEmojiParticles"
 
 const BACKGROUND_MUSIC_FALLBACK = "/games/cosmic-trivia/audio/music/bgm-trivia-time-chill-01.mp3"
 const BACKGROUND_MUSIC_LIBRARY = "/api/games/cosmic-trivia/music-library"
@@ -22,21 +23,10 @@ interface AudioController {
   key: string
 }
 
-interface MusicController {
-  audio: HTMLAudioElement
-  stopped: boolean
-  fadeToken: number
-  currentSrc: string
-  playlist: string[]
-}
-
 interface HookRefs {
   previousSnapshot: DirectorSnapshot | null
   audioCueKey: string
   audioController: AudioController | null
-  musicController: MusicController | null
-  musicSourcesPromise: Promise<string[]> | null
-  musicSources: string[] | null
 }
 
 // ── Utilities ────────────────────────────────────────────────────────────────
@@ -52,10 +42,13 @@ function buildSnapshot(trivia: CosmicTriviaState): DirectorSnapshot {
     questionId: trivia.currentQuestion?.id || "",
     playCount: 1,
     questionIndex: trivia.questionIndex,
+    questionCount: trivia.questionCount,
     questionAudio: trivia.currentQuestion?.questionAudio || "",
-    lastResolution: trivia.lastResolution,
+    lastResolution: trivia.lastResolution as Record<string, unknown> | null,
     answersCount: trivia.answeredPlayerIds.length,
     expectedAnswerCount: trivia.expectedAnswerCount,
+    preferenceCount: trivia.preferencePlayerIds.length,
+    expectedPreferenceCount: trivia.expectedPreferenceCount,
     remainingMs: trivia.phaseEndsAt ? Math.max(0, trivia.phaseEndsAt - Date.now()) : 0,
     scoreVisibility: trivia.scoreVisibility,
     scoreboardVisible: trivia.scoreboardVisible,
@@ -65,13 +58,16 @@ function buildSnapshot(trivia: CosmicTriviaState): DirectorSnapshot {
 
 function buildContext(snapshot: DirectorSnapshot, code: string): DirectorContext {
   const res = snapshot.lastResolution
-  const rewardCount = res?.rewards
-    ? Object.values(res.rewards).filter(v => v > 0).length
-    : 0
+  const rewardCount = typeof res?.rewardCount === "number"
+    ? res.rewardCount as number
+    : (res?.rewards
+        ? Object.values(res.rewards as Record<string, number>).filter(v => v > 0).length
+        : 0)
   return {
     roomCode: code,
     playCount: snapshot.playCount,
     questionIndex: snapshot.questionIndex,
+    questionCount: snapshot.questionCount,
     questionId: snapshot.questionId,
     questionAudio: snapshot.questionAudio,
     lastResolution: snapshot.lastResolution
@@ -150,7 +146,7 @@ function playAudioSequence(
   refs.audioController = controller
   refs.audioCueKey = playbackKey
 
-  if (plan.duckMusic !== false) duckMusic(refs)
+  if (plan.duckMusic !== false) duckMusic()
   void notifyAudioStatus(code, plan.phase, snapshot, "queued")
 
   if (plan.notifyOnEnd || plan.advanceOnEnd) {
@@ -168,7 +164,7 @@ function playAudioSequence(
     const segment = plan.segments[index]
     if (!segment?.src) {
       if (index >= plan.segments.length - 1) {
-        if (plan.duckMusic !== false) unduckMusic(refs)
+        if (plan.duckMusic !== false) unduckMusic()
         clearHeartbeat(controller)
         refs.audioController = null
         if (plan.notifyOnEnd || plan.advanceOnEnd) {
@@ -206,7 +202,7 @@ function playAudioSequence(
           setTimeout(() => playIndex(index + 1), pauseMs)
           return
         }
-        if (plan.duckMusic !== false) unduckMusic(refs)
+        if (plan.duckMusic !== false) unduckMusic()
         setTimeout(() => {
           if (controller.stopped || refs.audioController !== controller) return
           clearHeartbeat(controller)
@@ -221,7 +217,7 @@ function playAudioSequence(
     const onError = () => {
       if (controller.stopped || refs.audioController !== controller) return
       clearHeartbeat(controller)
-      if (plan.duckMusic !== false) unduckMusic(refs)
+      if (plan.duckMusic !== false) unduckMusic()
       refs.audioController = null
       void notifyAudioStatus(code, plan.phase, snapshot, "blocked")
     }
@@ -249,25 +245,40 @@ function waitForMetadata(audio: HTMLAudioElement): Promise<void> {
 }
 
 // ── Background music ─────────────────────────────────────────────────────────
+//
+// A single Audio element lives at module scope for the entire page session.
+// This guarantees only one music track ever plays, regardless of how many
+// times CosmicTriviaHost mounts/unmounts (AnimatePresence overlap, HMR, etc.).
 
-async function loadMusicSources(refs: HookRefs): Promise<string[]> {
-  if (refs.musicSources?.length) return refs.musicSources
-  if (!refs.musicSourcesPromise) {
-    refs.musicSourcesPromise = fetch(BACKGROUND_MUSIC_LIBRARY)
+const _musicAudio = new Audio()
+_musicAudio.loop = false
+_musicAudio.preload = "auto"
+_musicAudio.volume = MUSIC_VOLUME
+
+let _musicStopped = true        // true  = audio should be silent
+let _musicCurrentSrc = ""
+let _musicFadeToken = 0
+let _musicSourcesPromise: Promise<string[]> | null = null
+let _musicSources: string[] | null = null
+
+async function loadMusicSources(): Promise<string[]> {
+  if (_musicSources?.length) return _musicSources
+  if (!_musicSourcesPromise) {
+    _musicSourcesPromise = fetch(BACKGROUND_MUSIC_LIBRARY)
       .then(r => r.ok ? r.json() : null)
       .then((data: { sources?: string[] } | null) => {
         const sources = Array.isArray(data?.sources)
           ? [...new Set(data!.sources.map(s => String(s).trim()).filter(Boolean))]
           : []
-        refs.musicSources = sources.length ? sources : [BACKGROUND_MUSIC_FALLBACK]
-        return refs.musicSources
+        _musicSources = sources.length ? sources : [BACKGROUND_MUSIC_FALLBACK]
+        return _musicSources
       })
       .catch(() => {
-        refs.musicSources = [BACKGROUND_MUSIC_FALLBACK]
-        return refs.musicSources
+        _musicSources = [BACKGROUND_MUSIC_FALLBACK]
+        return _musicSources
       })
   }
-  return refs.musicSourcesPromise
+  return _musicSourcesPromise
 }
 
 function pickNextMusicSrc(previousSrc: string, sources: string[]): string {
@@ -277,86 +288,204 @@ function pickNextMusicSrc(previousSrc: string, sources: string[]): string {
   return available[Math.floor(Math.random() * available.length)] || sources[0]
 }
 
-function setMusicVolume(controller: MusicController, target: number, fadeMs = FADE_MS) {
+async function musicAdvance() {
+  if (_musicStopped) return
+  const sources = await loadMusicSources()
+  if (_musicStopped) return
+  const next = pickNextMusicSrc(_musicCurrentSrc, sources)
+  _musicCurrentSrc = next
+  _musicAudio.src = next
+  _musicAudio.currentTime = 0
+  const p = _musicAudio.play()
+  if (p?.catch) {
+    p.catch(() => {
+      // Autoplay blocked — resume on first user interaction
+      const resume = () => {
+        if (_musicStopped) return
+        void _musicAudio.play().catch(() => {})
+      }
+      document.addEventListener("click", resume, { once: true })
+      document.addEventListener("keydown", resume, { once: true })
+    })
+  }
+}
+
+_musicAudio.addEventListener("ended", () => { void musicAdvance() })
+_musicAudio.addEventListener("error", () => { setTimeout(() => { void musicAdvance() }, 3000) })
+
+function setMusicVolume(target: number, fadeMs = FADE_MS) {
   const clamped = Math.max(0, Math.min(1, target))
-  const audio = controller.audio
-  if (!audio.src) { audio.volume = clamped; return }
-  const token = ++controller.fadeToken
-  const from = Number.isFinite(audio.volume) ? audio.volume : clamped
+  if (!_musicAudio.src) { _musicAudio.volume = clamped; return }
+  const token = ++_musicFadeToken
+  const from = Number.isFinite(_musicAudio.volume) ? _musicAudio.volume : clamped
   const start = performance.now()
   const tick = () => {
-    if (controller.fadeToken !== token || controller.stopped) return
+    if (_musicFadeToken !== token) return
     const progress = Math.min(1, (performance.now() - start) / fadeMs)
-    audio.volume = from + (clamped - from) * progress
+    _musicAudio.volume = from + (clamped - from) * progress
     if (progress < 1) requestAnimationFrame(tick)
   }
   requestAnimationFrame(tick)
 }
 
-function duckMusic(refs: HookRefs) {
-  if (refs.musicController) setMusicVolume(refs.musicController, DUCKED_VOLUME)
+function duckMusic() {
+  setMusicVolume(DUCKED_VOLUME)
 }
 
-function unduckMusic(refs: HookRefs) {
-  if (refs.musicController) setMusicVolume(refs.musicController, MUSIC_VOLUME)
+function unduckMusic() {
+  setMusicVolume(MUSIC_VOLUME)
 }
 
-function ensureBackgroundMusic(refs: HookRefs) {
-  if (refs.musicController) return
-  const audio = new Audio()
-  audio.loop = false
-  audio.preload = "auto"
-  audio.volume = MUSIC_VOLUME
-  const controller: MusicController = {
-    audio, stopped: false, fadeToken: 0, currentSrc: "", playlist: [],
-  }
-  refs.musicController = controller
-
-  const advance = async () => {
-    if (controller.stopped) return
-    const sources = await loadMusicSources(refs)
-    const next = pickNextMusicSrc(controller.currentSrc, sources)
-    controller.currentSrc = next
-    audio.src = next
-    audio.currentTime = 0
-    const p = audio.play()
-    if (p?.catch) p.catch(() => {})
-  }
-
-  audio.addEventListener("ended", () => { void advance() })
-  audio.addEventListener("error", () => { setTimeout(() => { void advance() }, 3000) })
-  void advance()
+function ensureBackgroundMusic() {
+  if (!_musicStopped) return   // already playing
+  _musicStopped = false
+  void musicAdvance()
 }
 
-function stopMusic(refs: HookRefs) {
-  const controller = refs.musicController
-  if (!controller) return
-  controller.stopped = true
-  controller.fadeToken++
-  controller.audio.pause()
-  controller.audio.src = ""
-  refs.musicController = null
+function stopMusic() {
+  _musicStopped = true
+  _musicFadeToken++
+  _musicAudio.pause()
+  _musicAudio.src = ""
+  _musicCurrentSrc = ""
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useCosmicTriviaDirector(room: Room | null, code: string) {
+export interface CosmicTriviaDirectorVisuals {
+  // Joyly01Overlay — 转场/庆祝花朵
+  phaseBurstTrigger: number
+  phaseBurstPreset:  'transition' | 'celebration'
+  // ScoreBurstOverlay — 得分花朵飞向玩家条
+  scoreBurstTrigger:    number
+  scoreBurstWinnerIds:  string[]
+  onScoreBurstReady:    (playerIds: string[]) => void  // 花朵绽放完毕，行开始高亮
+  onScoreFlowerHit:     (playerId: string) => void
+  onScoreFlowerLeave:   (playerId: string) => void
+  // ScoreRow 动画 props
+  scoreRowHits:      Record<string, number>
+  scoreRowPushes:    Record<string, number>
+  scoreRowWinners:   Set<string>       // 得分玩家（burst开始→花朵消失）
+  frozenPlayerOrder: string[] | null   // 动画期间冻结排名顺序
+  // emoji 粒子避让 ref（绑到 preferences 内容 div）
+  prefsContentRef: React.RefObject<HTMLDivElement>
+}
+
+export function useCosmicTriviaDirector(room: Room | null, code: string): CosmicTriviaDirectorVisuals {
+  const trivia = (room?.gameState as CosmicTriviaState | null) ?? null
+
+  // ── Audio refs ────────────────────────────────────────────────
   const refs = useRef<HookRefs>({
     previousSnapshot: null,
     audioCueKey: "",
     audioController: null,
-    musicController: null,
-    musicSourcesPromise: null,
-    musicSources: null,
   })
 
+  // ── Visual cue state ─────────────────────────────────────────
+
+  // 1. Joyly01 转场/庆祝花朵
+  const [phaseBurstTrigger, setPhaseBurstTrigger] = useState(0)
+  const [phaseBurstPreset,  setPhaseBurstPreset]  = useState<'transition' | 'celebration'>('transition')
+  const prevPhaseRef         = useRef<string | null>(null)
+  // 捕获 answer-lock 时的排名顺序（评分前），用于动画期间冻结
+  const capturedOrderRef     = useRef<string[] | null>(null)
+
+  useEffect(() => {
+    const phase = trivia?.phase
+    if (!phase || phase === prevPhaseRef.current) return
+    prevPhaseRef.current = phase
+
+    if (phase === 'answer-lock' && trivia && room) {
+      // 评分前最后一个确定的排名快照
+      capturedOrderRef.current = [...room.players]
+        .sort((a, b) => (trivia.scores[b.id] ?? 0) - (trivia.scores[a.id] ?? 0))
+        .map(p => p.id)
+    }
+
+    if (phase === 'between-questions' || phase === 'question-intro') {
+      setPhaseBurstPreset('transition')
+      setPhaseBurstTrigger(t => t + 1)
+    } else if (phase === 'post-game') {
+      setPhaseBurstPreset('celebration')
+      setPhaseBurstTrigger(t => t + 1)
+    }
+  }, [trivia?.phase])  // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 2. 得分花朵 burst（ScoreBurstOverlay）
+  const [scoreBurstTrigger,   setScoreBurstTrigger]   = useState(0)
+  const [scoreBurstWinnerIds, setScoreBurstWinnerIds] = useState<string[]>([])
+  const [scoreRowHits,    setScoreRowHits]    = useState<Record<string, number>>({})
+  const [scoreRowPushes,  setScoreRowPushes]  = useState<Record<string, number>>({})
+  const [scoreRowWinners, setScoreRowWinners] = useState<Set<string>>(new Set())
+  const [frozenPlayerOrder, setFrozenPlayerOrder] = useState<string[] | null>(null)
+  const lastFiredResolutionRef = useRef<string | null>(null)
+  const pendingFlowerCountRef  = useRef(0)
+
+  const sortedPlayersRef = useRef<{ id: string }[]>([])
+  sortedPlayersRef.current = trivia && room
+    ? [...room.players].sort((a, b) => (trivia.scores[b.id] ?? 0) - (trivia.scores[a.id] ?? 0))
+    : []
+
+  useEffect(() => {
+    const phase = trivia?.phase
+    if (phase !== 'scoring' && phase !== 'reveal') return
+    const winnerIds = trivia?.lastResolution?.winnerIds
+    if (!winnerIds?.length) return
+    const key = `${trivia.questionIndex}-${trivia.lastResolution?.questionId ?? ''}`
+    if (key === lastFiredResolutionRef.current) return
+    lastFiredResolutionRef.current = key
+    pendingFlowerCountRef.current = winnerIds.length
+
+    // 冻结排名：优先使用 answer-lock 时捕获的顺序（评分前），否则用当前顺序
+    const frozen = capturedOrderRef.current ?? sortedPlayersRef.current.map(p => p.id)
+    setFrozenPlayerOrder(frozen)
+    setScoreBurstWinnerIds(winnerIds)
+    setScoreBurstTrigger(t => t + 1)
+  }, [trivia?.phase, trivia?.lastResolution, trivia?.questionIndex])
+
+  // 花朵绽放完毕（约0.75s后）→ 行开始高亮放大
+  const onScoreBurstReady = useCallback((playerIds: string[]) => {
+    setScoreRowWinners(new Set(playerIds))
+  }, [])
+
+  const onScoreFlowerHit = useCallback((playerId: string) => {
+    setScoreRowHits(prev => ({ ...prev, [playerId]: (prev[playerId] ?? 0) + 1 }))
+    const players = sortedPlayersRef.current
+    const idx = players.findIndex(p => p.id === playerId)
+    const neighbors = [players[idx - 1]?.id, players[idx + 1]?.id].filter(Boolean) as string[]
+    if (neighbors.length) {
+      setScoreRowPushes(prev => {
+        const next = { ...prev }
+        neighbors.forEach(id => { next[id] = (next[id] ?? 0) + 1 })
+        return next
+      })
+    }
+  }, [])
+
+  const onScoreFlowerLeave = useCallback((_playerId: string) => {
+    pendingFlowerCountRef.current = Math.max(0, pendingFlowerCountRef.current - 1)
+    if (pendingFlowerCountRef.current <= 0) {
+      // 最后一朵花消失 → 解冻排名（framer-motion 会动画到新位置）
+      setFrozenPlayerOrder(null)
+      // 稍等排名动画后再收缩行（约400ms）
+      setTimeout(() => setScoreRowWinners(new Set()), 400)
+    }
+  }, [])
+
+  // 3. emoji 粒子（preferences 阶段）
+  const prefsContentRef = useEmojiParticles(
+    trivia?.phase === 'preferences',
+    trivia?.questionOptions ?? undefined,
+  )
+
+  // ── Audio cue effect ─────────────────────────────────────────
   useEffect(() => {
     if (!room || !code) return
     const trivia = room.gameState as CosmicTriviaState | null
     if (!trivia?.phase) return
 
     const r = refs.current
-    ensureBackgroundMusic(r)
+    ensureBackgroundMusic()
 
     const nextSnapshot = buildSnapshot(trivia)
     const previousSnapshot = r.previousSnapshot
@@ -379,7 +508,7 @@ export function useCosmicTriviaDirector(room: Room | null, code: string) {
     if (plan.segments.length || plan.notifyOnEnd || plan.advanceOnEnd) {
       playAudioSequence(r, plan, nextSnapshot, code)
     } else {
-      unduckMusic(r)
+      unduckMusic()
     }
 
     r.previousSnapshot = nextSnapshot
@@ -387,9 +516,23 @@ export function useCosmicTriviaDirector(room: Room | null, code: string) {
 
   useEffect(() => {
     return () => {
-      const r = refs.current
-      stopAudio(r)
-      stopMusic(r)
+      stopAudio(refs.current)
+      stopMusic()
     }
   }, [])
+
+  return {
+    phaseBurstTrigger,
+    phaseBurstPreset,
+    scoreBurstTrigger,
+    scoreBurstWinnerIds,
+    onScoreBurstReady,
+    onScoreFlowerHit,
+    onScoreFlowerLeave,
+    scoreRowHits,
+    scoreRowPushes,
+    scoreRowWinners,
+    frozenPlayerOrder,
+    prefsContentRef,
+  }
 }

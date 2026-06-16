@@ -6,20 +6,39 @@ import CountdownBar from "../../../components/games/cosmic-trivia/CountdownBar";
 import ScoreRow from "../../../components/games/cosmic-trivia/ScoreRow";
 import WinnerBoard from "../../../components/games/cosmic-trivia/WinnerBoard";
 import { useCosmicTriviaDirector } from "../../../hooks/useCosmicTriviaDirector";
+import Joyly01Overlay from "../../../components/ui/Joyly01Overlay";
+import ScoreBurstOverlay from "../../../components/games/cosmic-trivia/ScoreBurstOverlay";
 
 interface CosmicTriviaHostProps {
   room: Room;
   code: string;
 }
 
-function Sidebar({ room, trivia }: { room: Room; trivia: CosmicTriviaState }) {
+// ── Sidebar ──────────────────────────────────────────────────
+
+interface SidebarProps {
+  room: Room;
+  trivia: CosmicTriviaState;
+  scoreRowHits:      Record<string, number>;
+  scoreRowPushes:    Record<string, number>;
+  scoreRowWinners:   Set<string>;
+  frozenPlayerOrder: string[] | null;
+}
+
+function Sidebar({ room, trivia, scoreRowHits, scoreRowPushes, scoreRowWinners, frozenPlayerOrder }: SidebarProps) {
   const isReveal = trivia.phase === "reveal" || trivia.phase === "scoring";
-  const players = [...room.players].sort(
-    (a, b) => (trivia.scores[b.id] ?? 0) - (trivia.scores[a.id] ?? 0)
-  );
+
+  // During animation: use frozen pre-score order; otherwise sort by score.
+  const players: Player[] = frozenPlayerOrder
+    ? frozenPlayerOrder
+        .map(id => room.players.find(p => p.id === id))
+        .filter(Boolean) as Player[]
+    : [...room.players].sort(
+        (a, b) => (trivia.scores[b.id] ?? 0) - (trivia.scores[a.id] ?? 0)
+      );
 
   return (
-    <aside className="w-[260px] flex-none flex flex-col gap-[8px] overflow-y-auto">
+    <aside className="w-[260px] flex-none flex flex-col gap-[8px] px-[6px] py-[2px]">
       <p className="text-[var(--muted)] text-[12px] font-[700] uppercase tracking-[2px] m-0 px-[4px]">
         Players
       </p>
@@ -32,11 +51,16 @@ function Sidebar({ room, trivia }: { room: Room; trivia: CosmicTriviaState }) {
           hasAnswered={trivia.answeredPlayerIds.includes(player.id)}
           showScore={trivia.scoreboardVisible}
           isRevealPhase={isReveal}
+          hitVersion={scoreRowHits[player.id] ?? 0}
+          pushedVersion={scoreRowPushes[player.id] ?? 0}
+          isHighlighted={scoreRowWinners.has(player.id)}
         />
       ))}
     </aside>
   );
 }
+
+// ── DevPanel ─────────────────────────────────────────────────
 
 function DevPanel({ code, room }: { code: string; room: Room }) {
   const [busy, setBusy] = useState(false);
@@ -82,19 +106,19 @@ function DevPanel({ code, room }: { code: string; room: Room }) {
           <button className={btnBase} disabled={busy} onClick={() => call("tester/selection", { playerId: null })}>
             ✓ Lock all preferences
           </button>
-          {trivia && room.players.length > 0 && (
+          {trivia && room.players.length > 0 && trivia.phase === "answering" && (
             <>
               <p className="text-[var(--muted)] text-[10px] font-[700] uppercase tracking-[1.5px] m-0 mt-[4px] mb-[2px]">
-                +100 pts
+                Answer correctly
               </p>
               {room.players.map((p) => (
                 <button
                   key={p.id}
                   className={btnBase}
-                  disabled={busy}
-                  onClick={() => call("tester/score", { playerId: p.id, points: 100 })}
+                  disabled={busy || trivia.answeredPlayerIds.includes(p.id)}
+                  onClick={() => call("tester/answer-correct", { playerId: p.id })}
                 >
-                  +100 → {p.nickname}
+                  ✓ {p.nickname}
                 </button>
               ))}
             </>
@@ -112,11 +136,14 @@ function DevPanel({ code, room }: { code: string; room: Room }) {
   );
 }
 
+// ── Main component ───────────────────────────────────────────
+
 export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) {
   const trivia = room.gameState as CosmicTriviaState | null;
   const [settingUp, setSettingUp] = useState(false);
   const [restartingGame, setRestartingGame] = useState(false);
-  useCosmicTriviaDirector(room, code);
+
+  const director = useCosmicTriviaDirector(room, code);
 
   if (!trivia) {
     return (
@@ -159,14 +186,17 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
 
   if (phase === "post-game") {
     return (
-      <div className="flex flex-col items-center justify-center gap-[24px] p-[32px] h-full">
-        <WinnerBoard
-          players={room.players}
-          scores={trivia.scores}
-          onPlayAgain={handleRestart}
-        />
-        <DevPanel code={code} room={room} />
-      </div>
+      <>
+        <div className="flex flex-col items-center justify-center gap-[24px] p-[32px] h-full">
+          <WinnerBoard
+            players={room.players}
+            scores={trivia.scores}
+            onPlayAgain={handleRestart}
+          />
+          <DevPanel code={code} room={room} />
+        </div>
+        <Joyly01Overlay preset={director.phaseBurstPreset} trigger={director.phaseBurstTrigger} />
+      </>
     );
   }
 
@@ -201,14 +231,13 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
     );
   }
 
-  // Shared layout for all in-game phases: content centered vertically, sidebar pinned to top-right
   const isRevealPhase = phase === "reveal" || phase === "scoring" || phase === "between-questions";
 
   let mainContent: React.ReactNode;
 
   if (phase === "preferences") {
     mainContent = (
-      <div className="max-w-[560px] w-full grid gap-[16px]">
+      <div ref={director.prefsContentRef} className="max-w-[560px] w-full grid gap-[16px]">
         <h2 className="text-[var(--ink)] text-[28px] font-[800] m-0">
           Players are choosing their categories
         </h2>
@@ -228,10 +257,10 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
     phase === "finale"
   ) {
     const label =
-      phase === "round-prep" ? "Building your round…" :
-      phase === "question-intro" ? "Next question coming up" :
-      phase === "question-read" ? "Listen to the question" :
-      phase === "final-hype" ? (trivia.finalHype?.current?.text ?? "Final results coming up…") :
+      phase === "round-prep"      ? "Building your round…" :
+      phase === "question-intro"  ? "Next question coming up" :
+      phase === "question-read"   ? "Listen to the question" :
+      phase === "final-hype"      ? (trivia.finalHype?.current?.text ?? "Final results coming up…") :
       "And the results are…";
 
     mainContent = (
@@ -245,7 +274,6 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
       </div>
     );
   } else {
-    // answering / answer-lock / reveal / scoring / between-questions
     mainContent = (
       <div className="w-full grid gap-[16px]">
         <div className="flex items-center justify-between">
@@ -286,12 +314,29 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
   }
 
   return (
-    <div className="flex items-center gap-[32px] p-[32px] h-full">
-      <div className="flex-1 flex items-center justify-center min-h-0">
-        {mainContent}
+    <>
+      <div className="flex items-center gap-[32px] p-[32px] h-full">
+        <div className="flex-1 flex items-center justify-center min-h-0">
+          {mainContent}
+        </div>
+        <Sidebar
+          room={room}
+          trivia={trivia}
+          scoreRowHits={director.scoreRowHits}
+          scoreRowPushes={director.scoreRowPushes}
+          scoreRowWinners={director.scoreRowWinners}
+          frozenPlayerOrder={director.frozenPlayerOrder}
+        />
+        <DevPanel code={code} room={room} />
       </div>
-      <Sidebar room={room} trivia={trivia} />
-      <DevPanel code={code} room={room} />
-    </div>
+      <Joyly01Overlay preset={director.phaseBurstPreset} trigger={director.phaseBurstTrigger} />
+      <ScoreBurstOverlay
+        correctPlayerIds={director.scoreBurstWinnerIds}
+        trigger={director.scoreBurstTrigger}
+        onBurstReady={director.onScoreBurstReady}
+        onPlayerHit={director.onScoreFlowerHit}
+        onPlayerLeave={director.onScoreFlowerLeave}
+      />
+    </>
   );
 }

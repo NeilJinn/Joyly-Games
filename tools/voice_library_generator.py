@@ -10,6 +10,7 @@ import hashlib
 import sqlite3
 import subprocess
 import threading
+import shutil
 import tkinter as tk
 from dataclasses import dataclass
 from pathlib import Path
@@ -713,7 +714,7 @@ def update_asset_record(conn: sqlite3.Connection, line_id: str, audio_path: str,
     )
 
 
-def generate_speech(api_key: str, base_url: str, voice_id: str, model_id: str, output_format: str, text: str, voice_settings: dict) -> bytes:
+def generate_speech(api_key: str, base_url: str, voice_id: str, model_id: str, output_format: str, text: str, voice_settings: dict, output_path: Path) -> None:
     payload = {
         "text": text,
         "model_id": model_id,
@@ -730,8 +731,9 @@ def generate_speech(api_key: str, base_url: str, voice_id: str, model_id: str, o
             "Content-Type": "application/json",
         },
     )
-    with request.urlopen(req, timeout=60 * 10, context=create_https_context()) as response:
-        return response.read()
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with request.urlopen(req, timeout=60 * 10, context=create_https_context()) as response, output_path.open("wb") as output_file:
+        shutil.copyfileobj(response, output_file, length=1024 * 64)
 
 
 def build_runtime_manifest() -> str:
@@ -747,7 +749,7 @@ def build_runtime_manifest() -> str:
     return result.stdout.strip()
 
 
-def generate_local_marked(api_key: str, voice_id_override: str = "") -> dict:
+def generate_local_marked(api_key: str, voice_id_override: str = "", line_ids: list[str] | None = None) -> dict:
     manifest = read_json_file(MANIFEST_PATH)
     base_url = str(__import__("os").environ.get("ELEVENLABS_BASE_URL") or "https://api.elevenlabs.io").rstrip("/")
     model_id = str(__import__("os").environ.get("ELEVENLABS_MODEL_ID") or manifest.get("modelId") or "eleven_v3")
@@ -762,16 +764,33 @@ def generate_local_marked(api_key: str, voice_id_override: str = "") -> dict:
     generated: list[dict] = []
     skipped: list[dict] = []
     with db_connection() as conn:
-        rows = conn.execute(
-            """
-            SELECT l.line_id, l.audio_path, l.file_name, r.transcript, r.tags_json, a.asset_status
-            FROM voice_lines l
-            JOIN voice_review_state r ON r.line_id = l.line_id
-            LEFT JOIN voice_assets a ON a.line_id = l.line_id
-            WHERE r.status = 'pending'
-            ORDER BY l.line_id
-            """
-        ).fetchall()
+        if line_ids:
+            unique_ids = list(dict.fromkeys(line_ids))
+            placeholders = ",".join("?" for _ in unique_ids)
+            rows = conn.execute(
+                f"""
+                SELECT l.line_id, l.audio_path, l.file_name, r.transcript, r.tags_json, a.asset_status
+                FROM voice_lines l
+                JOIN voice_review_state r ON r.line_id = l.line_id
+                LEFT JOIN voice_assets a ON a.line_id = l.line_id
+                WHERE l.line_id IN ({placeholders})
+                ORDER BY l.line_id
+                """,
+                unique_ids,
+            ).fetchall()
+            row_map = {row["line_id"]: row for row in rows}
+            rows = [row_map[line_id] for line_id in unique_ids if line_id in row_map]
+        else:
+            rows = conn.execute(
+                """
+                SELECT l.line_id, l.audio_path, l.file_name, r.transcript, r.tags_json, a.asset_status
+                FROM voice_lines l
+                JOIN voice_review_state r ON r.line_id = l.line_id
+                LEFT JOIN voice_assets a ON a.line_id = l.line_id
+                WHERE r.status = 'pending'
+                ORDER BY l.line_id
+                """
+            ).fetchall()
         for row in rows:
             line_id = row["line_id"]
             text = row["transcript"].strip()
@@ -783,7 +802,7 @@ def generate_local_marked(api_key: str, voice_id_override: str = "") -> dict:
                 continue
             output_path = audio_path_to_file_path(row["audio_path"])
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            audio = generate_speech(
+            generate_speech(
                 api_key=api_key,
                 base_url=base_url,
                 voice_id=default_voice_id,
@@ -791,8 +810,8 @@ def generate_local_marked(api_key: str, voice_id_override: str = "") -> dict:
                 output_format=output_format,
                 text=text,
                 voice_settings=voice_settings,
+                output_path=output_path,
             )
-            output_path.write_bytes(audio)
             tags = [tag for tag in normalize_tags(parse_json_cell(row["tags_json"], [])) if tag != "regenerate"]
             conn.execute(
                 """
@@ -825,6 +844,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.all_targets: list[TargetRow] = []
         self.targets: list[TargetRow] = []
         self.row_map: dict[str, TargetRow] = {}
+        self._selection_anchor_id: str | None = None
         self.settings = load_settings()
         self.api_key_var = tk.StringVar(value=self.settings.get("apiKey", ""))
         self.voice_id_var = tk.StringVar(value=self.settings.get("voiceId", ""))
@@ -878,7 +898,9 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.refresh_button.grid(row=0, column=0, padx=(0, 8))
         self.generate_button = ttk.Button(button_row, text="Generate pending voices", style="Accent.TButton", command=self.generate_marked)
         self.generate_button.grid(row=0, column=1, padx=(0, 8))
-        ttk.Button(button_row, text="Open Voice Library", command=lambda: webbrowser.open(VOICE_LIBRARY_URL)).grid(row=0, column=2)
+        self.generate_selected_button = ttk.Button(button_row, text="Regenerate selected", command=self.generate_selected)
+        self.generate_selected_button.grid(row=0, column=2, padx=(0, 8))
+        ttk.Button(button_row, text="Open Voice Library", command=lambda: webbrowser.open(VOICE_LIBRARY_URL)).grid(row=0, column=3)
 
         settings_row = ttk.Frame(top)
         settings_row.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(14, 0))
@@ -959,7 +981,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         table_frame.rowconfigure(0, weight=1)
 
         columns = ("project", "scope", "domain", "event", "subevent", "title", "text", "review", "asset")
-        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse")
+        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="extended")
         self.tree.heading("project", text="Project")
         self.tree.heading("scope", text="Scope")
         self.tree.heading("domain", text="Phase / Domain")
@@ -987,6 +1009,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         yscroll.grid(row=0, column=1, sticky="ns")
         xscroll.grid(row=1, column=0, sticky="ew")
 
+        self.tree.bind("<Button-1>", self._on_tree_click, add="+")
         self.tree.bind("<<TreeviewSelect>>", self._on_select_row)
 
         right_detail = ttk.Frame(right, padding=12)
@@ -1050,6 +1073,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         state = tk.DISABLED if busy else tk.NORMAL
         self.refresh_button.configure(state=state)
         self.generate_button.configure(state=state)
+        self.generate_selected_button.configure(state=state)
         self.save_text_button.configure(state=state)
         for button in self.review_status_buttons.values():
             button.configure(state=state)
@@ -1244,12 +1268,65 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         if self.tree.get_children():
             first = self.tree.get_children()[0]
+            self._selection_anchor_id = first
             self.tree.selection_set(first)
             self.tree.focus(first)
             self._show_row_detail(first)
         else:
+            self._selection_anchor_id = None
             self._set_detail("No voice lines found.")
             self.transcript_editor.delete("1.0", "end")
+
+    def _tree_selection_order(self) -> list[str]:
+        selected = set(self.tree.selection())
+        return [iid for iid in self.tree.get_children() if iid in selected]
+
+    def _set_tree_selection(self, item_ids: list[str], focus_id: str | None = None) -> None:
+        ordered = [iid for iid in self.tree.get_children() if iid in item_ids]
+        if ordered:
+            self.tree.selection_set(ordered)
+            focus_target = focus_id or ordered[0]
+            self.tree.focus(focus_target)
+            self.tree.see(focus_target)
+            self._selection_anchor_id = focus_target
+        else:
+            self.tree.selection_remove(self.tree.selection())
+            self._selection_anchor_id = None
+
+    def _on_tree_click(self, event: tk.Event) -> str | None:
+        region = self.tree.identify_region(event.x, event.y)
+        if region not in {"cell", "tree"}:
+            return None
+        row_id = self.tree.identify_row(event.y)
+        if not row_id:
+            return None
+        shift_pressed = bool(event.state & 0x0001)
+        command_pressed = bool(event.state & 0x0008)
+        if shift_pressed:
+            children = list(self.tree.get_children())
+            anchor_id = self._selection_anchor_id or (self.tree.focus() if self.tree.focus() in self.row_map else None)
+            if not anchor_id or anchor_id not in children:
+                anchor_id = self._tree_selection_order()[0] if self._tree_selection_order() else row_id
+            start = children.index(anchor_id)
+            end = children.index(row_id)
+            if start <= end:
+                selected = children[start : end + 1]
+            else:
+                selected = children[end : start + 1]
+            self._set_tree_selection(selected, focus_id=row_id)
+            return "break"
+        if command_pressed:
+            current = self._tree_selection_order()
+            if row_id in current:
+                current = [iid for iid in current if iid != row_id]
+            else:
+                current.append(row_id)
+            self._set_tree_selection(current, focus_id=row_id if row_id in current else (current[0] if current else None))
+            if row_id not in current:
+                self.tree.focus(row_id)
+            return "break"
+        self._set_tree_selection([row_id], focus_id=row_id)
+        return "break"
 
     def _show_row_detail(self, candidate_id: str) -> None:
         row = self.row_map.get(candidate_id)
@@ -1286,7 +1363,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self._update_review_status_buttons(row.status)
 
     def _on_select_row(self, _event: object) -> None:
-        selection = self.tree.selection()
+        selection = self._tree_selection_order()
         if not selection:
             return
         self._show_row_detail(selection[0])
@@ -1412,10 +1489,13 @@ class VoiceLibraryGeneratorApp(tk.Tk):
             messagebox.showerror(APP_TITLE, f"Could not play audio: {exc}")
 
     def _selected_row(self) -> TargetRow | None:
-        selection = self.tree.selection()
+        selection = self._tree_selection_order()
         if not selection:
             return None
         return self.row_map.get(selection[0])
+
+    def _selected_rows(self) -> list[TargetRow]:
+        return [self.row_map[row_id] for row_id in self._tree_selection_order() if row_id in self.row_map]
 
     def _text_dialog(self, title: str, prompt: str, initial: str = "") -> str | None:
         dialog = tk.Toplevel(self)
@@ -1574,38 +1654,39 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def generate_marked(self) -> None:
+    def _run_generation(self, rows: list[TargetRow], *, title: str, log_prefix: str, line_ids: list[str] | None = None) -> None:
         if self.busy:
             return
-        marked_targets = [row for row in self.all_targets if should_generate_voice_row(row)]
-        if not marked_targets:
-            messagebox.showinfo(APP_TITLE, "No pending voices were found to generate.")
+        if not rows:
+            messagebox.showinfo(APP_TITLE, "Nothing is selected for generation.")
             return
 
-        ready = [row for row in marked_targets if not row.skip_reason]
-        skipped = [row for row in marked_targets if row.skip_reason]
+        ready = [row for row in rows if not row.skip_reason]
+        skipped = [row for row in rows if row.skip_reason]
         api_key = self.api_key_var.get().strip()
         voice_id = self.voice_id_var.get().strip()
+        total_label = "selected" if line_ids else "pending"
         if not messagebox.askyesno(
             APP_TITLE,
             (
-                f"Generate the {len(marked_targets)} pending voice(s) now?\n\n"
+                f"{title}\n\n"
+                f"Rows: {len(rows)}\n"
                 f"Ready: {len(ready)}\n"
                 f"Skipped by preview: {len(skipped)}\n\n"
                 f"API key: {'set' if api_key else 'server env'}\n"
                 f"Voice ID: {voice_id or 'line voice IDs'}\n\n"
-                "The tool will read SQLite locally, generate pending items, update file status, and rebuild the runtime manifest."
+                f"The tool will read SQLite locally, generate {total_label} items, update file status, and rebuild the runtime manifest."
             ),
         ):
             return
 
         self.save_settings()
-        self._set_busy(True, "Generating pending voices…")
-        self._append_log(f"Starting generation for {len(marked_targets)} pending voice(s).")
+        self._set_busy(True, f"{log_prefix}…")
+        self._append_log(f"Starting generation for {len(rows)} voice line(s).")
 
         def worker() -> None:
             try:
-                response = generate_local_marked(api_key=api_key, voice_id_override=voice_id)
+                response = generate_local_marked(api_key=api_key, voice_id_override=voice_id, line_ids=line_ids)
                 generated = response.get("generated", []) or []
                 skipped_payload = response.get("skipped", []) or []
                 catalog, refreshed_state, targets = self._fetch_snapshot()
@@ -1635,6 +1716,29 @@ class VoiceLibraryGeneratorApp(tk.Tk):
                 self.task_queue.put(("error", f"Generation failed: {exc}"))
 
         threading.Thread(target=worker, daemon=True).start()
+
+    def generate_marked(self) -> None:
+        marked_targets = [row for row in self.all_targets if should_generate_voice_row(row)]
+        if not marked_targets:
+            messagebox.showinfo(APP_TITLE, "No pending voices were found to generate.")
+            return
+        self._run_generation(
+            marked_targets,
+            title=f"Generate the {len(marked_targets)} pending voice(s) now?",
+            log_prefix="Generating pending voices",
+        )
+
+    def generate_selected(self) -> None:
+        rows = self._selected_rows()
+        if not rows:
+            messagebox.showinfo(APP_TITLE, "Select one or more voice lines before regenerating.")
+            return
+        self._run_generation(
+            rows,
+            title=f"Regenerate the {len(rows)} selected voice line(s) now?",
+            log_prefix="Regenerating selected voices",
+            line_ids=[row.candidate_id for row in rows],
+        )
 
 
 def main() -> None:
