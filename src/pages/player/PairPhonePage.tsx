@@ -54,6 +54,19 @@ export default function PairPhonePage() {
     "placeholder:text-[var(--muted)]",
   ].join(" ");
 
+  if (!token) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
+        <PhoneLayout>
+          <div className="phone-card text-center grid gap-[8px]">
+            <p className="text-[var(--ink)] text-[16px] font-[700] m-0">Invalid pairing link</p>
+            <p className="text-[var(--muted)] text-[13px] m-0">Ask the host to show the QR code again.</p>
+          </div>
+        </PhoneLayout>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
       <PhoneLayout>

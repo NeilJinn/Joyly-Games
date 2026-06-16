@@ -59,6 +59,7 @@ export function usePairing(): PairingState | null {
         if (!res.ok) return;
         const data = (await res.json()) as PairingPollResponse;
         if (!data.account) return;
+        if (claimedRef.current) return;
         claimedRef.current = true;
         if (pollingRef.current) {
           clearInterval(pollingRef.current);
