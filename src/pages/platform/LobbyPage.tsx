@@ -66,6 +66,8 @@ export default function LobbyPage() {
 
   const joinUrl = `${config.localJoinBase}/?room=${code ?? ""}`;
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=164x164&data=${encodeURIComponent(joinUrl)}`;
+  const hostUrl = `${config.localJoinBase}/?host=${code ?? ""}`;
+  const hostQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(hostUrl)}`;
 
   if (loading) {
     return (
@@ -141,13 +143,28 @@ export default function LobbyPage() {
               {joinUrl}
             </a>
 
-            <div className="mt-auto p-[12px] rounded-[8px] border border-white/[.07] bg-[rgba(17,24,33,.6)]">
-              <span className="block text-[11px] font-[700] tracking-[.06em] uppercase text-[var(--muted)] mb-[4px]">
+            <div className="mt-auto p-[14px] rounded-[8px] border border-white/[.07] bg-[rgba(17,24,33,.6)] grid gap-[10px]">
+              <span className="block text-[11px] font-[700] tracking-[.06em] uppercase text-[var(--muted)]">
                 Host phone control
               </span>
-              <p className="text-[var(--muted)] text-[13px] m-0">
-                Sign in with {room.host.email} on your phone.
-              </p>
+              <div className="flex items-start gap-[10px]">
+                <div className="p-[6px] bg-white rounded-[6px] flex-none">
+                  <img src={hostQrUrl} alt="Host QR" width={60} height={60} className="block" />
+                </div>
+                <div className="grid gap-[4px]">
+                  <a
+                    href={hostUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[12px] text-[var(--muted)] break-all hover:text-[var(--ink)] transition-colors leading-snug"
+                  >
+                    {hostUrl}
+                  </a>
+                  <p className="text-[var(--muted)] text-[11px] m-0 leading-snug opacity-70">
+                    Sign in as {room.host.email}
+                  </p>
+                </div>
+              </div>
             </div>
           </aside>
 
