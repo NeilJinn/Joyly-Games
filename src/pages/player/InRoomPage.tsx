@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import PhoneLayout from "../../components/player/PhoneLayout";
 import { useSSE } from "../../hooks/useSSE";
 import { useRoomStore } from "../../stores/roomStore";
+import { useAuthStore } from "../../stores/authStore";
 import CosmicTriviaPhone from "../games/cosmic-trivia/PhonePage";
 
 export default function InRoomPage() {
@@ -11,6 +12,7 @@ export default function InRoomPage() {
   const navigate = useNavigate();
   const room = useRoomStore((s) => s.room);
   const setRoom = useRoomStore((s) => s.setRoom);
+  const isSignedIn = useAuthStore((s) => s.isSignedIn);
 
   useEffect(() => {
     if (!code || room?.code === code) return;
@@ -23,9 +25,10 @@ export default function InRoomPage() {
   useSSE(code ?? null);
 
   useEffect(() => {
-    if (room?.status === "waiting") navigate(`/waiting/${code}`, { replace: true });
+    if (room?.status === "waiting")
+      navigate(isSignedIn ? `/room/${code}` : `/waiting/${code}`, { replace: true });
     if (room?.status === "closed") navigate("/", { replace: true });
-  }, [room?.status, code, navigate]);
+  }, [room?.status, code, navigate, isSignedIn]);
 
   if (!room || !code) {
     return (

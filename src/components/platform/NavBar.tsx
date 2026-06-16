@@ -1,7 +1,8 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icon from "../ui/Icon";
 import Button from "../ui/Button";
 import { useAuthStore } from "../../stores/authStore";
+import { useRoomStore } from "../../stores/roomStore";
 import AccountMenu from "./AccountMenu";
 
 const NAV_ITEMS = [
@@ -23,12 +24,14 @@ export default function NavBar({
   onPlay,
 }: NavBarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isSignedIn } = useAuthStore();
+  const room = useRoomStore((s) => s.room);
 
   return (
     <header
       className={[
-        "h-[80px] flex items-center justify-between px-[16px] md:px-[28px]",
+        "h-[52px] flex items-center justify-between px-[16px] md:px-[28px] overflow-visible",
         "border-b border-white/[.07] bg-[rgba(14,22,35,.82)] backdrop-blur-[16px] z-20",
         floating ? "fixed inset-x-0 top-0" : "",
       ]
@@ -39,16 +42,15 @@ export default function NavBar({
       <div className="flex items-center gap-[24px] min-w-0">
         <Link
           to="/"
-          className="flex items-center gap-[14px] text-[var(--ink)] font-[800] text-[27px] no-underline"
+          className="flex items-center no-underline"
           aria-label="Home"
         >
           <span
-            className="w-[63px] h-[63px] block flex-none overflow-hidden rounded-[16px] [background:var(--brand-mark)_center/contain_no-repeat] text-transparent [text-indent:-999px] [filter:drop-shadow(0_5px_5px_rgba(0,0,0,.28))]"
+            className="w-[75px] h-[75px] block flex-none overflow-hidden rounded-[19px] [background:var(--brand-mark)_center/contain_no-repeat] text-transparent [text-indent:-999px] [filter:drop-shadow(0_6px_8px_rgba(0,0,0,.32))]"
             aria-hidden="true"
           >
             J
           </span>
-          Joyly Games
         </Link>
 
         <nav className="hidden md:flex items-center gap-[6px] flex-wrap" aria-label="Site">
@@ -90,7 +92,25 @@ export default function NavBar({
           </>
         ) : (
           <>
-            {onPlay && (
+            {room ? (
+              <button
+                type="button"
+                onClick={() => navigate(`/room/${room.code}`)}
+                className={[
+                  "flex items-center gap-[8px] h-[36px] px-[12px] rounded-full",
+                  "border border-white/[.15] bg-[rgba(17,24,33,.8)]",
+                  "text-[var(--ink)] text-[13px] font-[700] cursor-pointer",
+                  "hover:border-white/[.3] transition-colors",
+                ].join(" ")}
+              >
+                <svg className="w-[14px] h-[14px] fill-none stroke-current [stroke-width:2] flex-none" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9,22 9,12 15,12 15,22" />
+                </svg>
+                <span>Room {room.code}</span>
+                <strong className="text-[var(--green)]">{room.selectedGame?.title ?? "Lobby"}</strong>
+              </button>
+            ) : onPlay && (
               <Button variant="secondary" onClick={onPlay}>
                 <Icon name="play" />
                 <span>Play</span>

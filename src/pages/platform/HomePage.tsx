@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useRef, type FormEvent } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/platform/NavBar";
@@ -12,15 +12,18 @@ import { usePairing } from "../../hooks/usePairing";
 import { useAuthStore } from "../../stores/authStore";
 
 export default function HomePage() {
-  const { config } = useConfig();
+  const { config, loading: configLoading } = useConfig();
   const navigate = useNavigate();
   const isSignedIn = useAuthStore((s) => s.isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
-  const pairing = usePairing();
+  const pairing = usePairing(configLoading ? null : config.localJoinBase);
+  const pairInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isSignedIn) navigate("/room/setup");
-  }, [isSignedIn, navigate]);
+  function handlePairSubmit(e: FormEvent) {
+    e.preventDefault();
+    const code = pairInputRef.current?.value.trim();
+    if (code) navigate(`/pair/${encodeURIComponent(code.toLowerCase())}`);
+  }
 
   function handlePlay(gameId?: string) {
     if (!isSignedIn) {
@@ -62,58 +65,120 @@ export default function HomePage() {
           <JoinRoomForm />
         </div>
 
-        {/* Pair device — hidden on mobile */}
-        <div className="hidden lg:block relative pl-[28px] before:absolute before:left-0 before:top-[8px] before:bottom-[8px] before:w-[1px] before:bg-white/[.14]">
-          {pairing ? (
-            <aside
+        {/* Pair with screen — mobile only, manual code entry */}
+        <form
+          onSubmit={handlePairSubmit}
+          className="lg:hidden flex items-center gap-[8px] p-[12px] rounded-[8px] border border-white/[.1] bg-[rgba(17,24,33,.6)]"
+        >
+          <div className="grid gap-[2px] flex-1 min-w-0">
+            <span className="block text-[var(--green)] text-[10px] font-[950] tracking-[.08em] uppercase">
+              Pair with screen
+            </span>
+            <input
+              ref={pairInputRef}
+              type="text"
+              placeholder="Enter pair code"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              maxLength={12}
               className={[
-                "grid [grid-template-columns:auto_1fr] items-center gap-[14px] p-[14px]",
-                "rounded-[8px] border border-white/[.12] bg-[rgba(17,24,33,.92)] [box-shadow:var(--shadow)]",
+                "w-full bg-transparent border-none outline-none",
+                "text-[var(--ink)] text-[16px] font-[800] tracking-[3px] placeholder:text-[var(--muted)] placeholder:font-[400] placeholder:tracking-normal placeholder:text-[13px]",
               ].join(" ")}
-            >
-              <div className="p-[6px] bg-white rounded-[6px] flex-none">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(pairing.url)}`}
-                  alt="Pair phone QR code"
-                  width={80}
-                  height={80}
-                  className="block"
-                />
-              </div>
-              <div className="grid gap-[4px]">
-                <span className="block text-[var(--green)] text-[11px] font-[950] tracking-[.08em] uppercase">
-                  Pair phone and screen
-                </span>
-                <strong className="block text-[var(--ink)] text-[22px] font-[800] tracking-[4px] leading-[1]">
-                  {pairing.code}
-                </strong>
-                <span className="block text-[var(--muted)] text-[12px] leading-snug">
-                  Scan or visit /?pair={pairing.code.toLowerCase()}
-                </span>
-              </div>
-            </aside>
-          ) : (
-            <aside
-              className={[
-                "grid [grid-template-columns:46px_1fr] items-center gap-[12px] p-[12px] min-h-[92px]",
-                "rounded-[8px] border border-white/[.07] bg-[rgba(17,24,33,.6)]",
-              ].join(" ")}
-            >
-              <div className="w-[46px] h-[46px] grid place-items-center rounded-[8px] bg-[var(--panel-2)] text-[var(--muted)]">
-                <svg className="w-[20px] h-[20px] fill-none stroke-current [stroke-width:2]" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="5" y="2" width="14" height="20" rx="2" />
-                  <circle cx="12" cy="17" r="1" fill="currentColor" />
-                </svg>
-              </div>
-              <div>
-                <span className="block text-[var(--muted)] text-[11px] font-[700] tracking-[.06em] uppercase mb-[2px]">
-                  Pair phone and screen
-                </span>
-                <span className="block text-[var(--muted)] text-[13px]">Loading pair code…</span>
-              </div>
-            </aside>
-          )}
-        </div>
+            />
+          </div>
+          <button
+            type="submit"
+            className="flex-none h-[38px] px-[14px] rounded-[6px] bg-[var(--brand,#78d45e)] text-[#0a0f14] text-[13px] font-[700]"
+          >
+            Pair
+          </button>
+        </form>
+
+        {/* Pair device — hidden on mobile, hidden when signed in without active pairing */}
+        {(!isSignedIn || pairing?.phase === "claimed") && (
+          <div className="hidden lg:block relative pl-[28px] before:absolute before:left-0 before:top-[8px] before:bottom-[8px] before:w-[1px] before:bg-white/[.14]">
+            {pairing?.phase === "waiting" ? (
+              /* QR code — waiting for phone to scan */
+              <aside
+                className={[
+                  "grid [grid-template-columns:auto_1fr] items-center gap-[14px] p-[14px]",
+                  "rounded-[8px] border border-white/[.12] bg-[rgba(17,24,33,.92)] [box-shadow:var(--shadow)]",
+                ].join(" ")}
+              >
+                <div className="p-[6px] bg-white rounded-[6px] flex-none">
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(pairing.url)}`}
+                    alt="Pair phone QR code"
+                    width={80}
+                    height={80}
+                    className="block"
+                  />
+                </div>
+                <div className="grid gap-[4px]">
+                  <span className="block text-[var(--green)] text-[11px] font-[950] tracking-[.08em] uppercase">
+                    Pair phone and screen
+                  </span>
+                  <strong className="block text-[var(--ink)] text-[22px] font-[800] tracking-[4px] leading-[1]">
+                    {pairing.code}
+                  </strong>
+                  <span className="block text-[var(--muted)] text-[12px] leading-snug">
+                    Scan here to use your phone as a controller
+                  </span>
+                </div>
+              </aside>
+            ) : pairing?.phase === "claimed" ? (
+              /* Phone paired — waiting for phone to create a room */
+              <aside
+                className={[
+                  "grid [grid-template-columns:46px_1fr] items-center gap-[12px] p-[14px] min-h-[92px]",
+                  "rounded-[8px] border border-[var(--green)]/30 bg-[rgba(17,24,33,.92)] [box-shadow:var(--shadow)]",
+                ].join(" ")}
+              >
+                <div className="w-[46px] h-[46px] grid place-items-center rounded-[8px] bg-[rgba(120,212,94,.12)] text-[var(--green)] flex-none">
+                  <svg className="w-[22px] h-[22px] fill-none stroke-current [stroke-width:2]" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="5" y="2" width="14" height="20" rx="2" />
+                    <circle cx="12" cy="17" r="1" fill="currentColor" />
+                    <path d="M9 7h6M9 11h4" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <div className="grid gap-[4px]">
+                  <span className="block text-[var(--green)] text-[11px] font-[950] tracking-[.08em] uppercase">
+                    Phone paired
+                  </span>
+                  <strong className="block text-[var(--ink)] text-[15px] font-[700] leading-snug">
+                    Waiting for your phone to create a room
+                  </strong>
+                  <span className="block text-[var(--muted)] text-[12px]">
+                    Choose a game and pay on your phone — this screen will follow.
+                  </span>
+                </div>
+              </aside>
+            ) : (
+              /* Loading — config not ready yet */
+              <aside
+                className={[
+                  "grid [grid-template-columns:46px_1fr] items-center gap-[12px] p-[12px] min-h-[92px]",
+                  "rounded-[8px] border border-white/[.07] bg-[rgba(17,24,33,.6)]",
+                ].join(" ")}
+              >
+                <div className="w-[46px] h-[46px] grid place-items-center rounded-[8px] bg-[var(--panel-2)] text-[var(--muted)]">
+                  <svg className="w-[20px] h-[20px] fill-none stroke-current [stroke-width:2]" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="5" y="2" width="14" height="20" rx="2" />
+                    <circle cx="12" cy="17" r="1" fill="currentColor" />
+                  </svg>
+                </div>
+                <div>
+                  <span className="block text-[var(--muted)] text-[11px] font-[700] tracking-[.06em] uppercase mb-[2px]">
+                    Pair phone and screen
+                  </span>
+                  <span className="block text-[var(--muted)] text-[13px]">Loading pair code…</span>
+                </div>
+              </aside>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Game Library */}

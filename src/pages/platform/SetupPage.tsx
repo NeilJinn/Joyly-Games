@@ -50,7 +50,7 @@ export default function SetupPage() {
 
   return (
     <motion.div
-      className="min-h-screen pt-[80px]"
+      className="min-h-screen pt-[52px]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -61,7 +61,7 @@ export default function SetupPage() {
       {/* Setup area */}
       <section
         className="grid place-items-center p-[34px]"
-        style={{ minHeight: "calc(100vh - 64px)" }}
+        style={{ minHeight: "calc(100vh - 52px)" }}
       >
         <div className="w-[min(980px,100%)] grid gap-[24px]">
           <div className="flex items-start justify-between gap-[20px] mb-[4px]">

@@ -7,6 +7,7 @@ import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 import { usePlayerStore } from "../../stores/playerStore";
 import { useRoomStore } from "../../stores/roomStore";
+import { useAuthStore } from "../../stores/authStore";
 import {
   loadPlayerIdentity,
   makePlayerId,
@@ -42,6 +43,7 @@ export default function AvatarPage() {
   const isEditMode = searchParams.get("edit") === "1";
   const setPlayer = usePlayerStore((s) => s.setPlayer);
   const setRoom = useRoomStore((s) => s.setRoom);
+  const isSignedIn = useAuthStore((s) => s.isSignedIn);
 
   const [room, setLocalRoom] = useState<Room | null>(null);
   const [roomError, setRoomError] = useState("");
@@ -111,7 +113,7 @@ export default function AvatarPage() {
               const joinData = (await joinRes.json()) as { player: { id: string; nickname: string }; room: Room };
               setRoom(joinData.room);
               setPlayer({ playerId: joinData.player.id, nickname: joinData.player.nickname, avatar: savedAvatar });
-              navigate(`/waiting/${code}`, { replace: true });
+              navigate(isSignedIn ? `/room/${code}` : `/waiting/${code}`, { replace: true });
               return;
             }
           }
@@ -147,7 +149,7 @@ export default function AvatarPage() {
       savePlayerIdentity({ playerId: data.player.id, nickname: data.player.nickname, avatar });
       setPlayer({ playerId: data.player.id, nickname: data.player.nickname, avatar });
       setRoom(data.room);
-      navigate(`/waiting/${code}`);
+      navigate(isSignedIn ? `/room/${code}` : `/waiting/${code}`);
     } catch (err) {
       setJoinError(err instanceof Error ? err.message : "Failed to join");
     } finally {

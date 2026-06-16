@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import type { Room } from "../../../types/room";
 import type { CosmicTriviaState, CosmicPrivateState } from "../../../types/cosmic-trivia";
 import { loadPlayerIdentity } from "../../../types/player";
@@ -9,9 +9,12 @@ import PreferencesPicker from "../../../components/games/cosmic-trivia/Preferenc
 interface CosmicTriviaPhoneProps {
   room: Room;
   code: string;
+  embedded?: boolean;
+  isHost?: boolean;
 }
 
-export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps) {
+export default function CosmicTriviaPhone({ room, code, embedded = false, isHost = false }: CosmicTriviaPhoneProps) {
+  const Wrap = embedded ? ({ children }: { children: React.ReactNode }) => <>{children}</> : PhoneLayout;
   const trivia = room.gameState as CosmicTriviaState | null;
   const identity = loadPlayerIdentity();
   const playerId = identity?.playerId ?? null;
@@ -36,6 +39,22 @@ export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps
       })
       .catch(() => {});
   }, [trivia?.phase, code, playerId]);
+
+  const [settingUp, setSettingUp] = useState(false);
+
+  const handleSetup = useCallback(async (questionCount: number) => {
+    if (settingUp) return;
+    setSettingUp(true);
+    try {
+      await fetch(`/api/rooms/${code}/trivia/setup`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ questionCount }),
+      });
+    } finally {
+      setSettingUp(false);
+    }
+  }, [code, settingUp]);
 
   const submitAnswer = useCallback(async (answerId: string) => {
     if (!playerId || submitting || selectedAnswerId) return;
@@ -72,11 +91,11 @@ export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps
 
   if (!trivia) {
     return (
-      <PhoneLayout>
+      <Wrap>
         <div className="phone-card text-center">
           <p className="text-[var(--muted)] text-[14px] m-0">Loading…</p>
         </div>
-      </PhoneLayout>
+      </Wrap>
     );
   }
 
@@ -101,8 +120,45 @@ export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps
   );
 
   if (phase === "game-setup") {
+    if (isHost) {
+      return (
+        <Wrap>
+          <div className="phone-card grid gap-[14px]">
+            <div>
+              <span className="block text-[var(--green)] text-[11px] font-[950] tracking-[.08em] uppercase mb-[4px]">
+                Game setup
+              </span>
+              <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
+                How many questions?
+              </h2>
+              <p className="text-[var(--muted)] text-[13px] m-0 mt-[4px]">
+                {room.players.length} players · choose the round length
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-[8px]">
+              {(trivia.questionCountOptions ?? [5, 8, 10, 12]).map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  disabled={settingUp}
+                  onClick={() => handleSetup(n)}
+                  className={[
+                    "h-[64px] rounded-[10px] border border-white/[.15]",
+                    "bg-[rgba(17,24,33,.8)] text-[var(--ink)] text-[28px] font-[800]",
+                    "hover:border-[rgba(120,212,94,.5)] hover:bg-[rgba(120,212,94,.08)]",
+                    "transition-colors disabled:opacity-50 cursor-pointer",
+                  ].join(" ")}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
+        </Wrap>
+      );
+    }
     return (
-      <PhoneLayout>
+      <Wrap>
         <div className="phone-card grid gap-[10px]">
           <p className="text-[var(--muted)] text-[13px] m-0">Setting up</p>
           <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
@@ -112,23 +168,23 @@ export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps
             Once set, you&apos;ll choose categories here.
           </p>
         </div>
-      </PhoneLayout>
+      </Wrap>
     );
   }
 
   if (phase === "preferences") {
     if (hasLockedPrefs) {
       return (
-        <PhoneLayout>
+        <Wrap>
           <div className="phone-card grid gap-[10px]">
             <p className="text-[#78d45e] text-[13px] font-[700] m-0">Choices locked ✓</p>
             <p className="text-[var(--muted)] text-[13px] m-0">Waiting for other players…</p>
           </div>
-        </PhoneLayout>
+        </Wrap>
       );
     }
     return (
-      <PhoneLayout>
+      <Wrap>
         <div className="phone-card grid gap-[4px]">
           <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0 mb-[4px]">Pick your choices</h2>
           {trivia.questionOptions && (
@@ -139,26 +195,26 @@ export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps
             />
           )}
         </div>
-      </PhoneLayout>
+      </Wrap>
     );
   }
 
   if (phase === "round-prep" || phase === "question-intro" || phase === "question-read") {
     return (
-      <PhoneLayout>
+      <Wrap>
         <div className="phone-card grid gap-[10px]">
           <p className="text-[var(--muted)] text-[13px] m-0">Get ready</p>
           <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
             {phase === "question-read" ? "Listen closely…" : "Round starting!"}
           </h2>
         </div>
-      </PhoneLayout>
+      </Wrap>
     );
   }
 
   if (phase === "answering" && q) {
     return (
-      <PhoneLayout>
+      <Wrap>
         <div className="phone-card grid gap-[14px]">
           {scoreChip}
           <p className="text-[var(--ink)] text-[16px] font-[700] m-0 leading-snug">{q.question}</p>
@@ -175,26 +231,26 @@ export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps
             </p>
           )}
         </div>
-      </PhoneLayout>
+      </Wrap>
     );
   }
 
   if (phase === "answer-lock") {
     return (
-      <PhoneLayout>
+      <Wrap>
         <div className="phone-card grid gap-[10px] text-center">
           <p className="text-[var(--sun)] text-[13px] font-[700] m-0">Locked</p>
           <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">Answers are closed</h2>
           <p className="text-[var(--muted)] text-[13px] m-0">Revealing the answer now…</p>
         </div>
-      </PhoneLayout>
+      </Wrap>
     );
   }
 
   if ((phase === "reveal" || phase === "scoring" || phase === "between-questions") && q) {
     const correctAnswer = q.answers.find((a) => a.id === q.correctAnswer);
     return (
-      <PhoneLayout>
+      <Wrap>
         <div className="phone-card grid gap-[14px]">
           {scoreChip}
           <AnswerGrid
@@ -213,26 +269,26 @@ export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps
             </div>
           )}
         </div>
-      </PhoneLayout>
+      </Wrap>
     );
   }
 
   if (phase === "final-hype" || phase === "finale") {
     return (
-      <PhoneLayout>
+      <Wrap>
         <div className="phone-card text-center grid gap-[10px]">
           <p className="text-[var(--sun)] text-[13px] font-[700] m-0">Final results</p>
           <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
             {trivia.finalHype?.current?.text ?? "Final results are on their way…"}
           </h2>
         </div>
-      </PhoneLayout>
+      </Wrap>
     );
   }
 
   // post-game
   return (
-    <PhoneLayout>
+    <Wrap>
       <div className="phone-card text-center grid gap-[10px]">
         <div className="text-[48px]" aria-hidden="true">🏆</div>
         <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">Game over!</h2>
@@ -241,6 +297,6 @@ export default function CosmicTriviaPhone({ room, code }: CosmicTriviaPhoneProps
           <p className="text-[var(--ink)] text-[24px] font-[800]">{score} pts</p>
         )}
       </div>
-    </PhoneLayout>
+    </Wrap>
   );
 }

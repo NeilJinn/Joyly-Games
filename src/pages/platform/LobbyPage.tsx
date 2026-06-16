@@ -5,9 +5,11 @@ import NavBar from "../../components/platform/NavBar";
 import LobbyControls from "../../components/platform/LobbyControls";
 import PlayerStage from "../../components/platform/PlayerStage";
 import GamePickerModal from "../../components/platform/GamePickerModal";
+import HostPhoneLobbyView from "../../components/platform/HostPhoneLobbyView";
 import CosmicTriviaHost from "../games/cosmic-trivia/BigScreenPage";
 import { useSSE } from "../../hooks/useSSE";
 import { useRoomStore } from "../../stores/roomStore";
+import { useAuthStore } from "../../stores/authStore";
 import { useConfig } from "../../hooks/useConfig";
 import type { Room } from "../../types/room";
 
@@ -19,7 +21,7 @@ export default function LobbyPage() {
   const room = useRoomStore((s) => s.room);
   const setRoom = useRoomStore((s) => s.setRoom);
   const clearRoom = useRoomStore((s) => s.clearRoom);
-
+  const isSignedIn = useAuthStore((s) => s.isSignedIn);
   const [loading, setLoading] = useState(true);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -80,6 +82,19 @@ export default function LobbyPage() {
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-[var(--muted)]">Room not found.</p>
       </div>
+    );
+  }
+
+  // Host phone: signed-in users on mobile are the host (regular players never sign in)
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const isHostPhone = isMobile && isSignedIn;
+  if (isHostPhone) {
+    return (
+      <HostPhoneLobbyView
+        room={room}
+        code={code!}
+        onRoomUpdate={setRoom}
+      />
     );
   }
 

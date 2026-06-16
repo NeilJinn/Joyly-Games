@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import type { Room, Player } from "../../../types/room";
 import type { CosmicTriviaState } from "../../../types/cosmic-trivia";
 import AnswerGrid from "../../../components/games/cosmic-trivia/AnswerGrid";
@@ -201,29 +201,26 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
     );
   }
 
+  // Shared layout for all in-game phases: content centered vertically, sidebar pinned to top-right
+  const isRevealPhase = phase === "reveal" || phase === "scoring" || phase === "between-questions";
+
+  let mainContent: React.ReactNode;
+
   if (phase === "preferences") {
-    return (
-      <div className="flex items-center gap-[32px] p-[32px] h-full">
-        <div className="flex-1 flex items-center">
-          <div className="max-w-[560px] w-full grid gap-[16px]">
-            <h2 className="text-[var(--ink)] text-[28px] font-[800] m-0">
-              Players are choosing their categories
-            </h2>
-            <p className="text-[var(--muted)] text-[15px] m-0">
-              {trivia.preferencePlayerIds.length} / {trivia.expectedPreferenceCount} locked in
-            </p>
-            {trivia.phaseEndsAt && (
-              <CountdownBar endsAt={trivia.phaseEndsAt} totalSecs={60} />
-            )}
-          </div>
-        </div>
-        <Sidebar room={room} trivia={trivia} />
-        <DevPanel code={code} room={room} />
+    mainContent = (
+      <div className="max-w-[560px] w-full grid gap-[16px]">
+        <h2 className="text-[var(--ink)] text-[28px] font-[800] m-0">
+          Players are choosing their categories
+        </h2>
+        <p className="text-[var(--muted)] text-[15px] m-0">
+          {trivia.preferencePlayerIds.length} / {trivia.expectedPreferenceCount} locked in
+        </p>
+        {trivia.phaseEndsAt && (
+          <CountdownBar endsAt={trivia.phaseEndsAt} totalSecs={60} />
+        )}
       </div>
     );
-  }
-
-  if (
+  } else if (
     phase === "round-prep" ||
     phase === "question-intro" ||
     phase === "question-read" ||
@@ -237,30 +234,20 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
       phase === "final-hype" ? (trivia.finalHype?.current?.text ?? "Final results coming up…") :
       "And the results are…";
 
-    return (
-      <div className="flex items-center gap-[32px] p-[32px] h-full">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="max-w-[500px] text-center grid gap-[12px]">
-            {(phase === "question-intro" || phase === "question-read") && (
-              <p className="text-[var(--muted)] text-[14px] m-0">
-                Question {trivia.questionIndex + 1} / {trivia.questionCount}
-              </p>
-            )}
-            <h2 className="text-[var(--ink)] text-[32px] font-[800] m-0">{label}</h2>
-          </div>
-        </div>
-        <Sidebar room={room} trivia={trivia} />
-        <DevPanel code={code} room={room} />
+    mainContent = (
+      <div className="max-w-[500px] w-full text-center grid gap-[12px]">
+        {(phase === "question-intro" || phase === "question-read") && (
+          <p className="text-[var(--muted)] text-[14px] m-0">
+            Question {trivia.questionIndex + 1} / {trivia.questionCount}
+          </p>
+        )}
+        <h2 className="text-[var(--ink)] text-[32px] font-[800] m-0">{label}</h2>
       </div>
     );
-  }
-
-  // answering / answer-lock / reveal / scoring / between-questions
-  const isRevealPhase = phase === "reveal" || phase === "scoring" || phase === "between-questions";
-
-  return (
-    <div className="flex items-start gap-[24px] p-[32px] h-full">
-      <div className="flex-1 grid gap-[16px]">
+  } else {
+    // answering / answer-lock / reveal / scoring / between-questions
+    mainContent = (
+      <div className="w-full grid gap-[16px]">
         <div className="flex items-center justify-between">
           <p className="text-[var(--muted)] text-[13px] m-0">
             Question {trivia.questionIndex + 1} / {trivia.questionCount}
@@ -269,7 +256,6 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
             {trivia.answeredPlayerIds.length} / {trivia.expectedAnswerCount} answered
           </span>
         </div>
-
         {q && (
           <>
             <h2 className="text-[var(--ink)] text-[24px] font-[800] m-0 leading-snug">
@@ -287,7 +273,6 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
             )}
           </>
         )}
-
         {phase === "answering" && (
           <CountdownBar endsAt={trivia.phaseEndsAt} totalSecs={20} />
         )}
@@ -296,6 +281,14 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
             Answers are closed — revealing now…
           </p>
         )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-[32px] p-[32px] h-full">
+      <div className="flex-1 flex items-center justify-center min-h-0">
+        {mainContent}
       </div>
       <Sidebar room={room} trivia={trivia} />
       <DevPanel code={code} room={room} />
