@@ -17,7 +17,6 @@ export interface AppConfig {
   games: GameConfig[];
   localJoinBase: string;
   tools: {
-    jmsStudio: boolean;
     voiceLibrary: boolean;
   };
 }

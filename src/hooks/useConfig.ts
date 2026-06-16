@@ -4,7 +4,7 @@ import type { AppConfig } from "../types/config";
 const DEFAULT_CONFIG: AppConfig = {
   games: [],
   localJoinBase: window.location.origin,
-  tools: { jmsStudio: false, voiceLibrary: false },
+  tools: { voiceLibrary: false },
 };
 
 export function useConfig() {

@@ -31,7 +31,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
 const distDir = path.join(__dirname, "dist");
 const useReactBuild = existsSync(path.join(distDir, "index.html"));
-const jmsDir = path.join(__dirname, "packages", "jms");
 const cosmicTriviaMusicDir = path.join(publicDir, "games", "cosmic-trivia", "audio", "music");
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "0.0.0.0";
@@ -441,8 +440,6 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
   try {
-    const isJmsRuntimePath = url.pathname.startsWith("/jms/src/");
-    const isJmsToolPath = url.pathname === "/jms" || url.pathname === "/jms/" || url.pathname.startsWith("/jms/web");
     const isVoiceLibraryPath =
       url.pathname === "/voice" ||
       url.pathname === "/voice/" ||
@@ -452,11 +449,6 @@ const server = http.createServer(async (req, res) => {
       url.pathname.startsWith("/voice-library/");
     const isVoiceLibraryApiPath = url.pathname.startsWith("/api/voice-library/");
 
-    if ((req.method === "GET" || req.method === "HEAD") && isJmsToolPath && !localOnlyToolsEnabled) {
-      notFound(res);
-      return;
-    }
-
     if ((req.method === "GET" || req.method === "HEAD") && isVoiceLibraryPath && !localOnlyToolsEnabled) {
       notFound(res);
       return;
@@ -464,14 +456,6 @@ const server = http.createServer(async (req, res) => {
 
     if (isVoiceLibraryApiPath && !localOnlyToolsEnabled) {
       notFound(res);
-      return;
-    }
-
-    if ((req.method === "GET" || req.method === "HEAD") && (isJmsRuntimePath || isJmsToolPath)) {
-      await serveStaticDir(req, res, jmsDir, {
-        mountPath: "/jms",
-        defaultPath: "/web/index.html"
-      });
       return;
     }
 
@@ -488,7 +472,6 @@ const server = http.createServer(async (req, res) => {
         localJoinBase: publicJoinBase(req),
         games,
         tools: {
-          jmsStudio: localOnlyToolsEnabled,
           voiceLibrary: localOnlyToolsEnabled
         }
       });
