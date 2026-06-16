@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/platform/NavBar";
@@ -8,6 +8,7 @@ import JoinRoomForm from "../../components/platform/JoinRoomForm";
 import GameCard from "../../components/platform/GameCard";
 import AuthModal from "../../components/platform/AuthModal";
 import { useConfig } from "../../hooks/useConfig";
+import { usePairing } from "../../hooks/usePairing";
 import { useAuthStore } from "../../stores/authStore";
 
 export default function HomePage() {
@@ -15,6 +16,11 @@ export default function HomePage() {
   const navigate = useNavigate();
   const isSignedIn = useAuthStore((s) => s.isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
+  const pairing = usePairing();
+
+  useEffect(() => {
+    if (isSignedIn) navigate("/room/setup");
+  }, [isSignedIn, navigate]);
 
   function handlePlay(gameId?: string) {
     if (!isSignedIn) {
@@ -27,7 +33,7 @@ export default function HomePage() {
 
   return (
     <motion.main
-      className="min-h-screen pt-[80px]"
+      className="min-h-screen pt-[52px]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -58,30 +64,55 @@ export default function HomePage() {
 
         {/* Pair device — hidden on mobile */}
         <div className="hidden lg:block relative pl-[28px] before:absolute before:left-0 before:top-[8px] before:bottom-[8px] before:w-[1px] before:bg-white/[.14]">
-          <aside
-            className={[
-              "grid [grid-template-columns:46px_1fr] items-center gap-[12px] p-[12px] min-h-[92px]",
-              "rounded-[8px] border border-white/[.12] bg-[rgba(17,24,33,.92)] [box-shadow:var(--shadow)]",
-            ].join(" ")}
-          >
-            <div className="w-[46px] h-[46px] grid place-items-center rounded-[8px] bg-[var(--panel-2)] text-[var(--muted)]">
-              <svg className="w-[20px] h-[20px] fill-none stroke-current [stroke-width:2]" viewBox="0 0 24 24" aria-hidden="true">
-                <rect x="5" y="2" width="14" height="20" rx="2" />
-                <circle cx="12" cy="17" r="1" fill="currentColor" />
-              </svg>
-            </div>
-            <div>
-              <span className="block text-[var(--green)] text-[11px] font-[950] tracking-[.08em] uppercase mb-[4px]">
-                Pair phone and screen
-              </span>
-              <strong className="block text-[var(--ink)] text-[16px]">
-                Enter the desktop pair code
-              </strong>
-              <span className="block text-[var(--muted)] text-[13px]">
-                Sync your phone to control this screen.
-              </span>
-            </div>
-          </aside>
+          {pairing ? (
+            <aside
+              className={[
+                "grid [grid-template-columns:auto_1fr] items-center gap-[14px] p-[14px]",
+                "rounded-[8px] border border-white/[.12] bg-[rgba(17,24,33,.92)] [box-shadow:var(--shadow)]",
+              ].join(" ")}
+            >
+              <div className="p-[6px] bg-white rounded-[6px] flex-none">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(pairing.url)}`}
+                  alt="Pair phone QR code"
+                  width={80}
+                  height={80}
+                  className="block"
+                />
+              </div>
+              <div className="grid gap-[4px]">
+                <span className="block text-[var(--green)] text-[11px] font-[950] tracking-[.08em] uppercase">
+                  Pair phone and screen
+                </span>
+                <strong className="block text-[var(--ink)] text-[22px] font-[800] tracking-[4px] leading-[1]">
+                  {pairing.code}
+                </strong>
+                <span className="block text-[var(--muted)] text-[12px] leading-snug">
+                  Scan or visit /?pair={pairing.code.toLowerCase()}
+                </span>
+              </div>
+            </aside>
+          ) : (
+            <aside
+              className={[
+                "grid [grid-template-columns:46px_1fr] items-center gap-[12px] p-[12px] min-h-[92px]",
+                "rounded-[8px] border border-white/[.07] bg-[rgba(17,24,33,.6)]",
+              ].join(" ")}
+            >
+              <div className="w-[46px] h-[46px] grid place-items-center rounded-[8px] bg-[var(--panel-2)] text-[var(--muted)]">
+                <svg className="w-[20px] h-[20px] fill-none stroke-current [stroke-width:2]" viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="5" y="2" width="14" height="20" rx="2" />
+                  <circle cx="12" cy="17" r="1" fill="currentColor" />
+                </svg>
+              </div>
+              <div>
+                <span className="block text-[var(--muted)] text-[11px] font-[700] tracking-[.06em] uppercase mb-[2px]">
+                  Pair phone and screen
+                </span>
+                <span className="block text-[var(--muted)] text-[13px]">Loading pair code…</span>
+              </div>
+            </aside>
+          )}
         </div>
       </section>
 
