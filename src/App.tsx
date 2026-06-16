@@ -12,6 +12,7 @@ import JoinPage from "./pages/player/JoinPage";
 import AvatarPage from "./pages/player/AvatarPage";
 import WaitingPage from "./pages/player/WaitingPage";
 import InRoomPage from "./pages/player/InRoomPage";
+import PairPhonePage from "./pages/player/PairPhonePage";
 import FateWerewolfBigScreen from "./pages/games/fate-werewolf/BigScreenPage";
 import FateWerewolfPhone from "./pages/games/fate-werewolf/PhonePage";
 import NotFoundPage from "./pages/NotFoundPage";
@@ -22,8 +23,11 @@ function RoomCodeRedirect() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const roomCode = params.get("room");
+    const pairToken = params.get("pair");
     if (roomCode) {
       navigate(`/join/${roomCode.replace(/\D/g, "")}`, { replace: true });
+    } else if (pairToken) {
+      navigate(`/pair/${encodeURIComponent(pairToken.trim())}`, { replace: true });
     }
   }, [location.search, navigate]);
   return null;
@@ -48,6 +52,7 @@ function AnimatedRoutes() {
         <Route path="/join/:code" element={<AvatarPage />} />
         <Route path="/play/:code" element={<InRoomPage />} />
         <Route path="/waiting/:code" element={<WaitingPage />} />
+        <Route path="/pair/:token" element={<PairPhonePage />} />
 
         {/* Games */}
         <Route path="/game/fate-werewolf/:code" element={<FateWerewolfBigScreen />} />
