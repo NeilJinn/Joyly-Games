@@ -5,7 +5,7 @@ services:
     plan: free
     branch: main-1.0
     autoDeploy: true
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/config
     envVars:
