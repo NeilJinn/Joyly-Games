@@ -427,9 +427,10 @@ export function useCosmicTriviaDirector(room: Room | null, code: string): Cosmic
     : []
 
   useEffect(() => {
-    const phase = trivia?.phase
+    if (!trivia) return
+    const phase = trivia.phase
     if (phase !== 'scoring' && phase !== 'reveal') return
-    const winnerIds = trivia?.lastResolution?.winnerIds
+    const winnerIds = trivia.lastResolution?.winnerIds
     if (!winnerIds?.length) return
     const key = `${trivia.questionIndex}-${trivia.lastResolution?.questionId ?? ''}`
     if (key === lastFiredResolutionRef.current) return
