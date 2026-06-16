@@ -3,9 +3,9 @@ services:
     name: joyly-games
     runtime: node
     plan: free
-    branch: joyly_main
+    branch: main-1.0
     autoDeploy: true
-    buildCommand: npm install
+    buildCommand: npm ci && npm run build
     startCommand: npm start
     healthCheckPath: /api/config
     envVars:
