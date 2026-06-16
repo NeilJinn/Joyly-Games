@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import PhoneLayout from "../../components/player/PhoneLayout";
@@ -45,7 +45,7 @@ export default function HostPhonePage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const hostAccount = loadHostAccount();
+  const [hostAccount] = useState(() => loadHostAccount());
 
   useEffect(() => {
     if (!code || room?.code === code) { setLoading(false); return; }
@@ -91,7 +91,7 @@ export default function HostPhonePage() {
     } catch { /* SSE will sync */ }
   }
 
-  const wrap = (children: React.ReactNode) => (
+  const wrap = (children: ReactNode) => (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
       <PhoneLayout>{children}</PhoneLayout>
     </motion.div>
