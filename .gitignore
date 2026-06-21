@@ -7,3 +7,9 @@ build
 *.log
 *.sqlite-shm
 *.sqlite-wal
+
+# design-sync
+ds-bundle/
+.ds-sync/node_modules/
+.design-sync/.cache/
+.design-sync/node_modules/
