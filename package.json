@@ -16,6 +16,7 @@
     "test:ui": "vitest run",
     "test:ui:watch": "vitest",
     "build:trivia": "node scripts/build-cosmic-trivia-pack.js",
+    "add:trivia-questions": "python3 scripts/add_trivia_questions.py",
     "build:trivia-director-cues": "node scripts/build-cosmic-trivia-director-cues.js",
     "validate:cosmic-trivia": "node scripts/validate-cosmic-trivia-pack.js",
     "generate:cosmic-trivia-host-audio": "node scripts/generate-cosmic-trivia-host-audio.js",

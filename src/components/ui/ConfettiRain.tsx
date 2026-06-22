@@ -240,10 +240,20 @@ export default function ConfettiRain({ active, zIndex = 50 }: Props) {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
     };
+    const onVisibilityChange = () => {
+      if (!loadedRef.current) return;
+      if (document.hidden) {
+        stopSpawning(state);
+      } else if (activeRef.current) {
+        startSpawning(state);
+      }
+    };
     window.addEventListener('resize', onResize);
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     return () => {
       window.removeEventListener('resize', onResize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       stopSpawning(state);
       if (state.rafId !== null) cancelAnimationFrame(state.rafId);
       renderer.dispose();

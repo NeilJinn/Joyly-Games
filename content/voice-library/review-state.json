@@ -3466,6 +3466,28 @@
         "Lastly............"
       ],
       "updatedAt": 1782123489784
+    },
+    "phase.question-intro.question.next.line-04": {
+      "id": "phase.question-intro.question.next.line-04",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Woop woop, question coming up! [dance and clap hands]",
+      "transcriptSegments": [
+        "Woop woop, question coming up! [dance and clap hands]"
+      ],
+      "updatedAt": 1782127080511
+    },
+    "phase.question-intro.question.next.line-05": {
+      "id": "phase.question-intro.question.next.line-05",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Here's the question:",
+      "transcriptSegments": [
+        "Here's the question:"
+      ],
+      "updatedAt": 1782127197473
     }
   },
   "customTags": [

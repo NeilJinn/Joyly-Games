@@ -1669,6 +1669,20 @@ export const DIRECTOR_CUE_REGISTRY = {
           "text": "Attention back to the screen. The quiz gremlin has selected another question.",
           "placeholder": false,
           "regenerate": false
+        },
+        {
+          "id": "phase.question-intro.question.next.line-04",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/question-intro/question/next/line-04.mp3",
+          "text": "Woop woop, question coming up!",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "phase.question-intro.question.next.line-05",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/question-intro/question/next/line-05.mp3",
+          "text": "[hands clap] I'm ready, i aaaaam ready for quiz! Here's the question:",
+          "placeholder": false,
+          "regenerate": false
         }
       ]
     },
