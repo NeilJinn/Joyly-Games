@@ -2,9 +2,10 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import type { Room } from "../types/room"
 import type { CosmicTriviaState } from "../types/cosmic-trivia"
 import { getReactiveAudioPlan } from "../lib/director/cosmic-trivia-director"
-import { getDirectorSegmentPauseMs } from "../lib/director/flow"
+import { getDirectorSegmentPauseMs, stableHash } from "../lib/director/flow"
 import type { DirectorAudioPlan, DirectorSnapshot, DirectorContext } from "../lib/director/types"
 import { useEmojiParticles } from "./useEmojiParticles"
+import { getCueVariants } from "../lib/director/cosmic-trivia-cue-library"
 
 const BACKGROUND_MUSIC_FALLBACK = "/games/cosmic-trivia/audio/music/bgm-trivia-time-chill-01.mp3"
 const BACKGROUND_MUSIC_LIBRARY = "/api/games/cosmic-trivia/music-library"
@@ -37,6 +38,11 @@ function audioPlanPlaybackKey(plan: DirectorAudioPlan, snapshot: DirectorSnapsho
 }
 
 function buildSnapshot(trivia: CosmicTriviaState): DirectorSnapshot {
+  const scores = trivia.scores as Record<string, number> | undefined ?? {}
+  const playerIds = Object.keys(scores)
+  const rankedPlayerIds = playerIds.length > 0
+    ? [...playerIds].sort((a, b) => (scores[b] ?? 0) - (scores[a] ?? 0))
+    : []
   return {
     phase: trivia.phase,
     questionId: trivia.currentQuestion?.id || "",
@@ -53,6 +59,11 @@ function buildSnapshot(trivia: CosmicTriviaState): DirectorSnapshot {
     scoreVisibility: trivia.scoreVisibility,
     scoreboardVisible: trivia.scoreboardVisible,
     finalHype: trivia.finalHype,
+    leaderId: rankedPlayerIds[0] ?? "",
+    rankedPlayerIds,
+    streakCorrect: 0,
+    streakWrong: 0,
+    topCategories: trivia.topCategories || [],
   }
 }
 
@@ -80,19 +91,29 @@ function buildContext(snapshot: DirectorSnapshot, code: string): DirectorContext
   }
 }
 
+// ── Interest-reveal cue helper ───────────────────────────────────────────────
+
+function pickCueSrc(cueKey: string, seed: string): string | null {
+  const variants = getCueVariants(cueKey)
+  if (!variants.length) return null
+  if (variants.length === 1) return variants[0]
+  return variants[stableHash(seed) % variants.length]
+}
+
 // ── Audio status notification ────────────────────────────────────────────────
 
 async function notifyAudioStatus(
   code: string,
   phase: string,
   snapshot: DirectorSnapshot,
-  status: "queued" | "playing" | "ended" | "blocked"
+  status: "queued" | "playing" | "ended" | "blocked",
+  playbackKey?: string
 ): Promise<void> {
   try {
     await fetch(`/api/rooms/${code}/trivia/director/audio-status`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ phase, snapshot, status }),
+      body: JSON.stringify({ phase, snapshot, status, ...(playbackKey ? { playbackKey } : {}) }),
     })
   } catch {
     // Network errors must never block gameplay.
@@ -369,6 +390,9 @@ export interface CosmicTriviaDirectorVisuals {
   frozenPlayerOrder: string[] | null   // 动画期间冻结排名顺序
   // emoji 粒子避让 ref（绑到 preferences 内容 div）
   prefsContentRef: React.RefObject<HTMLDivElement>
+  // interest-reveal phase
+  interestRevealStep: number
+  topCategories: string[]
 }
 
 export function useCosmicTriviaDirector(room: Room | null, code: string): CosmicTriviaDirectorVisuals {
@@ -479,6 +503,79 @@ export function useCosmicTriviaDirector(room: Room | null, code: string): Cosmic
     trivia?.questionOptions ?? undefined,
   )
 
+  // 4. interest-reveal sequential audio
+  const [interestRevealStep, setInterestRevealStep] = useState(0)
+
+  useEffect(() => {
+    if (trivia?.phase !== 'interest-reveal') {
+      setInterestRevealStep(0)
+    }
+  }, [trivia?.phase])
+
+  useEffect(() => {
+    if (!trivia || trivia.phase !== 'interest-reveal' || !code) return
+
+    const topCategories = trivia.topCategories || []
+    const snapshot = buildSnapshot(trivia)
+    const seed = `${code}:interest-reveal`
+    const playbackKey = "interest-reveal:seq"
+    const stopRef = { current: false }
+
+    void notifyAudioStatus(code, "interest-reveal", snapshot, "queued", playbackKey)
+
+    function playSrc(src: string): Promise<void> {
+      return new Promise(resolve => {
+        if (stopRef.current) { resolve(); return }
+        const audio = new Audio(src)
+        audio.addEventListener("ended", () => resolve(), { once: true })
+        audio.addEventListener("error", () => resolve(), { once: true })
+        audio.play().catch(() => resolve())
+      })
+    }
+
+    ;(async () => {
+      const introSrc = pickCueSrc("phase.interest-reveal.selection.intro", seed)
+      if (introSrc && !stopRef.current) await playSrc(introSrc)
+
+      if (topCategories.length === 0) {
+        const noVotesSrc = pickCueSrc("phase.interest-reveal.selection.no-votes", seed)
+        if (noVotesSrc && !stopRef.current) await playSrc(noVotesSrc)
+      } else {
+        const rank1Src = pickCueSrc(`phase.interest-reveal.selection.rank-1.${topCategories[0]}`, seed)
+        if (!stopRef.current) {
+          setInterestRevealStep(1)
+          if (rank1Src) await playSrc(rank1Src)
+        }
+
+        if (topCategories.length >= 2 && !stopRef.current) {
+          const andSrc = pickCueSrc("global.connector.and", seed)
+          if (andSrc && !stopRef.current) await playSrc(andSrc)
+          const rank2Src = pickCueSrc(`phase.interest-reveal.selection.rank-2.${topCategories[1]}`, seed)
+          if (!stopRef.current) {
+            setInterestRevealStep(2)
+            if (rank2Src) await playSrc(rank2Src)
+          }
+
+          if (topCategories.length >= 3 && !stopRef.current) {
+            const lastlySrc = pickCueSrc("global.connector.lastly", seed)
+            if (lastlySrc && !stopRef.current) await playSrc(lastlySrc)
+            const rank3Src = pickCueSrc(`phase.interest-reveal.selection.rank-3.${topCategories[2]}`, seed)
+            if (!stopRef.current) {
+              setInterestRevealStep(3)
+              if (rank3Src) await playSrc(rank3Src)
+            }
+          }
+        }
+      }
+
+      if (!stopRef.current) {
+        void notifyAudioStatus(code, "interest-reveal", snapshot, "ended", playbackKey)
+      }
+    })()
+
+    return () => { stopRef.current = true }
+  }, [trivia?.phase, code])  // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Audio cue effect ─────────────────────────────────────────
   useEffect(() => {
     if (!room || !code) return
@@ -535,5 +632,7 @@ export function useCosmicTriviaDirector(room: Room | null, code: string): Cosmic
     scoreRowWinners,
     frozenPlayerOrder,
     prefsContentRef,
+    interestRevealStep,
+    topCategories: trivia?.topCategories || [],
   }
 }

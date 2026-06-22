@@ -209,6 +209,7 @@ export function publicCosmicTriviaState(room) {
     expectedAnswerCount: activePlayers(room).length,
     expectedPreferenceCount: activePlayers(room).length,
     preferencePlayerIds: activePlayerIds(room).filter(playerId => playerState(room, playerId).preferencesLocked),
+    topCategories: state.topCategories || [],
     playerStates: playerStateMap(room),
     tester: { selectedPlayerId: state.tester?.selectedPlayerId || null },
     questionOptions: room.gameContent?.options || null,

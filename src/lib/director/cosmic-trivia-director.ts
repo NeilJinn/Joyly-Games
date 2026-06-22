@@ -48,6 +48,7 @@ function cueSeed(context: DirectorContext, cueId: string): string {
 }
 
 const PHASE_AUDIO: Record<string, { audio?: (ctx: DirectorContext) => string[]; segmentPauseMultiplier?: number; segmentPauseMaxMs?: number }> = {
+  "interest-reveal": {},
   preferences: {
     audio: ctx => cueAudio("phase.preferences.selection.intro", cueSeed(ctx, "preferences.intro")),
   },
@@ -201,6 +202,11 @@ const reactiveDirector = createReactiveDirector({
         const ctx = phaseContext(r)
         return { id: "preferences.all-locked", replayKey: `preferences.all-locked:${cueSeed(ctx, "prefs-done")}`, audio: cueAudio("phase.preferences.selection.done", cueSeed(ctx, "prefs-done")), maxLateStartMs: 2_500 }
       },
+    },
+    {
+      id: "phase:interest-reveal",
+      when: r => r.phaseChanged && r.phase === "interest-reveal",
+      select: () => null,
     },
     {
       id: "phase:round-prep",

@@ -12,6 +12,7 @@ export const COSMIC_TRIVIA_PHASES = {
     timerMs: 35_000,
     message: "Choose your categories and keywords"
   },
+  "interest-reveal": { kind: "audio-advance", message: "Revealing your interests..." },
   "round-prep": {
     kind: "audio-advance",
     message: "Loading the round"
@@ -82,6 +83,7 @@ export const COSMIC_TRIVIA_PHASES = {
 };
 
 export const COSMIC_TRIVIA_AUDIO_ADVANCE_FALLBACK_MS = {
+  "interest-reveal": 500,
   "round-prep": 3_500,
   "question-intro": 3_500,
   "question-read": 12_000,

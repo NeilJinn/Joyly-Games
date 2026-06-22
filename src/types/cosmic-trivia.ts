@@ -1,6 +1,7 @@
 export type CosmicTriviaPhase =
   | "game-setup"
   | "preferences"
+  | "interest-reveal"
   | "round-prep"
   | "question-intro"
   | "question-read"
@@ -71,6 +72,7 @@ export interface CosmicTriviaState {
   lastResolution: CosmicLastResolution | null;
   finalHype: CosmicFinalHype | null;
   isFinalQuestion: boolean;
+  topCategories: string[];
 }
 
 export interface CosmicPrivateState {

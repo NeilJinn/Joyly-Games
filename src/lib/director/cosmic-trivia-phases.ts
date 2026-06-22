@@ -8,6 +8,7 @@ function currentSummaryText(context: DirectorContext): string {
 export const COSMIC_TRIVIA_PHASES: Record<string, DirectorStep> = {
   "game-setup": { kind: "hold", message: "Choose how many questions to play" },
   preferences: { kind: "timer", timerMs: 35_000, message: "Choose your categories and keywords" },
+  "interest-reveal": { kind: "audio-advance", message: "Revealing your interests..." },
   "round-prep": { kind: "audio-advance", message: "Loading the round" },
   "question-intro": {
     kind: "audio-advance",
@@ -58,6 +59,7 @@ export const COSMIC_TRIVIA_PHASES: Record<string, DirectorStep> = {
 }
 
 export const COSMIC_TRIVIA_AUDIO_ADVANCE_FALLBACK_MS: Record<string, number> = {
+  "interest-reveal": 500,
   "round-prep": 3_500,
   "question-intro": 3_500,
   "question-read": 12_000,
