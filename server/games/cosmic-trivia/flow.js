@@ -241,7 +241,6 @@ function buildRoundPreloadManifest(questions) {
   const questionAudio = questions.map(q => q.questionAudio).filter(Boolean);
   return [...new Set([...questionAudio, ...ROUND_CUE_PATHS])];
 }
-
 async function loadRoundContent(room) {
   const state = stateKey(room);
   const packId = room.gameContent?.packId || "core";
