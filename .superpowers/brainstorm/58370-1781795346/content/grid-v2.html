@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grid Picker v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  background: #080c18;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px 48px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.page-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: rgba(200,212,222,.25);
+  margin-bottom: 20px; text-align: center;
+}
+
+/* ── Phone ─────────────────────────── */
+.phone {
+  width: 320px;
+  border-radius: 38px;
+  overflow: hidden;
+  background: #0a0d1a;
+  border: 1.5px solid rgba(255,255,255,.09);
+  box-shadow:
+    0 0 0 5px rgba(255,255,255,.02),
+    0 32px 80px rgba(0,0,0,.85),
+    0 8px 24px rgba(0,0,0,.5);
+  position: relative;
+}
+
+/* ── Topbar ────────────────────────── */
+.topbar {
+  height: 50px;
+  background: rgba(10,13,26,.95);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: center; padding: 0 16px; gap: 10px;
+  position: relative; z-index: 10;
+}
+.logo {
+  width: 24px; height: 24px; border-radius: 7px; flex: none;
+  background: #78d45e;
+  box-shadow: 0 0 10px rgba(120,212,94,.5);
+}
+.app-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 800; color: #e8f0f8; letter-spacing: -.01em;
+}
+.spacer { flex: 1; }
+.progress-dots { display: flex; gap: 5px; align-items: center; }
+.dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(255,255,255,.15); transition: all .3s;
+}
+.dot.done { background: #78d45e; box-shadow: 0 0 5px rgba(120,212,94,.5); }
+.dot.active { background: #fff; transform: scale(1.2); }
+
+/* ── Body ──────────────────────────── */
+.body {
+  padding: 18px 14px 0;
+  background:
+    radial-gradient(ellipse at 10% 0%, rgba(120,80,255,.12) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 30%, rgba(94,184,212,.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(120,212,94,.06) 0%, transparent 50%),
+    #0a0d1a;
+  position: relative;
+  overflow: hidden;
+}
+
+/* nebula blobs */
+.neb {
+  position: absolute; border-radius: 50%;
+  filter: blur(45px); pointer-events: none;
+  animation: drift var(--d,18s) ease-in-out infinite alternate var(--dl,0s);
+}
+@keyframes drift { to { transform: translate(var(--tx,8px),var(--ty,6px)); } }
+
+.header { position: relative; z-index: 2; margin-bottom: 16px; }
+.eyebrow {
+  font-family: 'Syne', sans-serif;
+  font-size: 9px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: #78d45e; margin-bottom: 5px;
+}
+.title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px; font-weight: 800; color: #fff; line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.sub {
+  font-size: 11px; color: rgba(200,212,222,.45); margin-top: 4px;
+}
+
+/* section label */
+.section-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 8.5px; font-weight: 700; letter-spacing: .13em;
+  text-transform: uppercase; color: rgba(200,212,222,.3);
+  margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+  position: relative; z-index: 2;
+}
+.section-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: rgba(255,255,255,.06);
+}
+.section-label span {
+  color: rgba(200,212,222,.18); font-weight: 400;
+}
+
+/* ── Grid ──────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+  margin-bottom: 14px;
+  position: relative; z-index: 2;
+}
+
+.tile {
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.04);
+  padding: 13px 6px 11px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 7px;
+  cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: border-color .2s, background .2s, transform .2s;
+  /* glass glint */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* glass sheen */
+.tile::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,.04) 0%, transparent 60%);
+  pointer-events: none; border-radius: inherit;
+}
+
+.tile-emoji {
+  font-size: 26px; line-height: 1;
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+  position: relative; z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+}
+
+.tile-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 8px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(200,212,222,.5);
+  position: relative; z-index: 1;
+  transition: color .2s;
+  text-align: center;
+}
+
+/* checkmark */
+.tile-check {
+  position: absolute; top: 7px; right: 7px;
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,.15);
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; flex: none;
+}
+.tile-check svg {
+  width: 8px; height: 8px; opacity: 0; transition: opacity .2s;
+}
+
+/* Selected states */
+.tile.selected {
+  transform: scale(1.02);
+}
+.tile.selected .tile-emoji { transform: scale(1.18); }
+.tile.selected .tile-check { border: none; }
+.tile.selected .tile-check svg { opacity: 1; }
+
+/* category colors */
+.tile[data-color="violet"].selected {
+  border-color: rgba(139,92,246,.55);
+  background: rgba(139,92,246,.1);
+  box-shadow: 0 0 20px rgba(139,92,246,.12), inset 0 1px 0 rgba(255,255,255,.07);
+}
+.tile[data-color="violet"].selected .tile-name { color: #a78bfa; }
+.tile[data-color="violet"].selected .tile-check { background: #8b5cf6; }
+
+.tile[data-color="amber"].selected {
+  border-color: rgba(245,158,11,.5);
+  background: rgba(245,158,11,.08);
+  box-shadow: 0 0 20px rgba(245,158,11,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="amber"].selected .tile-name { color: #fbbf24; }
+.tile[data-color="amber"].selected .tile-check { background: #f59e0b; }
+
+.tile[data-color="emerald"].selected {
+  border-color: rgba(16,185,129,.5);
+  background: rgba(16,185,129,.08);
+  box-shadow: 0 0 20px rgba(16,185,129,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="emerald"].selected .tile-name { color: #34d399; }
+.tile[data-color="emerald"].selected .tile-check { background: #10b981; }
+
+.tile[data-color="rose"].selected {
+  border-color: rgba(244,63,94,.5);
+  background: rgba(244,63,94,.08);
+  box-shadow: 0 0 20px rgba(244,63,94,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="rose"].selected .tile-name { color: #fb7185; }
+.tile[data-color="rose"].selected .tile-check { background: #f43f5e; }
+
+.tile[data-color="cyan"].selected {
+  border-color: rgba(6,182,212,.5);
+  background: rgba(6,182,212,.08);
+  box-shadow: 0 0 20px rgba(6,182,212,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="cyan"].selected .tile-name { color: #22d3ee; }
+.tile[data-color="cyan"].selected .tile-check { background: #06b6d4; }
+
+.tile[data-color="orange"].selected {
+  border-color: rgba(249,115,22,.5);
+  background: rgba(249,115,22,.08);
+  box-shadow: 0 0 20px rgba(249,115,22,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="orange"].selected .tile-name { color: #fb923c; }
+.tile[data-color="orange"].selected .tile-check { background: #f97316; }
+
+.tile[data-color="indigo"].selected {
+  border-color: rgba(99,102,241,.5);
+  background: rgba(99,102,241,.08);
+  box-shadow: 0 0 20px rgba(99,102,241,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="indigo"].selected .tile-name { color: #818cf8; }
+.tile[data-color="indigo"].selected .tile-check { background: #6366f1; }
+
+.tile[data-color="pink"].selected {
+  border-color: rgba(236,72,153,.5);
+  background: rgba(236,72,153,.08);
+  box-shadow: 0 0 20px rgba(236,72,153,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="pink"].selected .tile-name { color: #f472b6; }
+.tile[data-color="pink"].selected .tile-check { background: #ec4899; }
+
+.tile[data-color="teal"].selected {
+  border-color: rgba(20,184,166,.5);
+  background: rgba(20,184,166,.08);
+  box-shadow: 0 0 20px rgba(20,184,166,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="teal"].selected .tile-name { color: #2dd4bf; }
+.tile[data-color="teal"].selected .tile-check { background: #14b8a6; }
+
+.tile[data-color="lime"].selected {
+  border-color: rgba(120,212,94,.5);
+  background: rgba(120,212,94,.08);
+  box-shadow: 0 0 20px rgba(120,212,94,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.tile[data-color="lime"].selected .tile-name { color: #78d45e; }
+.tile[data-color="lime"].selected .tile-check { background: #78d45e; }
+
+/* pop animation */
+@keyframes tile-pop {
+  0%   { transform: scale(.94); }
+  60%  { transform: scale(1.06); }
+  100% { transform: scale(1.02); }
+}
+.tile.just-selected { animation: tile-pop .25s cubic-bezier(.34,1.56,.64,1) forwards; }
+
+/* ── Bottom ─────────────────────────── */
+.bottom {
+  padding: 12px 14px 20px;
+  background: rgba(10,13,26,.96);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,.06);
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.selection-preview {
+  display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px;
+  align-items: center;
+}
+.preview-empty {
+  font-size: 11px; color: rgba(200,212,222,.3); font-style: italic;
+}
+.preview-pill {
+  font-family: 'Syne', sans-serif;
+  font-size: 9.5px; font-weight: 700; letter-spacing: .04em;
+  padding: 3px 9px; border-radius: 20px;
+  border: 1px solid; display: flex; align-items: center; gap: 4px;
+  animation: pill-pop .2s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes pill-pop {
+  from { transform: scale(0) rotate(-8deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.lock-btn {
+  height: 48px; border-radius: 12px; width: 100%; border: none;
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: .05em;
+  color: #060a0e;
+  background: linear-gradient(135deg, #78d45e 0%, #4db848 100%);
+  box-shadow: 0 4px 18px rgba(120,212,94,.28), 0 1px 3px rgba(0,0,0,.3);
+  transition: transform .15s, box-shadow .2s, opacity .2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.lock-btn:disabled { opacity: .3; cursor: default; }
+.lock-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(120,212,94,.38); }
+.lock-btn:not(:disabled):active { transform: scale(.98); }
+</style>
+</head>
+<body>
+
+<div class="page-label">大图块网格 · 磨砂宇宙 · 可交互</div>
+
+<div class="phone">
+  <div class="topbar">
+    <div class="logo"></div>
+    <span class="app-name">Joyly</span>
+    <div class="spacer"></div>
+    <div class="progress-dots">
+      <div class="dot done"></div>
+      <div class="dot active"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <div class="body" id="body">
+    <!-- nebulae -->
+    <div class="neb" style="width:180px;height:180px;background:rgba(120,80,255,.1);top:-50px;left:-40px;--d:20s;--tx:10px;--ty:8px;"></div>
+    <div class="neb" style="width:140px;height:140px;background:rgba(94,184,212,.08);top:30%;right:-30px;--d:16s;--dl:-5s;--tx:-8px;--ty:12px;"></div>
+
+    <div class="header">
+      <div class="eyebrow">Preferences</div>
+      <div class="title">What's your<br>kind of trivia?</div>
+      <div class="sub">Pick up to 3 categories + 5 keywords</div>
+    </div>
+
+    <div class="section-label">Categories <span>· up to 3</span></div>
+    <div class="grid" id="cats-grid">
+      <div class="tile" data-id="science"  data-section="cats" data-color="violet"  data-max="3">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">🔬</div>
+        <div class="tile-name">Science</div>
+      </div>
+      <div class="tile" data-id="history"  data-section="cats" data-color="amber"   data-max="3">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">📜</div>
+        <div class="tile-name">History</div>
+      </div>
+      <div class="tile" data-id="sports"   data-section="cats" data-color="emerald" data-max="3">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">⚽</div>
+        <div class="tile-name">Sports</div>
+      </div>
+      <div class="tile" data-id="music"    data-section="cats" data-color="rose"    data-max="3">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">🎵</div>
+        <div class="tile-name">Music</div>
+      </div>
+      <div class="tile" data-id="film"     data-section="cats" data-color="cyan"    data-max="3">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">🎬</div>
+        <div class="tile-name">Film</div>
+      </div>
+      <div class="tile" data-id="tech"     data-section="cats" data-color="indigo"  data-max="3">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">💻</div>
+        <div class="tile-name">Tech</div>
+      </div>
+    </div>
+
+    <div class="section-label">Keywords <span>· up to 5</span></div>
+    <div class="grid" id="tags-grid">
+      <div class="tile" data-id="space"   data-section="tags" data-color="indigo"  data-max="5">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">🚀</div>
+        <div class="tile-name">Space</div>
+      </div>
+      <div class="tile" data-id="90s"     data-section="tags" data-color="orange"  data-max="5">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">📼</div>
+        <div class="tile-name">90s</div>
+      </div>
+      <div class="tile" data-id="ancient" data-section="tags" data-color="amber"   data-max="5">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">🏛️</div>
+        <div class="tile-name">Ancient</div>
+      </div>
+      <div class="tile" data-id="pop"     data-section="tags" data-color="pink"    data-max="5">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">🎤</div>
+        <div class="tile-name">Pop</div>
+      </div>
+      <div class="tile" data-id="ai"      data-section="tags" data-color="teal"    data-max="5">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">🤖</div>
+        <div class="tile-name">AI</div>
+      </div>
+      <div class="tile" data-id="extreme" data-section="tags" data-color="lime"    data-max="5">
+        <div class="tile-check"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="tile-emoji">🧗</div>
+        <div class="tile-name">Extreme</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="selection-preview" id="preview">
+      <span class="preview-empty">Nothing yet…</span>
+    </div>
+    <button class="lock-btn" id="lock-btn" disabled>
+      Lock in choices
+    </button>
+  </div>
+</div>
+
+<script>
+const catSel = new Set();
+const tagSel = new Set();
+
+const COLOR_MAP = {
+  violet:  { bg:'rgba(139,92,246,.1)',  color:'#a78bfa', border:'rgba(139,92,246,.3)' },
+  amber:   { bg:'rgba(245,158,11,.1)',  color:'#fbbf24', border:'rgba(245,158,11,.3)' },
+  emerald: { bg:'rgba(16,185,129,.1)',  color:'#34d399', border:'rgba(16,185,129,.3)' },
+  rose:    { bg:'rgba(244,63,94,.1)',   color:'#fb7185', border:'rgba(244,63,94,.3)'  },
+  cyan:    { bg:'rgba(6,182,212,.1)',   color:'#22d3ee', border:'rgba(6,182,212,.3)'  },
+  indigo:  { bg:'rgba(99,102,241,.1)',  color:'#818cf8', border:'rgba(99,102,241,.3)' },
+  orange:  { bg:'rgba(249,115,22,.1)', color:'#fb923c', border:'rgba(249,115,22,.3)' },
+  pink:    { bg:'rgba(236,72,153,.1)',  color:'#f472b6', border:'rgba(236,72,153,.3)' },
+  teal:    { bg:'rgba(20,184,166,.1)',  color:'#2dd4bf', border:'rgba(20,184,166,.3)' },
+  lime:    { bg:'rgba(120,212,94,.1)',  color:'#78d45e', border:'rgba(120,212,94,.3)' },
+};
+
+document.querySelectorAll('.tile').forEach(tile => {
+  tile.addEventListener('click', () => {
+    const id      = tile.dataset.id;
+    const section = tile.dataset.section;
+    const max     = parseInt(tile.dataset.max);
+    const sel     = section === 'cats' ? catSel : tagSel;
+    const isOn    = sel.has(id);
+
+    if (!isOn && sel.size >= max) {
+      // shake
+      tile.style.transform = 'scale(.97) rotate(-1deg)';
+      setTimeout(() => tile.style.transform = '', 120);
+      return;
+    }
+
+    if (isOn) {
+      sel.delete(id);
+      tile.classList.remove('selected', 'just-selected');
+    } else {
+      sel.add(id);
+      tile.classList.remove('just-selected');
+      void tile.offsetWidth;
+      tile.classList.add('selected', 'just-selected');
+      setTimeout(() => tile.classList.remove('just-selected'), 300);
+    }
+
+    render();
+  });
+});
+
+function render() {
+  const preview = document.getElementById('preview');
+  const lock    = document.getElementById('lock-btn');
+  const all     = [...catSel, ...tagSel];
+
+  if (all.length === 0) {
+    preview.innerHTML = '<span class="preview-empty">Nothing yet…</span>';
+  } else {
+    preview.innerHTML = '';
+    all.forEach(id => {
+      const tile = document.querySelector(`.tile[data-id="${id}"]`);
+      const emoji = tile.querySelector('.tile-emoji').textContent;
+      const name  = tile.querySelector('.tile-name').textContent;
+      const color = tile.dataset.color;
+      const c     = COLOR_MAP[color] || COLOR_MAP.indigo;
+      const pill  = document.createElement('div');
+      pill.className = 'preview-pill';
+      pill.style.cssText = `background:${c.bg};color:${c.color};border-color:${c.border};`;
+      pill.textContent = emoji + ' ' + name;
+      preview.appendChild(pill);
+    });
+  }
+
+  lock.disabled = all.length === 0;
+}
+</script>
+</body>
+</html>

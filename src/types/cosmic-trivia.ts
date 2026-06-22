@@ -1,6 +1,7 @@
 export type CosmicTriviaPhase =
   | "game-setup"
   | "preferences"
+  | "interest-reveal"
   | "round-prep"
   | "question-intro"
   | "question-read"
@@ -43,6 +44,8 @@ export interface CosmicLastResolution {
   everyoneCorrect: boolean;
   noOneCorrect: boolean;
   scoredAt: number;
+  streakPlayers?: Array<{ id: string; streak: number }>;
+  wrongStreakPlayers?: Array<{ id: string; streak: number }>;
 }
 
 export interface CosmicFinalHype {
@@ -71,6 +74,8 @@ export interface CosmicTriviaState {
   lastResolution: CosmicLastResolution | null;
   finalHype: CosmicFinalHype | null;
   isFinalQuestion: boolean;
+  topCategories: string[];
+  upcomingAudioUrls: string[];
 }
 
 export interface CosmicPrivateState {

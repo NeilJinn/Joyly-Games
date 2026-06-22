@@ -48,6 +48,7 @@ function cueSeed(context: DirectorContext, cueId: string): string {
 }
 
 const PHASE_AUDIO: Record<string, { audio?: (ctx: DirectorContext) => string[]; segmentPauseMultiplier?: number; segmentPauseMaxMs?: number }> = {
+  "interest-reveal": {},
   preferences: {
     audio: ctx => cueAudio("phase.preferences.selection.intro", cueSeed(ctx, "preferences.intro")),
   },
@@ -163,6 +164,37 @@ function answeringTimeCrossed(prev: DirectorSnapshot | null, next: DirectorSnaps
   return prev.remainingMs > thresholdMs && next.remainingMs <= thresholdMs && next.remainingMs > 0
 }
 
+function scoreJustBecameHidden(prev: DirectorSnapshot | null, next: DirectorSnapshot | null): boolean {
+  if (!prev || !next) return false
+  return prev.scoreVisibility !== "hidden" && next.scoreVisibility === "hidden"
+}
+
+function isLastQuestion(snapshot: DirectorSnapshot | null): boolean {
+  if (!snapshot) return false
+  return snapshot.questionCount > 0 && snapshot.questionIndex >= snapshot.questionCount - 1
+}
+
+// Tracks the leader after each scoring phase so we can detect a change on the NEXT scoring.
+// Module-level: persists across renders within a browser session. Reset implicitly when
+// questionIndex === 0 fires (first scoring of each game), which sets the baseline.
+let _lastScoringLeaderId = ""
+let _lastScoringRankedIds: string[] = []
+
+function newLeaderDetected(next: DirectorSnapshot | null): boolean {
+  if (!next || next.scoreVisibility === "hidden") return false
+  if (!next.leaderId || next.questionIndex === 0) return false
+  return next.leaderId !== _lastScoringLeaderId
+}
+
+function bigRankJumpDetected(next: DirectorSnapshot | null): boolean {
+  if (!next || next.scoreVisibility === "hidden") return false
+  if (!_lastScoringRankedIds.length || !next.rankedPlayerIds.length) return false
+  return next.rankedPlayerIds.some((pid, nextRank) => {
+    const prevRank = _lastScoringRankedIds.indexOf(pid)
+    return prevRank >= 0 && prevRank - nextRank >= 2
+  })
+}
+
 const reactiveDirector = createReactiveDirector({
   flow: cosmicTriviaFlow,
   rules: [
@@ -201,6 +233,11 @@ const reactiveDirector = createReactiveDirector({
         const ctx = phaseContext(r)
         return { id: "preferences.all-locked", replayKey: `preferences.all-locked:${cueSeed(ctx, "prefs-done")}`, audio: cueAudio("phase.preferences.selection.done", cueSeed(ctx, "prefs-done")), maxLateStartMs: 2_500 }
       },
+    },
+    {
+      id: "phase:interest-reveal",
+      when: r => r.phaseChanged && r.phase === "interest-reveal",
+      select: () => null,
     },
     {
       id: "phase:round-prep",
@@ -274,10 +311,126 @@ const reactiveDirector = createReactiveDirector({
       },
     },
     {
+      id: "cross:final-question-ended",
+      when: r => r.phaseChanged && r.phase === "scoring" && isLastQuestion(r.nextSnapshot),
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("cross.game.final-question-ended", cueSeed(ctx, "final-question-ended"))
+        if (!audio.length) return null
+        return { id: "final-question-ended", replayKey: `final-question-ended:${cueSeed(ctx, "final-question-ended")}`, audio }
+      },
+    },
+    {
+      id: "phase:scoring:leader-new",
+      when: r => r.phaseChanged && r.phase === "scoring" && !isLastQuestion(r.nextSnapshot) && newLeaderDetected(r.nextSnapshot),
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("phase.scoring.leader.new", cueSeed(ctx, "scoring-leader"))
+        if (!audio.length) return null
+        return { id: "scoring.leader-new", replayKey: `scoring.leader-new:${cueSeed(ctx, "scoring-leader")}`, audio }
+      },
+    },
+    {
+      id: "phase:scoring:rank-big-jump",
+      when: r => r.phaseChanged && r.phase === "scoring" && !isLastQuestion(r.nextSnapshot) && !newLeaderDetected(r.nextSnapshot) && bigRankJumpDetected(r.nextSnapshot),
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("phase.scoring.rank.big-jump", cueSeed(ctx, "scoring-rank-jump"))
+        if (!audio.length) return null
+        return { id: "scoring.rank-big-jump", replayKey: `scoring.rank-big-jump:${cueSeed(ctx, "scoring-rank-jump")}`, audio }
+      },
+    },
+    {
+      id: "cross:streak:rightandwrong-3",
+      when: r => r.phaseChanged && r.phase === "scoring" && !isLastQuestion(r.nextSnapshot)
+        && (r.nextSnapshot?.streakCorrect ?? 0) >= 3 && (r.nextSnapshot?.streakWrong ?? 0) >= 3,
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("cross.stats.streak.3-question-rightandwrong-streak", cueSeed(ctx, "streak-rw3"))
+        if (!audio.length) return null
+        return { id: "streak-rw3", replayKey: `streak-rw3:${cueSeed(ctx, "streak-rw3")}`, audio }
+      },
+    },
+    {
+      id: "cross:streak:right-4more",
+      when: r => r.phaseChanged && r.phase === "scoring" && !isLastQuestion(r.nextSnapshot)
+        && (r.nextSnapshot?.streakCorrect ?? 0) >= 4,
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("cross.stats.streak.4more-question-right-streak", cueSeed(ctx, "streak-r4"))
+        if (!audio.length) return null
+        return { id: "streak-r4", replayKey: `streak-r4:${cueSeed(ctx, "streak-r4")}`, audio }
+      },
+    },
+    {
+      id: "cross:streak:right-3",
+      when: r => r.phaseChanged && r.phase === "scoring" && !isLastQuestion(r.nextSnapshot)
+        && (r.nextSnapshot?.streakCorrect ?? 0) >= 3,
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("cross.stats.streak.3-question-right-streak", cueSeed(ctx, "streak-r3"))
+        if (!audio.length) return null
+        return { id: "streak-r3", replayKey: `streak-r3:${cueSeed(ctx, "streak-r3")}`, audio }
+      },
+    },
+    {
+      id: "cross:streak:wrong-3",
+      when: r => r.phaseChanged && r.phase === "scoring" && !isLastQuestion(r.nextSnapshot)
+        && (r.nextSnapshot?.streakWrong ?? 0) >= 3,
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("cross.stats.streak.3-question-wrong-streak", cueSeed(ctx, "streak-w3"))
+        if (!audio.length) return null
+        return { id: "streak-w3", replayKey: `streak-w3:${cueSeed(ctx, "streak-w3")}`, audio }
+      },
+    },
+    {
+      id: "cross:streak:wrong-2",
+      when: r => r.phaseChanged && r.phase === "scoring" && !isLastQuestion(r.nextSnapshot)
+        && (r.nextSnapshot?.streakWrong ?? 0) >= 2,
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("cross.stats.streak.2-question-wrong-streak", cueSeed(ctx, "streak-w2"))
+        if (!audio.length) return null
+        return { id: "streak-w2", replayKey: `streak-w2:${cueSeed(ctx, "streak-w2")}`, audio }
+      },
+    },
+    {
+      id: "cross:streak:detected",
+      when: r => r.phaseChanged && r.phase === "scoring" && !isLastQuestion(r.nextSnapshot)
+        && (r.nextSnapshot?.streakCorrect ?? 0) >= 2,
+      select: r => {
+        const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
+        const audio = cueAudio("cross.stats.streak.detected", cueSeed(ctx, "streak-detected"))
+        if (!audio.length) return null
+        return { id: "streak-detected", replayKey: `streak-detected:${cueSeed(ctx, "streak-detected")}`, audio }
+      },
+    },
+    {
       id: "phase:scoring",
       when: r => r.phaseChanged && r.phase === "scoring",
       select: r => {
         const ctx = phaseContext(r)
+        _lastScoringLeaderId = r.nextSnapshot?.leaderId ?? ""
+        _lastScoringRankedIds = r.nextSnapshot?.rankedPlayerIds ?? []
         const isHidden = ctx.scoreVisibility === "hidden"
         const cueKey = isHidden ? "phase.scoring.score.hidden-update" : "phase.scoring.score.update"
         return { id: "scoring.update", replayKey: `scoring.update:${cueSeed(ctx, "scoring")}`, audio: cueAudio(cueKey, cueSeed(ctx, "scoring")) }
@@ -343,6 +496,26 @@ const reactiveDirector = createReactiveDirector({
       select: r => {
         const ctx = phaseContext(r)
         return { id: "reveal.positive", replayKey: `reveal.positive:${cueSeed(ctx, "reveal-positive")}`, audio: cueAudio("phase.reveal.answer.positive", cueSeed(ctx, "reveal-positive")) }
+      },
+    },
+    {
+      id: "cross:final-question-armed",
+      when: r => r.phaseChanged && r.phase === "between-questions" && isLastQuestion(r.nextSnapshot),
+      select: r => {
+        const ctx = phaseContext(r)
+        const audio = cueAudio("cross.game.final-question-armed", cueSeed(ctx, "final-question-armed"))
+        if (!audio.length) return null
+        return { id: "final-question-armed", replayKey: `final-question-armed:${cueSeed(ctx, "final-question-armed")}`, audio }
+      },
+    },
+    {
+      id: "cross:score:hidden-started",
+      when: r => r.phaseChanged && r.phase === "between-questions" && scoreJustBecameHidden(r.previousSnapshot, r.nextSnapshot),
+      select: r => {
+        const ctx = phaseContext(r)
+        const audio = cueAudio("global.score.hidden.started", cueSeed(ctx, "score-hidden-started"))
+        if (!audio.length) return null
+        return { id: "score-hidden-started", replayKey: `score-hidden-started:${cueSeed(ctx, "score-hidden-started")}`, audio }
       },
     },
     {

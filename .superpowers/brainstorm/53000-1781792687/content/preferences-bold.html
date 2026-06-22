@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>兴趣选择 - 大胆风格</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #060810;
+  color: #c8d4de;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 28px 20px 60px;
+  min-height: 100vh;
+}
+h1 { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+.subtitle { font-size: 13px; color: rgba(200,212,222,.55); margin-bottom: 32px; line-height: 1.5; }
+
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; max-width: 980px; margin: 0 auto; }
+
+.col-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: rgba(200,212,222,.35);
+  margin-bottom: 12px; text-align: center;
+}
+
+/* === PHONE FRAME === */
+.phone {
+  width: 100%; max-width: 290px; margin: 0 auto;
+  background: #0a0b14;
+  border-radius: 32px;
+  border: 1.5px solid rgba(255,255,255,.1);
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0,0,0,.75);
+  cursor: pointer; transition: transform .2s;
+}
+.phone:hover { transform: translateY(-3px); }
+.phone.selected {
+  border-color: rgba(120,212,94,.55);
+  box-shadow: 0 0 0 2px rgba(120,212,94,.25), 0 16px 48px rgba(0,0,0,.75);
+}
+.topbar {
+  height: 44px;
+  background: rgba(6,8,16,.98);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  display: flex; align-items: center; padding: 0 14px; gap: 8px;
+}
+.topbar .logo { width: 20px; height: 20px; border-radius: 5px; background: #78d45e; flex: none; box-shadow: 0 0 7px rgba(120,212,94,.5); }
+.topbar .bar { height: 7px; width: 60px; background: rgba(255,255,255,.13); border-radius: 3px; }
+
+/* ===== OPTION A: SWIPE CARDS ===== */
+.swipe-body {
+  background: linear-gradient(160deg, #0d1625, #060810);
+  padding: 16px; min-height: 460px;
+  display: flex; flex-direction: column; gap: 12px;
+  position: relative; overflow: hidden;
+}
+.swipe-body::before {
+  content: ''; position: absolute;
+  width: 200px; height: 200px; border-radius: 50%;
+  background: rgba(99,102,241,.12); top: -60px; right: -60px;
+  filter: blur(50px); pointer-events: none;
+}
+.swipe-header { position: relative; z-index: 1; }
+.swipe-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #78d45e; margin-bottom: 3px; }
+.swipe-header h2 { font-size: 16px; font-weight: 800; color: #fff; }
+.swipe-header p { font-size: 11px; color: rgba(200,212,222,.45); margin-top: 2px; }
+
+.card-stack {
+  position: relative; height: 160px; flex: none;
+  display: flex; align-items: flex-start; justify-content: center;
+}
+/* background cards peeking */
+.stack-card {
+  position: absolute; width: calc(100% - 8px);
+  border-radius: 14px; border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.04);
+  display: flex; align-items: center; justify-content: center;
+}
+.stack-card:nth-child(1) { height: 140px; bottom: 0; transform: rotate(-4deg) translateX(-6px); opacity: .3; }
+.stack-card:nth-child(2) { height: 148px; bottom: 0; transform: rotate(-1.5deg) translateX(-2px); opacity: .5; }
+.stack-card.front {
+  height: 156px; bottom: 0; z-index: 3;
+  background: linear-gradient(135deg, rgba(94,130,244,.18), rgba(168,85,247,.12));
+  border-color: rgba(94,130,244,.4);
+  box-shadow: 0 4px 24px rgba(94,130,244,.15), inset 0 1px 0 rgba(255,255,255,.08);
+  flex-direction: column; gap: 8px; padding: 16px;
+}
+.stack-front-emoji { font-size: 34px; }
+.stack-front-name { font-size: 15px; font-weight: 800; color: #fff; }
+.stack-front-hint { font-size: 11px; color: rgba(200,212,222,.5); }
+
+.swipe-actions {
+  display: flex; gap: 10px; justify-content: center; z-index: 1;
+}
+.swipe-btn {
+  height: 44px; flex: 1;
+  border-radius: 12px; border: 1px solid;
+  font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  cursor: pointer;
+}
+.swipe-btn.skip {
+  background: rgba(255,255,255,.04); border-color: rgba(255,255,255,.12);
+  color: rgba(200,212,222,.6);
+}
+.swipe-btn.pick {
+  background: rgba(120,212,94,.12); border-color: rgba(120,212,94,.4);
+  color: #78d45e;
+  box-shadow: 0 0 12px rgba(120,212,94,.12);
+}
+.swipe-progress {
+  display: flex; gap: 4px; justify-content: center; z-index: 1;
+}
+.prog-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: rgba(255,255,255,.15);
+}
+.prog-dot.done { background: #78d45e; box-shadow: 0 0 4px rgba(120,212,94,.5); }
+.prog-dot.active { background: #fff; width: 14px; border-radius: 3px; }
+
+.swipe-selected {
+  font-size: 11px; color: rgba(200,212,222,.45); text-align: center; z-index: 1;
+}
+.swipe-selected strong { color: #78d45e; }
+.swipe-lock-btn {
+  height: 42px; border-radius: 10px;
+  background: linear-gradient(135deg, #78d45e, #5eb87a);
+  border: none; font-size: 13px; font-weight: 800; color: #080c18;
+  box-shadow: 0 4px 16px rgba(120,212,94,.25);
+  margin-top: auto; z-index: 1;
+}
+
+/* ===== OPTION B: GALAXY MAP ===== */
+.galaxy-body {
+  background: linear-gradient(180deg, #080e1e 0%, #050810 100%);
+  padding: 0; min-height: 460px;
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+}
+.galaxy-top {
+  padding: 14px 14px 0;
+  position: relative; z-index: 2;
+}
+.galaxy-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #78d45e; margin-bottom: 3px; }
+.galaxy-top h2 { font-size: 16px; font-weight: 800; color: #fff; }
+.galaxy-top p { font-size: 11px; color: rgba(200,212,222,.4); margin-top: 2px; }
+
+/* The actual galaxy canvas */
+.galaxy-canvas {
+  flex: 1; position: relative; min-height: 300px;
+}
+/* stars */
+.star {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,.5);
+}
+/* category nodes — larger glowing orbs */
+.node {
+  position: absolute; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 1px;
+  cursor: pointer; transition: transform .2s;
+  text-align: center;
+  border: 1.5px solid;
+}
+.node:hover { transform: scale(1.1); }
+.node.active { transform: scale(1.12); }
+.node-emoji { font-size: 13px; line-height: 1; }
+.node-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; line-height: 1; }
+
+/* SVG connector lines */
+.galaxy-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+
+/* Bottom pill */
+.galaxy-bottom {
+  padding: 10px 14px 14px;
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.galaxy-hint { font-size: 10px; color: rgba(200,212,222,.35); text-align: center; }
+.galaxy-lock-btn {
+  height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, #78d45e, #5eb87a);
+  border: none; font-size: 12px; font-weight: 800; color: #080c18;
+  box-shadow: 0 4px 14px rgba(120,212,94,.25);
+}
+
+/* ===== OPTION C: VIBE WHEEL / EMOJI FLOOD ===== */
+.flood-body {
+  background: linear-gradient(160deg, #0c0f1e, #06080f);
+  padding: 16px; min-height: 460px;
+  display: flex; flex-direction: column; gap: 14px;
+  position: relative; overflow: hidden;
+}
+.flood-body::after {
+  content: ''; position: absolute;
+  width: 180px; height: 180px; border-radius: 50%;
+  background: rgba(224,94,180,.08); bottom: -40px; right: -40px;
+  filter: blur(50px); pointer-events: none;
+}
+.flood-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #78d45e; }
+.flood-header h2 { font-size: 16px; font-weight: 800; color: #fff; margin-top: 2px; }
+.flood-header p { font-size: 11px; color: rgba(200,212,222,.4); margin-top: 2px; }
+
+/* section label */
+.flood-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: rgba(200,212,222,.35);
+}
+
+/* Large emoji tiles in a masonry-ish grid */
+.flood-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.flood-tile {
+  border-radius: 12px; border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  padding: 10px 6px 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer; transition: all .15s;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  position: relative; overflow: hidden;
+}
+.flood-tile.selected-a {
+  background: rgba(120,212,94,.1);
+  border-color: rgba(120,212,94,.4);
+  box-shadow: 0 0 14px rgba(120,212,94,.1), inset 0 1px 0 rgba(255,255,255,.06);
+}
+.flood-tile.selected-b {
+  background: rgba(94,184,212,.1);
+  border-color: rgba(94,184,212,.35);
+}
+.flood-tile.selected-c {
+  background: rgba(244,176,74,.1);
+  border-color: rgba(244,176,74,.35);
+}
+.flood-tile-emoji { font-size: 22px; line-height: 1; }
+.flood-tile-name {
+  font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .05em; color: rgba(200,212,222,.6); text-align: center;
+  line-height: 1.2;
+}
+.flood-tile.selected-a .flood-tile-name { color: #78d45e; }
+.flood-tile.selected-b .flood-tile-name { color: #5eb8d4; }
+.flood-tile.selected-c .flood-tile-name { color: #f4b04a; }
+
+/* check dot */
+.flood-check {
+  position: absolute; top: 5px; right: 5px;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #78d45e; display: none;
+  align-items: center; justify-content: center;
+  font-size: 7px; color: #080c18; font-weight: 900;
+}
+.flood-tile.selected-a .flood-check,
+.flood-tile.selected-b .flood-check,
+.flood-tile.selected-c .flood-check { display: flex; }
+.flood-tile.selected-b .flood-check { background: #5eb8d4; }
+.flood-tile.selected-c .flood-check { background: #f4b04a; }
+
+.flood-lock-btn {
+  height: 42px; border-radius: 10px;
+  background: linear-gradient(135deg, #78d45e, #5eb87a);
+  border: none; font-size: 13px; font-weight: 800; color: #080c18;
+  box-shadow: 0 4px 14px rgba(120,212,94,.25);
+  margin-top: auto;
+}
+
+/* col selector ring */
+.col-wrap { position: relative; }
+.col-wrap.selected .phone {
+  border-color: rgba(120,212,94,.55);
+  box-shadow: 0 0 0 2.5px rgba(120,212,94,.3), 0 16px 48px rgba(0,0,0,.75);
+}
+.selected-badge {
+  display: none; position: absolute; top: -10px; right: -2px;
+  background: #78d45e; color: #080c18; font-size: 11px; font-weight: 800;
+  padding: 3px 9px; border-radius: 20px; z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+.col-wrap.selected .selected-badge { display: block; }
+
+@media (max-width: 700px) {
+  .grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<h1>兴趣选择 — 大胆风格</h1>
+<p class="subtitle">三种跳脱表单思维的方向，都是磨砂玻璃宇宙基调</p>
+
+<div class="grid">
+
+  <!-- ===== A: SWIPE CARDS ===== -->
+  <div class="col-wrap" id="col-a">
+    <div class="selected-badge">✓ 已选</div>
+    <div class="col-label">A · 逐张翻牌</div>
+    <div class="phone" onclick="selectCol('col-a','swipe-cards')">
+      <div class="topbar"><div class="logo"></div><div class="bar"></div></div>
+      <div class="swipe-body">
+        <div class="swipe-header">
+          <div class="swipe-eyebrow">Step 1 of 2 · Categories</div>
+          <h2>What's your thing?</h2>
+          <p>Pick up to 3 · swipe through all</p>
+        </div>
+
+        <!-- Card stack -->
+        <div class="card-stack">
+          <div class="stack-card"></div>
+          <div class="stack-card"></div>
+          <div class="stack-card front">
+            <div class="stack-front-emoji">🔬</div>
+            <div class="stack-front-name">Science</div>
+            <div class="stack-front-hint">Space, biology, physics…</div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="swipe-actions">
+          <div class="swipe-btn skip">✕ Skip</div>
+          <div class="swipe-btn pick">+ Pick it</div>
+        </div>
+
+        <!-- Progress dots -->
+        <div class="swipe-progress">
+          <div class="prog-dot done"></div>
+          <div class="prog-dot done"></div>
+          <div class="prog-dot active"></div>
+          <div class="prog-dot"></div>
+          <div class="prog-dot"></div>
+          <div class="prog-dot"></div>
+        </div>
+
+        <div class="swipe-selected">Picked: <strong>History, Sports</strong> · 1 more</div>
+        <button class="swipe-lock-btn" style="width:100%;">Done — Lock in →</button>
+      </div>
+    </div>
+    <div style="margin-top:14px; padding:0 4px;">
+      <p style="font-size:12px;color:rgba(200,212,222,.55);line-height:1.6;">每次只看一张卡片，点 Pick 收藏、点 Skip 跳过，像刷卡一样。选满后自动解锁提交。专注感强，不会被选项数量吓到。</p>
+    </div>
+  </div>
+
+  <!-- ===== B: GALAXY MAP ===== -->
+  <div class="col-wrap" id="col-b">
+    <div class="selected-badge">✓ 已选</div>
+    <div class="col-label">B · 星图点亮</div>
+    <div class="phone" onclick="selectCol('col-b','galaxy-map')">
+      <div class="topbar"><div class="logo"></div><div class="bar"></div></div>
+      <div class="galaxy-body">
+        <div class="galaxy-top">
+          <div class="galaxy-eyebrow">Your Universe</div>
+          <h2>Tap to light up your stars</h2>
+          <p>Pick categories &amp; keywords</p>
+        </div>
+
+        <!-- Galaxy canvas -->
+        <div class="galaxy-canvas" id="gc">
+          <!-- stars -->
+          <div class="star" style="width:2px;height:2px;top:8%;left:15%;opacity:.7;"></div>
+          <div class="star" style="width:1px;height:1px;top:18%;left:42%;opacity:.5;"></div>
+          <div class="star" style="width:2px;height:2px;top:30%;left:82%;opacity:.6;"></div>
+          <div class="star" style="width:1px;height:1px;top:55%;left:22%;opacity:.4;"></div>
+          <div class="star" style="width:2px;height:2px;top:70%;left:65%;opacity:.5;"></div>
+          <div class="star" style="width:1px;height:1px;top:85%;left:38%;opacity:.6;"></div>
+          <div class="star" style="width:2px;height:2px;top:14%;left:68%;opacity:.4;"></div>
+          <div class="star" style="width:1px;height:1px;top:48%;left:55%;opacity:.7;"></div>
+
+          <!-- SVG connector lines between active nodes -->
+          <svg class="galaxy-svg" viewBox="0 0 260 300">
+            <!-- lines between active nodes (science→sports) -->
+            <line x1="70" y1="60" x2="190" y2="130" stroke="rgba(120,212,94,.25)" stroke-width="1" stroke-dasharray="3,4"/>
+            <line x1="190" y1="130" x2="120" y2="220" stroke="rgba(120,212,94,.15)" stroke-width="1" stroke-dasharray="3,4"/>
+          </svg>
+
+          <!-- Category nodes -->
+          <div class="node active" style="width:60px;height:60px;top:30px;left:30px;background:rgba(94,130,244,.18);border-color:rgba(94,130,244,.55);box-shadow:0 0 18px rgba(94,130,244,.25);">
+            <div class="node-emoji">🔬</div>
+            <div class="node-label" style="color:#5e82f4;">Science</div>
+          </div>
+          <div class="node" style="width:52px;height:52px;top:20px;left:130px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);">
+            <div class="node-emoji">📜</div>
+            <div class="node-label" style="color:rgba(200,212,222,.5);">History</div>
+          </div>
+          <div class="node active" style="width:58px;height:58px;top:100px;left:155px;background:rgba(224,94,180,.15);border-color:rgba(224,94,180,.5);box-shadow:0 0 16px rgba(224,94,180,.2);">
+            <div class="node-emoji">⚽</div>
+            <div class="node-label" style="color:#e05eb4;">Sports</div>
+          </div>
+          <div class="node" style="width:48px;height:48px;top:110px;left:40px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);">
+            <div class="node-emoji">🎵</div>
+            <div class="node-label" style="color:rgba(200,212,222,.5);">Music</div>
+          </div>
+          <div class="node active" style="width:54px;height:54px;top:185px;left:95px;background:rgba(94,184,212,.14);border-color:rgba(94,184,212,.5);box-shadow:0 0 14px rgba(94,184,212,.2);">
+            <div class="node-emoji">🚀</div>
+            <div class="node-label" style="color:#5eb8d4;">Space</div>
+          </div>
+          <div class="node" style="width:46px;height:46px;top:200px;left:190px;background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);">
+            <div class="node-emoji">🎬</div>
+            <div class="node-label" style="color:rgba(200,212,222,.5);">Film</div>
+          </div>
+        </div>
+
+        <div class="galaxy-bottom">
+          <div class="galaxy-hint">3 stars lit · tap to add more</div>
+          <button class="galaxy-lock-btn" style="width:100%;">Launch my round 🚀</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px; padding:0 4px;">
+      <p style="font-size:12px;color:rgba(200,212,222,.55);line-height:1.6;">各类别变成星图上的星球，选中后发光并用虚线连接成星座。契合 Cosmic Trivia 宇宙主题，沉浸感最强，但实现难度最高。</p>
+    </div>
+  </div>
+
+  <!-- ===== C: EMOJI FLOOD ===== -->
+  <div class="col-wrap" id="col-c">
+    <div class="selected-badge">✓ 已选</div>
+    <div class="col-label">C · 大图块网格</div>
+    <div class="phone" onclick="selectCol('col-c','emoji-flood')">
+      <div class="topbar"><div class="logo"></div><div class="bar"></div></div>
+      <div class="flood-body">
+        <div class="flood-header">
+          <div class="flood-eyebrow">Pick your vibe</div>
+          <h2>What do you know best?</h2>
+          <p style="font-size:11px;color:rgba(200,212,222,.4);margin-top:2px;">Tap all that apply</p>
+        </div>
+
+        <div class="flood-section-label">Categories</div>
+        <div class="flood-grid">
+          <div class="flood-tile selected-a">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">🔬</div>
+            <div class="flood-tile-name">Science</div>
+          </div>
+          <div class="flood-tile">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">📜</div>
+            <div class="flood-tile-name">History</div>
+          </div>
+          <div class="flood-tile selected-a">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">⚽</div>
+            <div class="flood-tile-name">Sports</div>
+          </div>
+          <div class="flood-tile">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">🎵</div>
+            <div class="flood-tile-name">Music</div>
+          </div>
+          <div class="flood-tile">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">🎬</div>
+            <div class="flood-tile-name">Film</div>
+          </div>
+          <div class="flood-tile">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">💻</div>
+            <div class="flood-tile-name">Tech</div>
+          </div>
+        </div>
+
+        <div class="flood-section-label" style="margin-top:2px;">Keywords</div>
+        <div class="flood-grid">
+          <div class="flood-tile selected-b">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">🚀</div>
+            <div class="flood-tile-name">Space</div>
+          </div>
+          <div class="flood-tile selected-c">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">📼</div>
+            <div class="flood-tile-name">90s</div>
+          </div>
+          <div class="flood-tile">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">🏛️</div>
+            <div class="flood-tile-name">Ancient</div>
+          </div>
+          <div class="flood-tile selected-b">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">🎤</div>
+            <div class="flood-tile-name">Pop</div>
+          </div>
+          <div class="flood-tile">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">🤖</div>
+            <div class="flood-tile-name">AI</div>
+          </div>
+          <div class="flood-tile">
+            <div class="flood-check">✓</div>
+            <div class="flood-tile-emoji">🧗</div>
+            <div class="flood-tile-name">Extreme</div>
+          </div>
+        </div>
+
+        <button class="flood-lock-btn" style="width:100%;">Lock in choices</button>
+      </div>
+    </div>
+    <div style="margin-top:14px; padding:0 4px;">
+      <p style="font-size:12px;color:rgba(200,212,222,.55);line-height:1.6;">每个选项是大号 emoji + 标签的方块，3列网格铺满屏幕。触控区域大，一眼看完所有选项，选中后发光高亮。改动最小但视觉冲击最大。</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function selectCol(id, choice) {
+  document.querySelectorAll('.col-wrap').forEach(el => el.classList.remove('selected'));
+  document.getElementById(id).classList.add('selected');
+  if (window.recordChoice) recordChoice(choice, id);
+}
+</script>
+</body>
+</html>

@@ -26,8 +26,10 @@ PUBLIC_ROOT = PROJECT_ROOT / "public"
 MANIFEST_PATH = PROJECT_ROOT / "content" / "games" / "cosmic-trivia" / "audio" / "tts-manifest.json"
 REVIEW_STATE_PATH = PROJECT_ROOT / "content" / "voice-library" / "review-state.json"
 VOICE_LIBRARY_URL = f"file://{PROJECT_ROOT / 'public' / 'voice-library' / 'index.html'}"
+DIRECTOR_TS_PATH = PROJECT_ROOT / "src" / "lib" / "director" / "cosmic-trivia-director.ts"
 CONFIG_PATH = Path.home() / ".voice-library-generator.json"
 DEFAULT_REGENERATE_ONLY = False
+
 REVIEW_STATUS_OPTIONS = ("unreviewed", "pending", "approved")
 CA_BUNDLE_CANDIDATES = (
     os.environ.get("SSL_CERT_FILE", ""),
@@ -531,7 +533,6 @@ def create_local_cue(
               cue_key, game_id, project_title, group_id, title, scope, domain, event_path_json, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(cue_key) DO UPDATE SET
-              title = excluded.title,
               scope = excluded.scope,
               domain = excluded.domain,
               event_path_json = excluded.event_path_json,
@@ -621,6 +622,102 @@ def create_local_line(cue_key: str, transcript: str) -> dict:
     mirror_review_state_candidate(line_id, transcript=transcript, tags=["regenerate"], status="unreviewed")
     build_runtime_manifest()
     return {"lineId": line_id, "fileName": file_name, "audioPath": audio_path}
+
+
+def delete_local_line(line_id: str) -> dict:
+    """Delete a voice line and its audio file from the library."""
+    with db_connection() as conn:
+        row = conn.execute(
+            "SELECT audio_path FROM voice_lines WHERE line_id = ?", (line_id,)
+        ).fetchone()
+        if not row:
+            raise ValueError(f"Unknown voice line: {line_id}")
+        audio_path = row["audio_path"] or ""
+        conn.execute("DELETE FROM voice_lines WHERE line_id = ?", (line_id,))
+        conn.execute("DELETE FROM voice_review_state WHERE line_id = ?", (line_id,))
+        conn.execute("DELETE FROM voice_assets WHERE line_id = ?", (line_id,))
+        conn.commit()
+    if audio_path:
+        file_path = audio_path_to_file_path(audio_path)
+        if file_path.exists():
+            file_path.unlink()
+    build_runtime_manifest()
+    return {"lineId": line_id, "deleted": True}
+
+
+def rename_cue(old_key: str, new_scope: str, new_domain: str, new_event: str, new_subevent: str) -> dict:
+    """Rename a cue by changing its structural fields (scope/domain/event/subevent).
+    Updates all related DB records and renames audio files on disk."""
+    new_event_path = normalize_event_path([new_event, *str(new_subevent or "").split(".")])
+    new_key = cue_key_for(new_scope, new_domain, new_event_path)
+
+    if new_key == old_key:
+        return {"oldKey": old_key, "newKey": new_key, "changed": False}
+
+    with db_connection() as conn:
+        if conn.execute("SELECT 1 FROM voice_cues WHERE cue_key = ?", (new_key,)).fetchone():
+            raise ValueError(f"Cue '{new_key}' already exists — choose a different name.")
+        old_cue = conn.execute("SELECT * FROM voice_cues WHERE cue_key = ?", (old_key,)).fetchone()
+        if not old_cue:
+            raise ValueError(f"Cue '{old_key}' not found.")
+        old_lines = conn.execute("SELECT * FROM voice_lines WHERE cue_key = ?", (old_key,)).fetchall()
+        timestamp = now_ms()
+
+        conn.execute(
+            """INSERT INTO voice_cues
+               (cue_key, game_id, project_title, group_id, title, scope, domain, event_path_json, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (new_key, old_cue["game_id"], old_cue["project_title"],
+             f"{old_cue['game_id']}:director:{new_key}",
+             old_cue["title"], new_scope, new_domain, json.dumps(new_event_path), timestamp),
+        )
+        conn.execute("UPDATE director_trigger_rules SET cue_key = ? WHERE cue_key = ?", (new_key, old_key))
+
+        file_renames: list[tuple[str, str]] = []
+        for line in old_lines:
+            old_lid = line["line_id"]
+            suffix = old_lid[len(old_key) + 1:]  # e.g. "line-01"
+            new_lid = f"{new_key}.{suffix}"
+            new_audio = (
+                f"/games/{old_cue['game_id']}/audio/host/director"
+                f"/{new_scope}/{new_domain}/{'/'.join(new_event_path)}/{line['file_name']}"
+            )
+            conn.execute(
+                """INSERT INTO voice_lines
+                   (line_id, cue_key, game_id, kind, file_name, audio_path, source_text,
+                    source_text_hash, tone, audience, visibility, active, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (new_lid, new_key, line["game_id"], line["kind"], line["file_name"], new_audio,
+                 line["source_text"], line["source_text_hash"], line["tone"], line["audience"],
+                 line["visibility"], line["active"], timestamp),
+            )
+            for table, col in (("voice_review_state", "line_id"), ("voice_assets", "line_id")):
+                old_row = conn.execute(f"SELECT * FROM {table} WHERE {col} = ?", (old_lid,)).fetchone()
+                if old_row:
+                    cols = [k for k in old_row.keys() if k != col]
+                    placeholders = ", ".join("?" * (len(cols) + 1))
+                    col_names = ", ".join([col] + cols)
+                    values = [new_lid] + [
+                        new_audio if (table == "voice_assets" and c == "audio_path") else old_row[c]
+                        for c in cols
+                    ]
+                    conn.execute(f"INSERT OR REPLACE INTO {table} ({col_names}) VALUES ({placeholders})", values)
+                conn.execute(f"DELETE FROM {table} WHERE {col} = ?", (old_lid,))
+            conn.execute("DELETE FROM voice_lines WHERE line_id = ?", (old_lid,))
+            file_renames.append((line["audio_path"], new_audio))
+
+        conn.execute("DELETE FROM voice_cues WHERE cue_key = ?", (old_key,))
+        conn.commit()
+
+    for old_path, new_path in file_renames:
+        old_file = audio_path_to_file_path(old_path)
+        new_file = audio_path_to_file_path(new_path)
+        if old_file.exists():
+            new_file.parent.mkdir(parents=True, exist_ok=True)
+            old_file.rename(new_file)
+
+    build_runtime_manifest()
+    return {"oldKey": old_key, "newKey": new_key, "changed": True}
 
 
 def save_local_transcript(line_id: str, transcript: str) -> dict:
@@ -734,6 +831,107 @@ def generate_speech(api_key: str, base_url: str, voice_id: str, model_id: str, o
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with request.urlopen(req, timeout=60 * 10, context=create_https_context()) as response, output_path.open("wb") as output_file:
         shutil.copyfileobj(response, output_file, length=1024 * 64)
+
+
+def ensure_director_triggered_column() -> None:
+    if not DB_PATH.exists():
+        return
+    conn = sqlite3.connect(str(DB_PATH))
+    try:
+        conn.execute("ALTER TABLE voice_cues ADD COLUMN director_triggered INTEGER DEFAULT 0")
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass  # column already exists
+    finally:
+        conn.close()
+
+
+CUE_LIBRARY_TS_PATH = PROJECT_ROOT / "src" / "lib" / "director" / "cosmic-trivia-cue-library.ts"
+
+# Cue keys triggered through indirect mechanisms not visible as simple string literals.
+# global.game.default: referenced in cue-library fallbackOrder, not in director rules.
+INDIRECT_TRIGGER_KEYS: set[str] = {"global.game.default"}
+INDIRECT_TRIGGER_PREFIXES: tuple[str, ...] = ()
+
+
+def audit_director_triggers() -> dict[str, bool]:
+    """
+    Parse the director TS file (and cue-library TS) to find all cue keys
+    that are reachable, then update director_triggered in voice_cues.
+    Returns {cue_key: triggered}.
+
+    Detection strategies:
+      1. Any double-quoted string matching a cue key pattern — catches both
+         direct cueAudio("key") calls AND ternary branches.
+      2. Template literal base prefixes like `phase.x.${var}` — finds all
+         DB cues whose key starts with that prefix.
+      3. eventKey: "key" references.
+      4. phaseEntryAudio("phase") — resolves via director_trigger_rules.
+      5. Indirect / hardcoded keys (fallback cue, question audio).
+    """
+    ensure_director_triggered_column()
+    if not DB_PATH.exists() or not DIRECTOR_TS_PATH.exists():
+        return {}
+
+    # Scan both director and cue-library files.
+    sources: list[str] = [DIRECTOR_TS_PATH.read_text(encoding="utf-8")]
+    if CUE_LIBRARY_TS_PATH.exists():
+        sources.append(CUE_LIBRARY_TS_PATH.read_text(encoding="utf-8"))
+    combined = "\n".join(sources)
+
+    # 1. Any double-quoted cue key literal (covers ternary branches too).
+    cue_key_pattern = r'"((phase|global|cross|question)\.[a-z0-9][a-z0-9.\-]+)"'
+    triggered: set[str] = set(re.findall(cue_key_pattern, combined, re.IGNORECASE))
+    # re.findall with groups returns tuples; take the full match group (index 0).
+    triggered = {m[0] if isinstance(m, tuple) else m for m in triggered}
+
+    # 2. Template literal prefixes like `phase.final-hype.summary.${kind}`.
+    template_prefixes = re.findall(
+        r'`((phase|global|cross)\.[a-z0-9.\-]+)\$\{', combined, re.IGNORECASE
+    )
+    template_prefix_strs = [m[0] if isinstance(m, tuple) else m for m in template_prefixes]
+
+    # 3. eventKey: "key" references (already covered by #1, kept for clarity).
+    triggered.update(re.findall(r'eventKey:\s*"([^"]+)"', combined))
+
+    # 4. phaseEntryAudio("phase") → resolve via director_trigger_rules.
+    phases = set(re.findall(r'phaseEntryAudio\("([^"]+)"', combined))
+    conn = sqlite3.connect(str(DB_PATH))
+    if phases:
+        placeholders = ",".join("?" * len(phases))
+        rows = conn.execute(
+            f"SELECT c.cue_key FROM voice_cues c "
+            f"JOIN director_trigger_rules t ON t.cue_key = c.cue_key "
+            f"WHERE c.game_id = 'cosmic-trivia' AND t.phase IN ({placeholders}) "
+            f"AND t.trigger_mode != 'manual'",
+            list(phases),
+        ).fetchall()
+        triggered.update(row[0] for row in rows)
+
+    all_keys = {row[0] for row in conn.execute(
+        "SELECT cue_key FROM voice_cues WHERE game_id = 'cosmic-trivia'"
+    ).fetchall()}
+
+    # Resolve template prefixes against actual DB keys.
+    for prefix in template_prefix_strs:
+        for key in all_keys:
+            if key.startswith(prefix):
+                triggered.add(key)
+
+    # 5. Indirect keys (e.g. global.game.default via cue-library fallbackOrder).
+    triggered.update(INDIRECT_TRIGGER_KEYS & all_keys)
+
+    result: dict[str, bool] = {}
+    for cue_key in all_keys:
+        is_triggered = cue_key in triggered
+        result[cue_key] = is_triggered
+        conn.execute(
+            "UPDATE voice_cues SET director_triggered = ? WHERE cue_key = ?",
+            (1 if is_triggered else 0, cue_key),
+        )
+    conn.commit()
+    conn.close()
+    return result
 
 
 def build_runtime_manifest() -> str:
@@ -861,6 +1059,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self._build_ui()
         self.after(100, self.refresh_data)
         self.after(200, self._poll_queue)
+        self.after(300, ensure_director_triggered_column)
 
     def _build_styles(self) -> None:
         style = ttk.Style(self)
@@ -898,9 +1097,13 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.refresh_button.grid(row=0, column=0, padx=(0, 8))
         self.generate_button = ttk.Button(button_row, text="Generate pending voices", style="Accent.TButton", command=self.generate_marked)
         self.generate_button.grid(row=0, column=1, padx=(0, 8))
+        self.rebuild_cue_button = ttk.Button(button_row, text="Rebuild cue library", command=self.rebuild_cue_library)
+        self.rebuild_cue_button.grid(row=0, column=2, padx=(0, 8))
+        self.audit_button = ttk.Button(button_row, text="检查触发状态", command=self.audit_triggers)
+        self.audit_button.grid(row=0, column=3, padx=(0, 8))
         self.generate_selected_button = ttk.Button(button_row, text="Regenerate selected", command=self.generate_selected)
-        self.generate_selected_button.grid(row=0, column=2, padx=(0, 8))
-        ttk.Button(button_row, text="Open Voice Library", command=lambda: webbrowser.open(VOICE_LIBRARY_URL)).grid(row=0, column=3)
+        self.generate_selected_button.grid(row=0, column=4, padx=(0, 8))
+        ttk.Button(button_row, text="Open Voice Library", command=lambda: webbrowser.open(VOICE_LIBRARY_URL)).grid(row=0, column=5)
 
         settings_row = ttk.Frame(top)
         settings_row.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(14, 0))
@@ -1011,6 +1214,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         self.tree.bind("<Button-1>", self._on_tree_click, add="+")
         self.tree.bind("<<TreeviewSelect>>", self._on_select_row)
+        self.tree.bind("<Double-Button-1>", self._on_tree_double_click)
 
         right_detail = ttk.Frame(right, padding=12)
         right_log = ttk.Frame(right, padding=12)
@@ -1039,7 +1243,9 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.add_cue_button = ttk.Button(editor_header, text="Add new cue", command=self.add_new_cue)
         self.add_cue_button.grid(row=2, column=0, sticky="ew", padx=(0, 6), pady=(6, 0))
         self.save_text_button = ttk.Button(editor_header, text="Save text + mark regenerate", command=self.save_selected_text)
-        self.save_text_button.grid(row=2, column=1, columnspan=2, sticky="ew", padx=(0, 6), pady=(6, 0))
+        self.save_text_button.grid(row=2, column=1, sticky="ew", padx=(0, 6), pady=(6, 0))
+        self.delete_line_button = ttk.Button(editor_header, text="Delete this line", command=self.delete_selected_line)
+        self.delete_line_button.grid(row=2, column=2, sticky="ew", padx=(0, 6), pady=(6, 0))
         self.transcript_editor = scrolledtext.ScrolledText(right_detail, wrap=tk.WORD, height=8, font=("Helvetica", 12))
         self.transcript_editor.grid(row=3, column=0, sticky="nsew")
 
@@ -1081,6 +1287,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.stop_button.configure(state=state)
         self.add_line_button.configure(state=state)
         self.add_cue_button.configure(state=state)
+        self.delete_line_button.configure(state=state)
         if message is not None:
             self.status_var.set(message)
 
@@ -1327,6 +1534,105 @@ class VoiceLibraryGeneratorApp(tk.Tk):
             return "break"
         self._set_tree_selection([row_id], focus_id=row_id)
         return "break"
+
+    _EDITABLE_COLUMNS = {"scope", "domain", "event", "subevent", "title"}
+    _ALL_COLUMNS = ("project", "scope", "domain", "event", "subevent", "title", "text", "review", "asset")
+
+    def _on_tree_double_click(self, event: tk.Event) -> None:
+        if self.busy:
+            return
+        if self.tree.identify_region(event.x, event.y) != "cell":
+            return
+        row_id = self.tree.identify_row(event.y)
+        col_id = self.tree.identify_column(event.x)
+        if not row_id or not col_id:
+            return
+        col_index = int(col_id.lstrip("#")) - 1
+        if col_index < 0 or col_index >= len(self._ALL_COLUMNS):
+            return
+        col_name = self._ALL_COLUMNS[col_index]
+        if col_name not in self._EDITABLE_COLUMNS:
+            return
+        row = self.row_map.get(row_id)
+        if not row:
+            return
+
+        raw = {
+            "scope": row.scope,
+            "domain": row.domain,
+            "event": row.event_name,
+            "subevent": row.subevent_label,
+            "title": row.group_title,
+        }
+        current = raw[col_name] or ""
+
+        bbox = self.tree.bbox(row_id, col_id)
+        if not bbox:
+            return
+        x, y, w, h = bbox
+
+        var = tk.StringVar(value=current)
+        entry = ttk.Entry(self.tree, textvariable=var, font=("Helvetica", 11))
+        entry.place(x=x, y=y, width=w, height=h)
+        entry.focus_set()
+        entry.selection_range(0, tk.END)
+
+        committed: list[bool] = [False]
+
+        def commit(_evt=None) -> None:
+            if committed[0]:
+                return
+            committed[0] = True
+            new_value = var.get().strip()
+            entry.destroy()
+            if new_value and new_value != current:
+                self._apply_cell_edit(row, col_name, new_value, raw)
+
+        def cancel(_evt=None) -> None:
+            if committed[0]:
+                return
+            committed[0] = True
+            entry.destroy()
+
+        entry.bind("<Return>", commit)
+        entry.bind("<KP_Enter>", commit)
+        entry.bind("<Escape>", cancel)
+        entry.bind("<FocusOut>", commit)
+
+    def _apply_cell_edit(self, row: "TargetRow", col_name: str, new_value: str, raw: dict[str, str]) -> None:
+        cue_key = row.cue_key
+        if col_name == "title":
+            self._set_busy(True, "Saving cue note…")
+
+            def worker() -> None:
+                try:
+                    with db_connection() as conn:
+                        conn.execute("UPDATE voice_cues SET title = ? WHERE cue_key = ?", (new_value, cue_key))
+                        conn.commit()
+                    self.task_queue.put(("create-ok", {"message": f'Cue note updated → "{new_value}".', "log": f"Updated title for {cue_key}"}))
+                except Exception as exc:  # noqa: BLE001
+                    self.task_queue.put(("error", f"Save failed: {exc}"))
+
+            threading.Thread(target=worker, daemon=True).start()
+        else:
+            new_scope = new_value if col_name == "scope" else raw["scope"]
+            new_domain = new_value if col_name == "domain" else raw["domain"]
+            new_event = new_value if col_name == "event" else raw["event"]
+            new_subevent = new_value if col_name == "subevent" else raw["subevent"]
+            self._set_busy(True, "Renaming cue…")
+
+            def worker() -> None:
+                try:
+                    result = rename_cue(cue_key, new_scope, new_domain, new_event, new_subevent)
+                    if result["changed"]:
+                        msg = f"Renamed: {result['oldKey']} → {result['newKey']}"
+                        self.task_queue.put(("create-ok", {"message": msg, "log": msg}))
+                    else:
+                        self.task_queue.put(("create-ok", {"message": "No change (same key).", "log": "Rename skipped"}))
+                except Exception as exc:  # noqa: BLE001
+                    self.task_queue.put(("error", f"Rename failed: {exc}"))
+
+            threading.Thread(target=worker, daemon=True).start()
 
     def _show_row_detail(self, candidate_id: str) -> None:
         row = self.row_map.get(candidate_id)
@@ -1654,6 +1960,32 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def delete_selected_line(self) -> None:
+        if self.busy:
+            return
+        row = self._selected_row()
+        if not row or not row.candidate_id:
+            messagebox.showinfo(APP_TITLE, "Select a voice line first.")
+            return
+        confirm = messagebox.askyesno(
+            APP_TITLE,
+            f"Delete this line?\n\n{row.candidate_id}\n\nThis removes the DB record and audio file permanently.",
+        )
+        if not confirm:
+            return
+        self._set_busy(True, "Deleting voice line…")
+        self._append_log(f"Deleting line {row.candidate_id}.")
+        line_id = row.candidate_id
+
+        def worker() -> None:
+            try:
+                delete_local_line(line_id)
+                self.task_queue.put(("create-ok", {"message": "Line deleted.", "log": f"Deleted {line_id}"}))
+            except Exception as exc:  # noqa: BLE001
+                self.task_queue.put(("error", f"Delete line failed: {exc}"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
     def _run_generation(self, rows: list[TargetRow], *, title: str, log_prefix: str, line_ids: list[str] | None = None) -> None:
         if self.busy:
             return
@@ -1717,6 +2049,40 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def rebuild_cue_library(self) -> None:
+        self.rebuild_cue_button.configure(state="disabled", text="Rebuilding...")
+
+        def worker() -> None:
+            try:
+                log = build_runtime_manifest()
+                self.after(0, lambda: messagebox.showinfo(APP_TITLE, f"Cue library rebuilt successfully.\n\n{log}".strip()))
+            except Exception as exc:
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Cue library build failed:\n{exc}"))
+            finally:
+                self.after(0, lambda: self.rebuild_cue_button.configure(state="normal", text="Rebuild cue library"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def audit_triggers(self) -> None:
+        self.audit_button.configure(state="disabled", text="检查中...")
+
+        def worker() -> None:
+            try:
+                result = audit_director_triggers()
+                triggered = sum(1 for v in result.values() if v)
+                untriggered_keys = sorted(k for k, v in result.items() if not v)
+                total = len(result)
+                summary = f"共 {total} 个 cue，{triggered} 个有触发规则，{total - triggered} 个未触发。"
+                if untriggered_keys:
+                    summary += "\n\n未触发的 cue keys：\n" + "\n".join(f"  • {k}" for k in untriggered_keys)
+                self.after(0, lambda: messagebox.showinfo(APP_TITLE, summary))
+            except Exception as exc:
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"检查失败：{exc}"))
+            finally:
+                self.after(0, lambda: self.audit_button.configure(state="normal", text="检查触发状态"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
     def generate_marked(self) -> None:
         marked_targets = [row for row in self.all_targets if should_generate_voice_row(row)]
         if not marked_targets:
@@ -1739,6 +2105,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
             log_prefix="Regenerating selected voices",
             line_ids=[row.candidate_id for row in rows],
         )
+
 
 
 def main() -> None:

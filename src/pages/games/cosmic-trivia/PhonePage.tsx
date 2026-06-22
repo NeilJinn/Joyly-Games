@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import type { Room } from "../../../types/room";
 import type { CosmicTriviaState, CosmicPrivateState } from "../../../types/cosmic-trivia";
 import { loadPlayerIdentity } from "../../../types/player";
 import PhoneLayout from "../../../components/player/PhoneLayout";
 import AnswerGrid from "../../../components/games/cosmic-trivia/AnswerGrid";
 import PreferencesPicker from "../../../components/games/cosmic-trivia/PreferencesPicker";
+import Joyly01Overlay from "../../../components/ui/Joyly01Overlay";
+import PhoneSadEmojiRain from "../../../components/games/cosmic-trivia/PhoneSadEmojiRain";
+import ConfettiRain from "../../../components/ui/ConfettiRain";
 
 interface CosmicTriviaPhoneProps {
   room: Room;
@@ -23,6 +26,9 @@ export default function CosmicTriviaPhone({ room, code, embedded = false, isHost
   const [submitting, setSubmitting] = useState(false);
   const [prefSubmitting, setPrefSubmitting] = useState(false);
   const [privateState, setPrivateState] = useState<CosmicPrivateState | null>(null);
+  const [flowerTrigger, setFlowerTrigger] = useState(0);
+  const [sadEmojiTrigger, setSadEmojiTrigger] = useState(0);
+  const lastScoreAnimKeyRef = useRef<string | null>(null);
 
   // Reset selected answer when question changes
   useEffect(() => {
@@ -39,6 +45,25 @@ export default function CosmicTriviaPhone({ room, code, embedded = false, isHost
       })
       .catch(() => {});
   }, [trivia?.phase, code, playerId]);
+
+  // 揭晓得分时触发动画：答对→花朵，答错→悲伤 emoji 降落
+  useEffect(() => {
+    if (!playerId || !trivia) return;
+    const phase = trivia.phase;
+    if (phase !== 'reveal' && phase !== 'scoring') return;
+    const key = `${trivia.questionIndex}-${trivia.lastResolution?.questionId ?? ''}`;
+    if (key === lastScoreAnimKeyRef.current) return;
+    lastScoreAnimKeyRef.current = key;
+
+    const winnerIds = trivia.lastResolution?.winnerIds ?? [];
+    const didAnswer = trivia.answeredPlayerIds.includes(playerId);
+
+    if (winnerIds.includes(playerId)) {
+      setFlowerTrigger(t => t + 1);
+    } else if (didAnswer) {
+      setSadEmojiTrigger(t => t + 1);
+    }
+  }, [trivia?.phase, trivia?.lastResolution, trivia?.questionIndex, playerId]);
 
   const [settingUp, setSettingUp] = useState(false);
 
@@ -102,6 +127,10 @@ export default function CosmicTriviaPhone({ room, code, embedded = false, isHost
   const phase = trivia.phase;
   const q = trivia.currentQuestion;
   const myPlayerState = playerId ? trivia.playerStates[playerId] : null;
+
+  // 获胜玩家（最高分，允许并列）
+  const maxScore = Object.values(trivia.scores).reduce((a, b) => Math.max(a, b), 0);
+  const isWinner = phase === 'post-game' && playerId != null && (trivia.scores[playerId] ?? 0) === maxScore && maxScore > 0;
   const hasLockedPrefs = myPlayerState?.preferencesLocked ?? false;
   const hasAnswered = playerId ? trivia.answeredPlayerIds.includes(playerId) : false;
   const score = playerId && privateState
@@ -119,46 +148,47 @@ export default function CosmicTriviaPhone({ room, code, embedded = false, isHost
     </div>
   );
 
+  // ── Main content per phase ──────────────────────────────────
+
+  let mainContent: React.ReactNode;
+
   if (phase === "game-setup") {
     if (isHost) {
-      return (
-        <Wrap>
-          <div className="phone-card grid gap-[14px]">
-            <div>
-              <span className="block text-[var(--green)] text-[11px] font-[950] tracking-[.08em] uppercase mb-[4px]">
-                Game setup
-              </span>
-              <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
-                How many questions?
-              </h2>
-              <p className="text-[var(--muted)] text-[13px] m-0 mt-[4px]">
-                {room.players.length} players · choose the round length
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-[8px]">
-              {(trivia.questionCountOptions ?? [5, 8, 10, 12]).map((n) => (
-                <button
-                  key={n}
-                  type="button"
-                  disabled={settingUp}
-                  onClick={() => handleSetup(n)}
-                  className={[
-                    "h-[64px] rounded-[10px] border border-white/[.15]",
-                    "bg-[rgba(17,24,33,.8)] text-[var(--ink)] text-[28px] font-[800]",
-                    "hover:border-[rgba(120,212,94,.5)] hover:bg-[rgba(120,212,94,.08)]",
-                    "transition-colors disabled:opacity-50 cursor-pointer",
-                  ].join(" ")}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
+      mainContent = (
+        <div className="phone-card grid gap-[14px]">
+          <div>
+            <span className="block text-[var(--green)] text-[11px] font-[950] tracking-[.08em] uppercase mb-[4px]">
+              Game setup
+            </span>
+            <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
+              How many questions?
+            </h2>
+            <p className="text-[var(--muted)] text-[13px] m-0 mt-[4px]">
+              {room.players.length} players · choose the round length
+            </p>
           </div>
-        </Wrap>
+          <div className="grid grid-cols-2 gap-[8px]">
+            {(trivia.questionCountOptions ?? [5, 8, 10, 12]).map((n) => (
+              <button
+                key={n}
+                type="button"
+                disabled={settingUp}
+                onClick={() => handleSetup(n)}
+                className={[
+                  "h-[64px] rounded-[10px] border border-white/[.15]",
+                  "bg-[rgba(17,24,33,.8)] text-[var(--ink)] text-[28px] font-[800]",
+                  "hover:border-[rgba(120,212,94,.5)] hover:bg-[rgba(120,212,94,.08)]",
+                  "transition-colors disabled:opacity-50 cursor-pointer",
+                ].join(" ")}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
       );
-    }
-    return (
-      <Wrap>
+    } else {
+      mainContent = (
         <div className="phone-card grid gap-[10px]">
           <p className="text-[var(--muted)] text-[13px] m-0">Setting up</p>
           <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
@@ -168,23 +198,18 @@ export default function CosmicTriviaPhone({ room, code, embedded = false, isHost
             Once set, you&apos;ll choose categories here.
           </p>
         </div>
-      </Wrap>
-    );
-  }
-
-  if (phase === "preferences") {
-    if (hasLockedPrefs) {
-      return (
-        <Wrap>
-          <div className="phone-card grid gap-[10px]">
-            <p className="text-[#78d45e] text-[13px] font-[700] m-0">Choices locked ✓</p>
-            <p className="text-[var(--muted)] text-[13px] m-0">Waiting for other players…</p>
-          </div>
-        </Wrap>
       );
     }
-    return (
-      <Wrap>
+  } else if (phase === "preferences") {
+    if (hasLockedPrefs) {
+      mainContent = (
+        <div className="phone-card grid gap-[10px]">
+          <p className="text-[#78d45e] text-[13px] font-[700] m-0">Choices locked ✓</p>
+          <p className="text-[var(--muted)] text-[13px] m-0">Waiting for other players…</p>
+        </div>
+      );
+    } else {
+      mainContent = (
         <div className="phone-card grid gap-[4px]">
           <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0 mb-[4px]">Pick your choices</h2>
           {trivia.questionOptions && (
@@ -195,100 +220,85 @@ export default function CosmicTriviaPhone({ room, code, embedded = false, isHost
             />
           )}
         </div>
-      </Wrap>
+      );
+    }
+  } else if (phase === "interest-reveal") {
+    mainContent = (
+      <div className="phone-card grid gap-[10px]">
+        <p className="text-[var(--muted)] text-[13px] m-0">Coming up</p>
+        <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">请看大屏幕</h2>
+      </div>
     );
-  }
-
-  if (phase === "round-prep" || phase === "question-intro" || phase === "question-read") {
-    return (
-      <Wrap>
-        <div className="phone-card grid gap-[10px]">
-          <p className="text-[var(--muted)] text-[13px] m-0">Get ready</p>
-          <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
-            {phase === "question-read" ? "Listen closely…" : "Round starting!"}
-          </h2>
-        </div>
-      </Wrap>
+  } else if (phase === "round-prep" || phase === "question-intro" || phase === "question-read") {
+    mainContent = (
+      <div className="phone-card grid gap-[10px]">
+        <p className="text-[var(--muted)] text-[13px] m-0">Get ready</p>
+        <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
+          {phase === "question-read" ? "Listen closely…" : "Round starting!"}
+        </h2>
+      </div>
     );
-  }
-
-  if (phase === "answering" && q) {
-    return (
-      <Wrap>
-        <div className="phone-card grid gap-[14px]">
-          {scoreChip}
-          <p className="text-[var(--ink)] text-[16px] font-[700] m-0 leading-snug">{q.question}</p>
-          <AnswerGrid
-            answers={q.answers}
-            selectedId={selectedAnswerId}
-            disabled={hasAnswered || submitting}
-            onSelect={submitAnswer}
-            variant="phone"
-          />
-          {hasAnswered && (
-            <p className="text-[#78d45e] text-[13px] text-center m-0 font-[700]">
-              Answer locked in ✓
-            </p>
-          )}
-        </div>
-      </Wrap>
+  } else if (phase === "answering" && q) {
+    mainContent = (
+      <div className="phone-card grid gap-[14px]">
+        {scoreChip}
+        <p className="text-[var(--ink)] text-[16px] font-[700] m-0 leading-snug">{q.question}</p>
+        <AnswerGrid
+          answers={q.answers}
+          selectedId={selectedAnswerId}
+          disabled={hasAnswered || submitting}
+          onSelect={submitAnswer}
+          variant="phone"
+        />
+        {hasAnswered && (
+          <p className="text-[#78d45e] text-[13px] text-center m-0 font-[700]">
+            Answer locked in ✓
+          </p>
+        )}
+      </div>
     );
-  }
-
-  if (phase === "answer-lock") {
-    return (
-      <Wrap>
-        <div className="phone-card grid gap-[10px] text-center">
-          <p className="text-[var(--sun)] text-[13px] font-[700] m-0">Locked</p>
-          <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">Answers are closed</h2>
-          <p className="text-[var(--muted)] text-[13px] m-0">Revealing the answer now…</p>
-        </div>
-      </Wrap>
+  } else if (phase === "answer-lock") {
+    mainContent = (
+      <div className="phone-card grid gap-[10px] text-center">
+        <p className="text-[var(--sun)] text-[13px] font-[700] m-0">Locked</p>
+        <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">Answers are closed</h2>
+        <p className="text-[var(--muted)] text-[13px] m-0">Revealing the answer now…</p>
+      </div>
     );
-  }
-
-  if ((phase === "reveal" || phase === "scoring" || phase === "between-questions") && q) {
+  } else if ((phase === "reveal" || phase === "scoring" || phase === "between-questions") && q) {
     const correctAnswer = q.answers.find((a) => a.id === q.correctAnswer);
-    return (
-      <Wrap>
-        <div className="phone-card grid gap-[14px]">
-          {scoreChip}
-          <AnswerGrid
-            answers={q.answers}
-            selectedId={selectedAnswerId}
-            correctId={q.correctAnswer ?? undefined}
-            disabled
-            variant="phone"
-          />
-          {correctAnswer && (
-            <div className="grid gap-[4px]">
-              <p className="text-[#78d45e] text-[13px] font-[700] m-0">
-                Correct: {correctAnswer.text}
-              </p>
-              {q.fact && <p className="text-[var(--muted)] text-[12px] m-0">{q.fact}</p>}
-            </div>
-          )}
-        </div>
-      </Wrap>
+    mainContent = (
+      <div className="phone-card grid gap-[14px]">
+        {scoreChip}
+        <AnswerGrid
+          answers={q.answers}
+          selectedId={selectedAnswerId}
+          correctId={q.correctAnswer ?? undefined}
+          disabled
+          variant="phone"
+        />
+        {correctAnswer && (
+          <div className="grid gap-[4px]">
+            <p className="text-[#78d45e] text-[13px] font-[700] m-0">
+              Correct: {correctAnswer.text}
+            </p>
+            {q.fact && <p className="text-[var(--muted)] text-[12px] m-0">{q.fact}</p>}
+          </div>
+        )}
+      </div>
     );
-  }
-
-  if (phase === "final-hype" || phase === "finale") {
-    return (
-      <Wrap>
-        <div className="phone-card text-center grid gap-[10px]">
-          <p className="text-[var(--sun)] text-[13px] font-[700] m-0">Final results</p>
-          <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
-            {trivia.finalHype?.current?.text ?? "Final results are on their way…"}
-          </h2>
-        </div>
-      </Wrap>
+  } else if (phase === "final-hype" || phase === "finale") {
+    mainContent = (
+      <div className="phone-card text-center grid gap-[10px]">
+        <p className="text-[var(--sun)] text-[13px] font-[700] m-0">Final results</p>
+        <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">
+          {trivia.finalHype?.current?.text ?? "Final results are on their way…"}
+        </h2>
+      </div>
     );
-  }
-
-  // post-game
-  return (
-    <Wrap>
+  } else {
+    // post-game
+    mainContent = (
       <div className="phone-card text-center grid gap-[10px]">
         <div className="text-[48px]" aria-hidden="true">🏆</div>
         <h2 className="text-[var(--ink)] text-[20px] font-[800] m-0">Game over!</h2>
@@ -297,6 +307,15 @@ export default function CosmicTriviaPhone({ room, code, embedded = false, isHost
           <p className="text-[var(--ink)] text-[24px] font-[800]">{score} pts</p>
         )}
       </div>
-    </Wrap>
+    );
+  }
+
+  return (
+    <>
+      <Wrap>{mainContent}</Wrap>
+      <Joyly01Overlay preset="transition" origin="bottom" trigger={flowerTrigger} />
+      <PhoneSadEmojiRain trigger={sadEmojiTrigger} />
+      <ConfettiRain active={isWinner} zIndex={49} />
+    </>
   );
 }

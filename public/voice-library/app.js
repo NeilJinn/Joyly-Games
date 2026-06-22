@@ -719,6 +719,26 @@ async function runTaggedRegeneration() {
   }
 }
 
+async function rebuildCueLibrary() {
+  const btn = document.querySelector("[data-rebuild-cue-library]");
+  if (btn) { btn.disabled = true; btn.textContent = "Rebuilding..."; }
+  try {
+    const response = await fetch("/api/voice-library/build-cue-library", { method: "POST" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || "Cue library build failed");
+    }
+    if (btn) { btn.textContent = "Rebuild cue library"; btn.disabled = false; }
+    audio.dataset.currentMeta = "Cue library rebuilt successfully";
+    syncAudioBar();
+  } catch (error) {
+    console.error(error);
+    if (btn) { btn.textContent = "Rebuild cue library"; btn.disabled = false; }
+    audio.dataset.currentMeta = `Cue library build failed: ${error.message || "unknown error"}`;
+    syncAudioBar();
+  }
+}
+
 function clearFilters() {
   uiState.filterPhases = [];
   uiState.filterCategories = [];
@@ -1264,6 +1284,7 @@ function renderControls() {
           <button class="btn" data-toggle-sort type="button">${escape(uiState.sortKey === "recent" ? "Newest" : uiState.sortKey === "name" ? "Name" : uiState.sortKey === "duration" ? "Duration" : uiState.sortKey === "status" ? "Status" : "Project")}</button>
           <button class="btn" data-toggle-sort-dir type="button">${escape(uiState.sortDir === "desc" ? "Desc" : "Asc")}</button>
           <button class="btn" data-scan-library type="button">Rescan filesystem</button>
+          <button class="btn" data-rebuild-cue-library type="button">Rebuild cue library</button>
           <button class="btn primary" data-run-tagged type="button">Generate regenerate-tagged (${escape(String(regenerateTaggedCount()))})</button>
         </div>
       </div>
@@ -1434,6 +1455,11 @@ function handleAction(event) {
 
   if (button.dataset.runTagged !== undefined) {
     void runTaggedRegeneration();
+    return;
+  }
+
+  if (button.dataset.rebuildCueLibrary !== undefined) {
+    void rebuildCueLibrary();
     return;
   }
 

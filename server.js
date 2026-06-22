@@ -1,6 +1,7 @@
 import http from "node:http";
 import { readFile, readdir } from "node:fs/promises";
 import { existsSync, statSync } from "node:fs";
+import { execFile } from "node:child_process";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
@@ -650,6 +651,18 @@ const server = http.createServer(async (req, res) => {
         generated: result.generated || [],
         skipped: result.skipped || [],
         reviewState
+      });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/voice-library/build-cue-library") {
+      const scriptPath = path.join(__dirname, "scripts", "build-cosmic-trivia-director-cues.js");
+      execFile(process.execPath, [scriptPath], { cwd: __dirname }, (err, stdout, stderr) => {
+        if (err) {
+          sendJson(res, 500, { error: err.message, stderr: String(stderr || "") });
+        } else {
+          sendJson(res, 200, { ok: true, output: String(stdout || "").trim() });
+        }
       });
       return;
     }

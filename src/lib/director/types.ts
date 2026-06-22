@@ -72,6 +72,11 @@ export interface DirectorSnapshot {
   scoreVisibility: string
   scoreboardVisible: boolean
   finalHype: { current: { text: string; kind: string } | null; index?: number } | null
+  leaderId: string
+  rankedPlayerIds: string[]
+  streakCorrect: number
+  streakWrong: number
+  topCategories: string[]
 }
 
 export interface NormalizedCue {

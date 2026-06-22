@@ -136,7 +136,7 @@ function collectMaterials(obj: THREE.Object3D): THREE.MeshBasicMaterial[] {
 
 // ─── 核心：burst 触发 ────────────────────────────────────────
 
-function fireBurst(state: ThreeState, preset: string) {
+function fireBurst(state: ThreeState, preset: string, origin: 'random' | 'bottom' = 'random') {
   const { scene, camera, templates } = state;
   const keys = PRESET_MODELS[preset] ?? ['flower'];
   const count = PRESET_COUNT[preset] ?? 24;
@@ -159,14 +159,23 @@ function fireBurst(state: ThreeState, preset: string) {
     const cfg = MODEL_CFG[key];
     const targetScale = cfg.baseScale * (0.6 + Math.random() * 0.7);
     const delay = i * 0.055;
-    const lifetime = 3.8;
 
-    // 位置：随机分布在屏幕内
-    obj.position.set(
-      (Math.random() - 0.5) * halfW * 1.7,
-      (Math.random() - 0.5) * halfH * 1.4,
-      0,
-    );
+    // 位置和漂浮距离根据 origin 决定
+    let spawnX: number, spawnY: number, floatDist: number, lifetime: number;
+    if (origin === 'bottom') {
+      // 从屏幕底端随机散布，向上漂过整个屏幕
+      spawnX    = (Math.random() - 0.5) * halfW * 1.8;
+      spawnY    = -halfH * (0.85 + Math.random() * 0.2);
+      floatDist = halfH * 2.3;
+      lifetime  = 4.8;
+    } else {
+      spawnX    = (Math.random() - 0.5) * halfW * 1.7;
+      spawnY    = (Math.random() - 0.5) * halfH * 1.4;
+      floatDist = halfH * 0.55;
+      lifetime  = 3.8;
+    }
+
+    obj.position.set(spawnX, spawnY, 0);
 
     // 旋转
     if (cfg.constrainRotation) {
@@ -224,7 +233,7 @@ function fireBurst(state: ThreeState, preset: string) {
 
     // 向上漂浮 + 淡出 + 移除
     gsap.to(obj.position, {
-      y: obj.position.y + halfH * 0.55,
+      y: obj.position.y + floatDist,
       duration: lifetime, delay, ease: 'power1.out',
     });
     gsap.to(fadeProxy, {
@@ -261,13 +270,14 @@ function startRaf(state: ThreeState) {
 export interface Joyly01OverlayProps {
   preset?: 'transition' | 'celebration';
   trigger?: number;
+  origin?: 'random' | 'bottom';
 }
 
-export default function Joyly01Overlay({ preset = 'transition', trigger }: Joyly01OverlayProps) {
+export default function Joyly01Overlay({ preset = 'transition', trigger, origin = 'random' }: Joyly01OverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef  = useRef<ThreeState | null>(null);
   const loadedRef = useRef(false);
-  const pendingRef = useRef<string | null>(null);
+  const pendingRef = useRef<{ preset: string; origin: 'random' | 'bottom' } | null>(null);
 
   // Three.js 初始化 + 模型预加载
   useEffect(() => {
@@ -305,7 +315,7 @@ export default function Joyly01Overlay({ preset = 'transition', trigger }: Joyly
           if (doneCount === keys.length) {
             loadedRef.current = true;
             if (pendingRef.current) {
-              fireBurst(state, pendingRef.current);
+              fireBurst(state, pendingRef.current.preset, pendingRef.current.origin);
               pendingRef.current = null;
             }
           }
@@ -341,10 +351,10 @@ export default function Joyly01Overlay({ preset = 'transition', trigger }: Joyly
     if (!state) return;
 
     if (!loadedRef.current) {
-      pendingRef.current = preset;
+      pendingRef.current = { preset, origin };
       return;
     }
-    fireBurst(state, preset);
+    fireBurst(state, preset, origin);
   }, [trigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

@@ -952,11 +952,11 @@
       "status": "approved",
       "tags": [],
       "notes": [],
-      "transcript": "Next question incoming. Eyes up, phones ready, dignity optional.[giggles]",
+      "transcript": "Question incoming. Eyes up, phones ready, dignity optional.[giggles]",
       "transcriptSegments": [
-        "Next question incoming. Eyes up, phones ready, dignity optional.[giggles]"
+        "Question incoming. Eyes up, phones ready, dignity optional.[giggles]"
       ],
-      "updatedAt": 1781478392810
+      "updatedAt": 1782126613380
     },
     "phase.question-intro.question.next.line-02": {
       "id": "phase.question-intro.question.next.line-02",
@@ -988,11 +988,11 @@
       "status": "approved",
       "tags": [],
       "notes": [],
-      "transcript": "Here comes the next one. Try to look like you meant to know this.",
+      "transcript": "Here comes the question. Try to look like you meant to know this.",
       "transcriptSegments": [
-        "Here comes the next one. Try to look like you meant to know this."
+        "Here comes the question. Try to look like you meant to know this."
       ],
-      "updatedAt": 1781478368919
+      "updatedAt": 1782126615168
     },
     "phase.question-intro.question.next.line-03": {
       "id": "phase.question-intro.question.next.line-03",
@@ -1024,11 +1024,11 @@
       "status": "approved",
       "tags": [],
       "notes": [],
-      "transcript": "Attention back to the screen. The quiz gremlin has selected another question.",
+      "transcript": "Attention back to the screen. The quiz gremlin has selected a question.",
       "transcriptSegments": [
-        "Attention back to the screen. The quiz gremlin has selected another question."
+        "Attention back to the screen. The quiz gremlin has selected a question."
       ],
-      "updatedAt": 1781478391616
+      "updatedAt": 1782126610555
     },
     "phase.question-intro.question.final.line-01": {
       "id": "phase.question-intro.question.final.line-01",
@@ -1424,7 +1424,7 @@
       "transcriptSegments": [
         "Everyone has handed in their answers"
       ],
-      "updatedAt": 1781477986128
+      "updatedAt": 1781784142265
     },
     "phase.reveal.answer.positive.line-01": {
       "id": "phase.reveal.answer.positive.line-01",
@@ -2214,11 +2214,11 @@
       "status": "approved",
       "tags": [],
       "notes": [],
-      "transcript": "That's the game. You brought knowledge, guesses, and a surprising amount of confidence.",
+      "transcript": "That's the game. You brought knowledge, guesses, and a surprising amount of confidence. [laugh] And thank you for playing the game, let's do another round! [cheering]\n\n[long pause][wait for 5 seconds][sad] or no more game?[cry]",
       "transcriptSegments": [
-        "That's the game. You brought knowledge, guesses, and a surprising amount of confidence."
+        "That's the game. You brought knowledge, guesses, and a surprising amount of confidence. [laugh] And thank you for playing the game, let's do another round! [cheering]\n\n[long pause][wait for 5 seconds][sad] or no more game?[cry]"
       ],
-      "updatedAt": 1781645655114
+      "updatedAt": 1781783535103
     },
     "phase.post-game.result.outro.line-02": {
       "id": "phase.post-game.result.outro.line-02",
@@ -2650,7 +2650,7 @@
       "transcriptSegments": [
         "Someone has a streak going. I won't say who, but the scoreboard is whispering."
       ],
-      "updatedAt": 1781645649844
+      "updatedAt": 1781775717864
     },
     "global.host.pause.line-01": {
       "id": "global.host.pause.line-01",
@@ -3028,11 +3028,444 @@
       "notes": [],
       "status": "approved",
       "tags": [],
-      "transcript": "Oh ohh, We have two correct anwsers.",
+      "transcript": "Vaaaalaaaaaa, We have two people with correct anwsers.",
       "transcriptSegments": [
-        "Oh ohh, We have two correct anwsers."
+        "Vaaaalaaaaaa, We have two people with correct anwsers."
       ],
-      "updatedAt": 1781645558562
+      "updatedAt": 1781784139667
+    },
+    "cross.stats.streak.detected.line-02": {
+      "id": "cross.stats.streak.detected.line-02",
+      "notes": [],
+      "status": "unreviewed",
+      "tags": [
+        "regenerate"
+      ],
+      "transcript": "Wow someone is on fire, watch out",
+      "transcriptSegments": [
+        "Wow someone is on fire, watch out"
+      ],
+      "updatedAt": 1781775509307
+    },
+    "cross.stats.streak.detected.line-03": {
+      "id": "cross.stats.streak.detected.line-03",
+      "notes": [],
+      "status": "unreviewed",
+      "tags": [
+        "regenerate"
+      ],
+      "transcript": "Oh ohh, come on, three times in a row?",
+      "transcriptSegments": [
+        "Oh ohh, come on, three times in a row?"
+      ],
+      "updatedAt": 1781775577886
+    },
+    "cross.stats.streak.3-question-wrong-streak.line-01": {
+      "id": "cross.stats.streak.3-question-wrong-streak.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Oh ohh[sad] three wrong answers in a row now",
+      "transcriptSegments": [
+        "Oh ohh[sad] three wrong answers in a row now"
+      ],
+      "updatedAt": 1781778480566
+    },
+    "cross.stats.streak.3-question-right-streak.line-03": {
+      "id": "cross.stats.streak.3-question-right-streak.line-03",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Oh ohh, come on, three times in a row, someone is on fire!!",
+      "transcriptSegments": [
+        "Oh ohh, come on, three times in a row, someone is on fire!!"
+      ],
+      "updatedAt": 1781778454487
+    },
+    "cross.stats.streak.3-question-right-streak.line-02": {
+      "id": "cross.stats.streak.3-question-right-streak.line-02",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Wow someone is on fire, better watch out ya'll",
+      "transcriptSegments": [
+        "Wow someone is on fire, better watch out ya'll"
+      ],
+      "updatedAt": 1781778449177
+    },
+    "cross.stats.streak.2-question-wrong-streak.line-01": {
+      "id": "cross.stats.streak.2-question-wrong-streak.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Good job! Someone got a streak",
+      "transcriptSegments": [
+        "Good job! Someone got a streak"
+      ],
+      "updatedAt": 1781778439309
+    },
+    "cross.stats.streak.2-question-wrong-streak.line-02": {
+      "id": "cross.stats.streak.2-question-wrong-streak.line-02",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Valaaaaa! A streak!",
+      "transcriptSegments": [
+        "Valaaaaa! A streak!"
+      ],
+      "updatedAt": 1781778444088
+    },
+    "cross.stats.streak.3-question-rightandwrong-streak.line-01": {
+      "id": "cross.stats.streak.3-question-rightandwrong-streak.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Oh ohh while someone got a streak with the right answers, someone is wrong  3 times in a row....I won't mention names...but...hmmmm",
+      "transcriptSegments": [
+        "Oh ohh while someone got a streak with the right answers, someone is wrong  3 times in a row....I won't mention names...but...hmmmm"
+      ],
+      "updatedAt": 1781778475136
+    },
+    "cross.stats.streak.4more-question-right-streak.line-01": {
+      "id": "cross.stats.streak.4more-question-right-streak.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Mammaaa, is on fire! [whisper] or Papi [laugh]",
+      "transcriptSegments": [
+        "Mammaaa, is on fire! [whisper] or Papi [laugh]"
+      ],
+      "updatedAt": 1781778290514
+    },
+    "phase.reveal.answer.3-correct.line-01": {
+      "id": "phase.reveal.answer.3-correct.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "3 players got it right [laugh] ......\n\nNot bad, noooot bad!",
+      "transcriptSegments": [
+        "3 players got it right [laugh] ......\n\nNot bad, noooot bad!"
+      ],
+      "updatedAt": 1781784412108
+    },
+    "phase.reveal.answer.4-correct.line-01": {
+      "id": "phase.reveal.answer.4-correct.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Ohhoohooo 4 people got it right. [cheering]  Bring it in!",
+      "transcriptSegments": [
+        "Ohhoohooo 4 people got it right. [cheering]  Bring it in!"
+      ],
+      "updatedAt": 1781784506394
+    },
+    "phase.interest-reveal.selection.intro.line-01": {
+      "id": "phase.interest-reveal.selection.intro.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Based on your picks... here's what the game looks like—",
+      "transcriptSegments": [
+        "Based on your picks... here's what the game looks like—"
+      ],
+      "updatedAt": 1782122739460
+    },
+    "phase.interest-reveal.selection.no-votes.line-01": {
+      "id": "phase.interest-reveal.selection.no-votes.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "[chuckles] No strong preferences? Bold move. Anything could show up tonight.",
+      "transcriptSegments": [
+        "[chuckles] No strong preferences? Bold move. Anything could show up tonight."
+      ],
+      "updatedAt": 1782122897209
+    },
+    "phase.interest-reveal.selection.rank-1.geography.line-01": {
+      "id": "phase.interest-reveal.selection.rank-1.geography.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "[curious] Geography at the top... hope everyone's got their maps ready.",
+      "transcriptSegments": [
+        "[curious] Geography at the top... hope everyone's got their maps ready."
+      ],
+      "updatedAt": 1782122836250
+    },
+    "phase.interest-reveal.selection.rank-1.movies.line-01": {
+      "id": "phase.interest-reveal.selection.rank-1.movies.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Movies! [excited] The film buffs are absolutely in charge tonight.",
+      "transcriptSegments": [
+        "Movies! [excited] The film buffs are absolutely in charge tonight."
+      ],
+      "updatedAt": 1782122838057
+    },
+    "phase.interest-reveal.selection.rank-1.general.line-01": {
+      "id": "phase.interest-reveal.selection.rank-1.general.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "General knowledge taking the crown? [chuckles] Dangerous choice. Anything goes.",
+      "transcriptSegments": [
+        "General knowledge taking the crown? [chuckles] Dangerous choice. Anything goes."
+      ],
+      "updatedAt": 1782122940826
+    },
+    "phase.interest-reveal.selection.rank-1.history.line-01": {
+      "id": "phase.interest-reveal.selection.rank-1.history.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "[thoughtful] History taking the lead... I love a crowd that knows its past.",
+      "transcriptSegments": [
+        "[thoughtful] History taking the lead... I love a crowd that knows its past."
+      ],
+      "updatedAt": 1782122946486
+    },
+    "phase.interest-reveal.selection.rank-1.nature.line-01": {
+      "id": "phase.interest-reveal.selection.rank-1.nature.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Nature lovers are calling the shots tonight. [happy] Wholesome — I respect it.",
+      "transcriptSegments": [
+        "Nature lovers are calling the shots tonight. [happy] Wholesome — I respect it."
+      ],
+      "updatedAt": 1782123115749
+    },
+    "phase.interest-reveal.selection.rank-1.science.line-01": {
+      "id": "phase.interest-reveal.selection.rank-1.science.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Looks like the science fans are running things tonight. [chuckles] Let's get nerdy.",
+      "transcriptSegments": [
+        "Looks like the science fans are running things tonight. [chuckles] Let's get nerdy."
+      ],
+      "updatedAt": 1782122965033
+    },
+    "phase.interest-reveal.selection.rank-1.space.line-01": {
+      "id": "phase.interest-reveal.selection.rank-1.space.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "[surprised] Space and cosmos leading the way... we're going intergalactic tonight.",
+      "transcriptSegments": [
+        "[surprised] Space and cosmos leading the way... we're going intergalactic tonight."
+      ],
+      "updatedAt": 1782122972553
+    },
+    "phase.interest-reveal.selection.rank-1.sports.line-01": {
+      "id": "phase.interest-reveal.selection.rank-1.sports.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Sports takes the top spot. [woo] Let's see if the athletes know their stats.",
+      "transcriptSegments": [
+        "Sports takes the top spot. [woo] Let's see if the athletes know their stats."
+      ],
+      "updatedAt": 1782122979650
+    },
+    "phase.interest-reveal.selection.rank-2.general.line-01": {
+      "id": "phase.interest-reveal.selection.rank-2.general.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "General knowledge also holding its own. [chuckles] The wild cards always show up.",
+      "transcriptSegments": [
+        "General knowledge also holding its own. [chuckles] The wild cards always show up."
+      ],
+      "updatedAt": 1782122986445
+    },
+    "phase.interest-reveal.selection.rank-2.geography.line-01": {
+      "id": "phase.interest-reveal.selection.rank-2.geography.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Geography pulling votes too. [surprised] The world travelers are representing.",
+      "transcriptSegments": [
+        "Geography pulling votes too. [surprised] The world travelers are representing."
+      ],
+      "updatedAt": 1782122995303
+    },
+    "phase.interest-reveal.selection.rank-2.history.line-01": {
+      "id": "phase.interest-reveal.selection.rank-2.history.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "History buffs making their presence known too. [thoughtful] A classic choice.",
+      "transcriptSegments": [
+        "History buffs making their presence known too. [thoughtful] A classic choice."
+      ],
+      "updatedAt": 1782123002642
+    },
+    "phase.interest-reveal.selection.rank-2.movies.line-01": {
+      "id": "phase.interest-reveal.selection.rank-2.movies.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Movie lovers, you're not far behind. [happy] Cinema gets its moment.",
+      "transcriptSegments": [
+        "Movie lovers, you're not far behind. [happy] Cinema gets its moment."
+      ],
+      "updatedAt": 1782123008822
+    },
+    "phase.interest-reveal.selection.rank-2.nature.line-01": {
+      "id": "phase.interest-reveal.selection.rank-2.nature.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Nature quietly making its mark. [happy] A lovely addition to tonight's lineup.",
+      "transcriptSegments": [
+        "Nature quietly making its mark. [happy] A lovely addition to tonight's lineup."
+      ],
+      "updatedAt": 1782123016435
+    },
+    "phase.interest-reveal.selection.rank-2.science.line-01": {
+      "id": "phase.interest-reveal.selection.rank-2.science.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Science nerds, your voice is being heard. [chuckles] Solid pick.",
+      "transcriptSegments": [
+        "Science nerds, your voice is being heard. [chuckles] Solid pick."
+      ],
+      "updatedAt": 1782123025881
+    },
+    "phase.interest-reveal.selection.rank-2.space.line-01": {
+      "id": "phase.interest-reveal.selection.rank-2.space.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Space enthusiasts are in the mix. [curious] The cosmos gets some airtime.",
+      "transcriptSegments": [
+        "Space enthusiasts are in the mix. [curious] The cosmos gets some airtime."
+      ],
+      "updatedAt": 1782123038000
+    },
+    "phase.interest-reveal.selection.rank-2.sports.line-01": {
+      "id": "phase.interest-reveal.selection.rank-2.sports.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Sports fans showing up strong as well. [excited] The competitive energy is real.",
+      "transcriptSegments": [
+        "Sports fans showing up strong as well. [excited] The competitive energy is real."
+      ],
+      "updatedAt": 1782123044504
+    },
+    "phase.interest-reveal.selection.rank-3.general.line-01": {
+      "id": "phase.interest-reveal.selection.rank-3.general.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "General knowledge at number three. [chuckles] The wild card always finds a way.",
+      "transcriptSegments": [
+        "General knowledge at number three. [chuckles] The wild card always finds a way."
+      ],
+      "updatedAt": 1782123051475
+    },
+    "phase.interest-reveal.selection.rank-3.geography.line-01": {
+      "id": "phase.interest-reveal.selection.rank-3.geography.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Geography sneaking in at three. [curious] Map nerds, you found each other.",
+      "transcriptSegments": [
+        "Geography sneaking in at three. [curious] Map nerds, you found each other."
+      ],
+      "updatedAt": 1782123061641
+    },
+    "phase.interest-reveal.selection.rank-3.history.line-01": {
+      "id": "phase.interest-reveal.selection.rank-3.history.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "History scholars, assemble. [thoughtful] Seems this one has a dedicated following.",
+      "transcriptSegments": [
+        "History scholars, assemble. [thoughtful] Seems this one has a dedicated following."
+      ],
+      "updatedAt": 1782123067728
+    },
+    "phase.interest-reveal.selection.rank-3.movies.line-01": {
+      "id": "phase.interest-reveal.selection.rank-3.movies.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Film fans — you're not forgotten. [happy] Movies sneaks in at number three.",
+      "transcriptSegments": [
+        "Film fans — you're not forgotten. [happy] Movies sneaks in at number three."
+      ],
+      "updatedAt": 1782123075100
+    },
+    "phase.interest-reveal.selection.rank-3.nature.line-01": {
+      "id": "phase.interest-reveal.selection.rank-3.nature.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Nature has its gentle supporters. [sighs] This type always finds its people.",
+      "transcriptSegments": [
+        "Nature has its gentle supporters. [sighs] This type always finds its people."
+      ],
+      "updatedAt": 1782123082463
+    },
+    "phase.interest-reveal.selection.rank-3.science.line-01": {
+      "id": "phase.interest-reveal.selection.rank-3.science.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Science nerds in the house... [chuckles] this one seems to have its quiet fans too.",
+      "transcriptSegments": [
+        "Science nerds in the house... [chuckles] this one seems to have its quiet fans too."
+      ],
+      "updatedAt": 1782123089158
+    },
+    "phase.interest-reveal.selection.rank-3.space.line-01": {
+      "id": "phase.interest-reveal.selection.rank-3.space.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "The cosmos has its admirers. [curious] Space quietly pulling some interest tonight.",
+      "transcriptSegments": [
+        "The cosmos has its admirers. [curious] Space quietly pulling some interest tonight."
+      ],
+      "updatedAt": 1782123095853
+    },
+    "phase.interest-reveal.selection.rank-3.sports.line-01": {
+      "id": "phase.interest-reveal.selection.rank-3.sports.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "A few sports fans quietly raising their hand. [chuckles] Noted.",
+      "transcriptSegments": [
+        "A few sports fans quietly raising their hand. [chuckles] Noted."
+      ],
+      "updatedAt": 1782123101431
+    },
+    "global.connector.and.line-01": {
+      "id": "global.connector.and.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "...........and",
+      "transcriptSegments": [
+        "...........and"
+      ],
+      "updatedAt": 1782123490653
+    },
+    "global.connector.lastly.line-01": {
+      "id": "global.connector.lastly.line-01",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Lastly............",
+      "transcriptSegments": [
+        "Lastly............"
+      ],
+      "updatedAt": 1782123489784
     }
   },
   "customTags": [

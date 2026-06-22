@@ -1,0 +1,132 @@
+<h2>手机端布局方向</h2>
+<p class="subtitle">当前 UI 内容集中在屏幕中间小卡片里，很多垂直空间没用到。以下是三种改进方向。</p>
+
+<div class="cards" style="grid-template-columns: repeat(3, 1fr); gap: 20px;">
+
+  <!-- Option A: 当前状态 -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0e1623; padding:16px; border-radius:8px; min-height:340px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
+      <!-- phone frame -->
+      <div style="width:140px; background:#111821; border-radius:16px; border:1px solid rgba(255,255,255,.15); overflow:hidden;">
+        <!-- topbar -->
+        <div style="height:28px; background:rgba(14,22,35,.88); border-bottom:1px solid rgba(255,255,255,.08); display:flex;align-items:center;padding:0 8px;">
+          <div style="width:12px;height:12px;border-radius:3px;background:#78d45e;margin-right:6px;"></div>
+          <div style="height:5px;width:40px;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+        </div>
+        <!-- empty space top -->
+        <div style="height:30px;"></div>
+        <!-- small card in center -->
+        <div style="margin:0 10px; background:rgba(17,24,33,.92); border:1px solid rgba(255,255,255,.1); border-radius:8px; padding:10px;">
+          <div style="height:5px;width:60px;background:rgba(255,255,255,.15);border-radius:2px;margin-bottom:6px;"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+            <div style="height:28px;background:rgba(94,130,244,.2);border:1px solid rgba(94,130,244,.5);border-radius:5px;"></div>
+            <div style="height:28px;background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:5px;"></div>
+            <div style="height:28px;background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:5px;"></div>
+            <div style="height:28px;background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:5px;"></div>
+          </div>
+        </div>
+        <!-- empty space bottom -->
+        <div style="height:30px;"></div>
+      </div>
+      <p style="color:rgba(200,212,222,.5);font-size:11px;text-align:center;margin:4px 0 0;">当前：居中小卡片<br/>上下空间浪费</p>
+    </div>
+    <div class="card-body">
+      <h3>A · 现状（对比参考）</h3>
+      <p>内容用 <code>place-items:center</code> 居中，答题按钮 min-h 64px，手机上显得小且紧凑。</p>
+    </div>
+  </div>
+
+  <!-- Option B: 全屏填充 -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0e1623; padding:16px; border-radius:8px; min-height:340px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
+      <div style="width:140px; background:#111821; border-radius:16px; border:1px solid rgba(255,255,255,.15); overflow:hidden;">
+        <!-- topbar -->
+        <div style="height:28px; background:rgba(14,22,35,.88); border-bottom:1px solid rgba(255,255,255,.08); display:flex;align-items:center;padding:0 8px;">
+          <div style="width:12px;height:12px;border-radius:3px;background:#78d45e;margin-right:6px;"></div>
+          <div style="height:5px;width:40px;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+        </div>
+        <!-- full height content -->
+        <div style="padding:8px 8px; display:flex; flex-direction:column; gap:6px; height:230px;">
+          <!-- question -->
+          <div style="background:rgba(17,24,33,.92); border:1px solid rgba(255,255,255,.1); border-radius:6px; padding:8px; flex:none;">
+            <div style="height:4px;width:55px;background:rgba(255,255,255,.2);border-radius:2px;margin-bottom:4px;"></div>
+            <div style="height:4px;width:70px;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+          </div>
+          <!-- 4 answer buttons - bigger -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;flex:1;">
+            <div style="background:rgba(94,130,244,.2);border:1px solid rgba(94,130,244,.5);border-radius:6px;display:flex;align-items:center;padding:6px;">
+              <div style="width:14px;height:14px;border-radius:50%;background:#5e82f4;flex:none;margin-right:4px;"></div>
+              <div style="height:4px;flex:1;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;padding:6px;">
+              <div style="width:14px;height:14px;border-radius:50%;background:#f4b04a;flex:none;margin-right:4px;"></div>
+              <div style="height:4px;flex:1;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;padding:6px;">
+              <div style="width:14px;height:14px;border-radius:50%;background:#e05eb4;flex:none;margin-right:4px;"></div>
+              <div style="height:4px;flex:1;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;padding:6px;">
+              <div style="width:14px;height:14px;border-radius:50%;background:#5eb8d4;flex:none;margin-right:4px;"></div>
+              <div style="height:4px;flex:1;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+          </div>
+          <!-- score/status -->
+          <div style="display:flex;justify-content:space-between;align-items:center;flex:none;">
+            <div style="height:4px;width:30px;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            <div style="height:4px;width:20px;background:rgba(120,212,94,.4);border-radius:2px;"></div>
+          </div>
+        </div>
+      </div>
+      <p style="color:rgba(200,212,222,.5);font-size:11px;text-align:center;margin:4px 0 0;">填满屏幕<br/>按钮更大</p>
+    </div>
+    <div class="card-body">
+      <h3>B · 全屏填充（推荐）</h3>
+      <p>内容从上到下铺满屏幕，答题按钮自动 flex 撑高，信息层级清晰。去掉 <code>place-items:center</code>，改为从顶部对齐流式布局。</p>
+    </div>
+  </div>
+
+  <!-- Option C: 卡片放大 -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0e1623; padding:16px; border-radius:8px; min-height:340px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
+      <div style="width:140px; background:#111821; border-radius:16px; border:1px solid rgba(255,255,255,.15); overflow:hidden;">
+        <!-- topbar -->
+        <div style="height:28px; background:rgba(14,22,35,.88); border-bottom:1px solid rgba(255,255,255,.08); display:flex;align-items:center;padding:0 8px;">
+          <div style="width:12px;height:12px;border-radius:3px;background:#78d45e;margin-right:6px;"></div>
+          <div style="height:5px;width:40px;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+        </div>
+        <!-- bigger card, stretch vertically -->
+        <div style="padding:8px; height:230px; display:flex; flex-direction:column;">
+          <div style="background:rgba(17,24,33,.92); border:1px solid rgba(255,255,255,.1); border-radius:6px; padding:8px; flex:1; display:flex; flex-direction:column; gap:6px;">
+            <div style="height:4px;width:55px;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+            <div style="height:4px;width:70px;background:rgba(255,255,255,.15);border-radius:2px;margin-bottom:4px;"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;flex:1;">
+              <div style="background:rgba(94,130,244,.2);border:1px solid rgba(94,130,244,.5);border-radius:6px;display:flex;align-items:center;padding:6px;">
+                <div style="width:14px;height:14px;border-radius:50%;background:#5e82f4;flex:none;margin-right:4px;"></div>
+                <div style="height:4px;flex:1;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+              </div>
+              <div style="background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;padding:6px;">
+                <div style="width:14px;height:14px;border-radius:50%;background:#f4b04a;flex:none;margin-right:4px;"></div>
+                <div style="height:4px;flex:1;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+              </div>
+              <div style="background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;padding:6px;">
+                <div style="width:14px;height:14px;border-radius:50%;background:#e05eb4;flex:none;margin-right:4px;"></div>
+                <div style="height:4px;flex:1;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+              </div>
+              <div style="background:rgba(17,24,33,.8);border:1px solid rgba(255,255,255,.1);border-radius:6px;display:flex;align-items:center;padding:6px;">
+                <div style="width:14px;height:14px;border-radius:50%;background:#5eb8d4;flex:none;margin-right:4px;"></div>
+                <div style="height:4px;flex:1;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="color:rgba(200,212,222,.5);font-size:11px;text-align:center;margin:4px 0 0;">卡片撑满<br/>保留卡片感</p>
+    </div>
+    <div class="card-body">
+      <h3>C · 拉伸卡片</h3>
+      <p>保留单张卡片视觉风格，但让卡片 <code>min-height: calc(100vh - topbar)</code>，内部 flex 撑满。卡片感更强但顶部空间利用有限。</p>
+    </div>
+  </div>
+
+</div>

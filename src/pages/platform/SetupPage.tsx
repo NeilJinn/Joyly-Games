@@ -2,9 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import NavBar from "../../components/platform/NavBar";
-import GamePickerModal from "../../components/platform/GamePickerModal";
 import PaymentModal from "../../components/platform/PaymentModal";
-import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 import Tag from "../../components/ui/Tag";
 import { useConfig } from "../../hooks/useConfig";
@@ -18,18 +16,9 @@ export default function SetupPage() {
   const isSignedIn = useAuthStore((s) => s.isSignedIn);
 
   const [selectedGame, setSelectedGame] = useState<GameConfig | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [paymentOpen, setPaymentOpen] = useState(false);
+  const playableGames = config.games.filter((game) => game.status === "playable");
 
-  // Default to first playable game
-  useEffect(() => {
-    if (!selectedGame && config.games.length > 0) {
-      const first = config.games.find((g) => g.status === "playable") ?? config.games[0];
-      setSelectedGame(first);
-    }
-  }, [config.games, selectedGame]);
-
-  // Redirect unauthenticated users
   useEffect(() => {
     if (!isSignedIn) {
       navigate("/", { replace: true });
@@ -41,9 +30,10 @@ export default function SetupPage() {
   }
 
   function handleSelectGame(gameId: string) {
-    const game = config.games.find((g) => g.id === gameId) ?? null;
+    const game = playableGames.find((g) => g.id === gameId) ?? null;
+    if (!game) return;
     setSelectedGame(game);
-    setPickerOpen(false);
+    setPaymentOpen(true);
   }
 
   if (!isSignedIn) return null;
@@ -63,89 +53,91 @@ export default function SetupPage() {
         className="grid place-items-center p-[34px]"
         style={{ minHeight: "calc(100vh - 52px)" }}
       >
-        <div className="w-[min(980px,100%)] grid gap-[24px]">
-          <div className="flex items-start justify-between gap-[20px] mb-[4px]">
+        <div className="w-[min(1120px,100%)] grid gap-[26px]">
+          <div className="flex items-start justify-between gap-[20px] mb-[2px]">
             <div>
               <h2 className="m-0 text-[24px] font-[800] text-[var(--ink)]">
-                Set Up Room
+                Choose a Game
               </h2>
               <p className="text-[var(--muted)] text-[14px] mt-[6px] mb-0">
-                Choose a game, then open a 2–8 player room.
+                Pick a playable game and we will open payment right away.
               </p>
             </div>
           </div>
 
-          {/* Selected game card */}
-          <button
-            className={[
-              "grid [grid-template-columns:340px_1fr] min-h-[230px] p-[18px] gap-[18px]",
-              "rounded-[8px] border border-white/[.12] bg-[rgba(17,24,33,.92)] [box-shadow:var(--shadow)]",
-              "cursor-pointer text-left w-full",
-              "hover:border-white/[.2] transition-colors",
-            ].join(" ")}
-            type="button"
-            onClick={() => setPickerOpen(true)}
-          >
-            <div
-              className={`game-art rounded-[6px] ${selectedGame ? `game-art-${selectedGame.id}` : ""}`}
-            />
-            <div className="flex flex-col justify-center gap-[10px]">
-              <span className="flex items-center gap-[6px] text-[11px] font-[950] tracking-[.08em] uppercase text-[var(--green)]">
-                <Icon name="game" />
-                Choose game
+          {playableGames.length > 0 ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-[16px]">
+              {playableGames.map((game) => (
+                <button
+                  key={game.id}
+                  className={[
+                    "group grid grid-cols-1 md:[grid-template-columns:240px_1fr] gap-[18px] p-[18px]",
+                    "rounded-[10px] border border-white/[.12] bg-[rgba(17,24,33,.94)] [box-shadow:var(--shadow)]",
+                    "text-left cursor-pointer transition-[transform,border-color,box-shadow,background-color] duration-[180ms]",
+                    "hover:-translate-y-[2px] hover:border-[rgba(160,233,120,.9)] hover:bg-[rgba(28,40,46,.99)]",
+                    "hover:[box-shadow:0_0_0_2px_rgba(160,233,120,.28),0_0_36px_rgba(146,224,109,.18),0_26px_56px_rgba(5,10,18,.5)]",
+                    selectedGame?.id === game.id
+                      ? "border-[rgba(120,212,94,.72)] [box-shadow:0_0_0_2px_rgba(120,212,94,.14),var(--shadow)]"
+                      : "",
+                  ].join(" ")}
+                  type="button"
+                  onClick={() => handleSelectGame(game.id)}
+                >
+                  <div
+                    className={[
+                      `game-art rounded-[8px] game-art-${game.id}`,
+                      "transition-[filter,transform] duration-[180ms]",
+                      "group-hover:brightness-[1.18] group-hover:saturate-[1.08]",
+                    ].join(" ")}
+                  />
+                  <div className="flex flex-col justify-between gap-[16px] min-w-0">
+                    <div className="grid gap-[10px]">
+                      <span className="flex items-center gap-[6px] text-[11px] font-[950] tracking-[.08em] uppercase text-[var(--green)]">
+                        <Icon name="game" />
+                        Choose game
+                      </span>
+                      <Tag>{game.genre}</Tag>
+                      <div>
+                        <h3 className="m-0 text-[24px] font-[800] text-[var(--ink)]">
+                          {game.title}
+                        </h3>
+                        <p className="text-[var(--muted)] text-[14px] mt-[8px] mb-0 leading-[1.5]">
+                          {game.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-end justify-between gap-[16px] flex-wrap">
+                      <div className="flex flex-wrap gap-[8px] text-[12px] text-[var(--muted)]">
+                        <span className="rounded-full border border-white/[.12] px-[10px] py-[6px]">
+                          {game.players} players
+                        </span>
+                        <span className="rounded-full border border-white/[.12] px-[10px] py-[6px]">
+                          {game.mood}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-[10px] p-[20px] rounded-[10px] border border-white/[.1] bg-[rgba(17,24,33,.92)]">
+              <span className="flex items-center gap-[8px] text-[12px] font-[950] tracking-[.08em] uppercase text-[var(--green)]">
+                <Icon name="star" />
+                No playable games
               </span>
-              {selectedGame && (
-                <>
-                  <Tag>{selectedGame.genre}</Tag>
-                  <h3 className="m-0 text-[22px] font-[800] text-[var(--ink)]">
-                    {selectedGame.title}
-                  </h3>
-                  <p className="text-[var(--muted)] text-[14px] m-0">
-                    {selectedGame.players} players · {selectedGame.mood}
-                  </p>
-                </>
-              )}
-              {!selectedGame && (
-                <p className="text-[var(--muted)] text-[14px] m-0">
-                  Tap to choose a game
-                </p>
-              )}
+              <h3 className="m-0 text-[20px] font-[800] text-[var(--ink)]">
+                There is nothing to start right now.
+              </h3>
+              <p className="m-0 text-[14px] text-[var(--muted)]">
+                Add a playable game to the config and this room setup screen will unlock automatically.
+              </p>
             </div>
-          </button>
-
-          {/* Setup summary */}
-          <div className="grid gap-[10px] p-[14px] rounded-[8px] bg-[rgba(23,29,37,.6)] border border-white/[.07]">
-            <div className="flex items-center gap-[10px] text-[14px] text-[var(--muted)]">
-              <Icon name="users" />
-              <span>Players choose their characters on their phones.</span>
-            </div>
-            <div className="flex items-center gap-[10px] text-[14px] text-[var(--muted)]">
-              <Icon name="music" />
-              <span>Bright stage colors are ready for an upbeat music loop.</span>
-            </div>
-          </div>
-
-          {/* CTA */}
-          <Button
-            variant="primary"
-            className="w-full min-h-[52px] text-[16px]"
-            disabled={!selectedGame || selectedGame.status !== "playable"}
-            onClick={() => setPaymentOpen(true)}
-          >
-            <Icon name="card" />
-            <span>Payment · Create room</span>
-          </Button>
+          )}
         </div>
       </section>
 
-      {/* Modals */}
-      <GamePickerModal
-        open={pickerOpen}
-        games={config.games}
-        selectedGameId={selectedGame?.id ?? null}
-        onSelect={handleSelectGame}
-        onClose={() => setPickerOpen(false)}
-      />
       <PaymentModal
         open={paymentOpen}
         game={selectedGame}

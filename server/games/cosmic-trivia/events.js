@@ -32,17 +32,10 @@ export const EVT = {
   SCORE_HIDDEN_STARTED:     "global.score.hidden.started",
   GAME_FINAL_QUESTION_ARMED:"cross.game.final-question-armed",
   GAME_FINAL_QUESTION_ENDED:"cross.game.final-question-ended",
-  PLAYER_DISCONNECTED:      "cross.player.disconnected",
-  PLAYER_RECONNECTED:       "cross.player.reconnected",
 
   // ── Global insert events ────────────────────────────────────────────────────
   // May interrupt playback at any point.
-  HOST_PAUSE:               "global.host.pause",
-  HOST_RESUME:              "global.host.resume",
   SKIP_REQUESTED:           "global.host.skip-requested",
-  NETWORK_UNSTABLE:         "global.network.unstable",
-  NETWORK_RECOVERED:        "global.network.recovered",
-  IDLE_FILLER:              "cross.player.idle.filler",
   STREAK_DETECTED:          "cross.stats.streak.detected",
   RARE_STAT_DETECTED:       "global.stats.rare-stat.detected"
 };

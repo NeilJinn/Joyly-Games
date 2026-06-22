@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galaxy Preferences v2</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #030508;
+  color: #c8d4de;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 28px 16px 64px;
+  min-height: 100vh;
+}
+.page-title {
+  text-align: center;
+  font-size: 13px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: rgba(200,212,222,.3);
+  margin-bottom: 28px;
+}
+.themes-row {
+  display: flex; gap: 28px; justify-content: center;
+  flex-wrap: wrap; align-items: flex-start;
+}
+.theme-col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.theme-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: rgba(200,212,222,.3);
+}
+/* phone shell */
+.phone {
+  width: 280px;
+  border-radius: 34px;
+  border: 1.5px solid rgba(255,255,255,.1);
+  overflow: hidden;
+  box-shadow: 0 0 0 5px rgba(255,255,255,.02), 0 24px 64px rgba(0,0,0,.85);
+  position: relative;
+  flex: none;
+}
+.topbar {
+  height: 46px;
+  display: flex; align-items: center; padding: 0 16px; gap: 8px;
+  position: relative; z-index: 10;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.logo { width: 22px; height: 22px; border-radius: 6px; flex: none; }
+.app-name { font-size: 13px; font-weight: 800; flex: none; }
+.spacer { flex: 1; }
+.chip {
+  font-size: 10px; font-weight: 700;
+  border-radius: 20px; padding: 3px 9px;
+  border: 1px solid; transition: all .3s;
+}
+/* scene */
+.scene {
+  position: relative; height: 480px; overflow: hidden;
+}
+.scene-header {
+  position: absolute; top: 14px; left: 16px; right: 16px; z-index: 6;
+  pointer-events: none;
+}
+.eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 3px; }
+.scene-h2 { font-size: 15px; font-weight: 800; color: #fff; line-height: 1.2; }
+.scene-sub { font-size: 10px; margin-top: 2px; }
+/* nebulae */
+.neb { position: absolute; border-radius: 50%; filter: blur(55px); pointer-events: none; animation: drift linear infinite alternate; }
+@keyframes drift { to { transform: translate(var(--tx,8px),var(--ty,6px)) scale(var(--ts,1.06)); } }
+/* stars */
+.starfield { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.s { position: absolute; border-radius: 50%; background: #fff; animation: twink var(--d,3s) ease-in-out infinite var(--dl,0s); }
+@keyframes twink { 0%,100% { opacity: var(--lo,.3); } 50% { opacity: var(--hi,.8); } }
+/* planet */
+.pw {
+  position: absolute; z-index: 5; cursor: pointer;
+  transform: translate(-50%,-50%);
+  transition: filter .2s;
+}
+.pl {
+  border-radius: 50%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px;
+  border: 1.5px solid rgba(255,255,255,.12);
+  transition: transform .3s cubic-bezier(.34,1.56,.64,1),
+              box-shadow .3s, border-color .3s;
+  position: relative;
+}
+.pl::after {
+  content: ''; position: absolute; inset: -4px; border-radius: 50%;
+  background: inherit; filter: blur(10px); opacity: .3; z-index: -1;
+  transition: opacity .3s, filter .3s;
+}
+.pw.active .pl {
+  transform: scale(1.38);
+  border-color: rgba(255,255,255,.4);
+}
+.pw.active .pl::after { opacity: .8; filter: blur(16px); }
+.pe { font-size: 15px; line-height: 1; pointer-events: none; user-select: none; }
+.pn { font-size: 7.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.7); pointer-events: none; user-select: none; }
+/* click burst */
+@keyframes burst { 0% { transform:translate(-50%,-50%) scale(.4); opacity:.7; } 100% { transform:translate(-50%,-50%) scale(2.5); opacity:0; } }
+.burst { position:absolute; border-radius:50%; pointer-events:none; z-index:4; animation: burst .45s ease-out forwards; }
+/* bottom bar */
+.bottom {
+  padding: 12px 14px 16px;
+  border-top: 1px solid rgba(255,255,255,.06);
+  backdrop-filter: blur(20px);
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.pills { display: flex; flex-wrap: wrap; gap: 5px; min-height: 22px; align-items: center; }
+.pill {
+  padding: 2px 9px; border-radius: 20px;
+  font-size: 10px; font-weight: 700;
+  border: 1px solid; display: flex; align-items: center; gap: 3px;
+  animation: popIn .2s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.empty-hint { font-size: 10px; font-style: italic; color: rgba(200,212,222,.35); }
+.lock {
+  height: 42px; border-radius: 10px; width: 100%; border: none; cursor: pointer;
+  font-size: 13px; font-weight: 800; letter-spacing: .02em;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: opacity .2s, transform .15s, box-shadow .2s;
+}
+.lock:disabled { opacity: .35; cursor: default; }
+.lock:not(:disabled):hover { transform: translateY(-1px); }
+.lock:not(:disabled):active { transform: scale(.98); }
+</style>
+</head>
+<body>
+
+<div class="page-title">点击星球投票 · 三种色系 · 可交互</div>
+
+<div class="themes-row" id="themes-row"></div>
+
+<script>
+// ── Shared planet positions (relative to 280px wide, 480px tall scene) ──
+const PLANETS = [
+  { id:'science', emoji:'🔬', label:'Science', x:.24, y:.34 },
+  { id:'history', emoji:'📜', label:'History', x:.72, y:.25 },
+  { id:'sports',  emoji:'⚽', label:'Sports',  x:.18, y:.60 },
+  { id:'music',   emoji:'🎵', label:'Music',   x:.62, y:.58 },
+  { id:'film',    emoji:'🎬', label:'Film',    x:.40, y:.80 },
+  { id:'tech',    emoji:'💻', label:'Tech',    x:.82, y:.74 },
+];
+const MAX = 3;
+
+// ── Theme definitions ──
+const THEMES = [
+  {
+    id: 'cold',
+    label: 'A · 深空冷色',
+    bg: 'linear-gradient(160deg,#08101e 0%,#030810 100%)',
+    topbarBg: 'rgba(3,8,16,.97)',
+    logoColor: '#5e82f4',
+    logoGlow: 'rgba(94,130,244,.5)',
+    appNameColor: '#c8d4de',
+    chipBg: 'rgba(94,130,244,.1)', chipColor: '#5e82f4', chipBorder: 'rgba(94,130,244,.3)',
+    eyebrowColor: '#5e82f4',
+    subColor: 'rgba(200,212,222,.4)',
+    nebulae: [
+      { w:200,h:200, bg:'rgba(94,130,244,.12)', t:-50, l:-30, dur:'13s', tx:'12px', ty:'8px', ts:1.07 },
+      { w:160,h:160, bg:'rgba(168,85,247,.09)', t:'40%', l:'50%', dur:'17s', tx:'-8px', ty:'14px', ts:1.05 },
+    ],
+    bottomBg: 'rgba(3,8,16,.94)',
+    lockBg: 'linear-gradient(135deg,#5e82f4,#3d5fd4)',
+    lockGlow: 'rgba(94,130,244,.3)',
+    lockColor: '#fff',
+    lockText: '🚀 Launch My Round',
+    planets: [
+      { id:'science', color:'#5e82f4', glow:'rgba(94,130,244,.6)',  grad:'radial-gradient(circle at 35% 30%, #8fa8ff 0%, #5e82f4 45%, #2a3d8a 100%)' },
+      { id:'history', color:'#a78bfa', glow:'rgba(167,139,250,.55)', grad:'radial-gradient(circle at 35% 30%, #c4b5fd 0%, #a78bfa 45%, #5b3dc9 100%)' },
+      { id:'sports',  color:'#38bdf8', glow:'rgba(56,189,248,.55)',  grad:'radial-gradient(circle at 35% 30%, #7dd3fc 0%, #38bdf8 45%, #0369a1 100%)' },
+      { id:'music',   color:'#818cf8', glow:'rgba(129,140,248,.5)',  grad:'radial-gradient(circle at 35% 30%, #a5b4fc 0%, #818cf8 45%, #3730a3 100%)' },
+      { id:'film',    color:'#67e8f9', glow:'rgba(103,232,249,.5)',  grad:'radial-gradient(circle at 35% 30%, #a5f3fc 0%, #67e8f9 45%, #0e7490 100%)' },
+      { id:'tech',    color:'#93c5fd', glow:'rgba(147,197,253,.5)',  grad:'radial-gradient(circle at 35% 30%, #bfdbfe 0%, #93c5fd 45%, #1d4ed8 100%)' },
+    ],
+    pillFn: (p) => { const t = THEMES[0].planets.find(x=>x.id===p.id); return { bg:`${t.glow.replace('.6','').replace('.55','').replace('.5','')}.12)`, color:t.color, border:`${t.glow.replace('.6','').replace('.55','').replace('.5','')}.35)` }; },
+  },
+  {
+    id: 'fire',
+    label: 'B · 星云暖色',
+    bg: 'linear-gradient(160deg,#140a0e 0%,#0a0509 100%)',
+    topbarBg: 'rgba(10,5,9,.97)',
+    logoColor: '#f97316',
+    logoGlow: 'rgba(249,115,22,.5)',
+    appNameColor: '#e8d5c4',
+    chipBg: 'rgba(249,115,22,.1)', chipColor: '#f97316', chipBorder: 'rgba(249,115,22,.3)',
+    eyebrowColor: '#f97316',
+    subColor: 'rgba(220,180,160,.4)',
+    nebulae: [
+      { w:220,h:220, bg:'rgba(249,115,22,.1)', t:-60, l:-40, dur:'14s', tx:'14px', ty:'6px', ts:1.06 },
+      { w:150,h:150, bg:'rgba(244,63,94,.09)', t:'50%', l:'55%', dur:'11s', tx:'-10px', ty:'-12px', ts:1.08 },
+    ],
+    bottomBg: 'rgba(10,5,9,.94)',
+    lockBg: 'linear-gradient(135deg,#f97316,#c2410c)',
+    lockGlow: 'rgba(249,115,22,.35)',
+    lockColor: '#fff',
+    lockText: '🔥 Lock In',
+    planets: [
+      { id:'science', color:'#f97316', glow:'rgba(249,115,22,.6)',  grad:'radial-gradient(circle at 35% 30%, #fed7aa 0%, #f97316 45%, #7c2d12 100%)' },
+      { id:'history', color:'#fb923c', glow:'rgba(251,146,60,.55)', grad:'radial-gradient(circle at 35% 30%, #fde68a 0%, #fb923c 45%, #92400e 100%)' },
+      { id:'sports',  color:'#f43f5e', glow:'rgba(244,63,94,.55)',  grad:'radial-gradient(circle at 35% 30%, #fda4af 0%, #f43f5e 45%, #881337 100%)' },
+      { id:'music',   color:'#e879f9', glow:'rgba(232,121,249,.5)', grad:'radial-gradient(circle at 35% 30%, #f5d0fe 0%, #e879f9 45%, #701a75 100%)' },
+      { id:'film',    color:'#fbbf24', glow:'rgba(251,191,36,.5)',  grad:'radial-gradient(circle at 35% 30%, #fef08a 0%, #fbbf24 45%, #78350f 100%)' },
+      { id:'tech',    color:'#fb7185', glow:'rgba(251,113,133,.5)', grad:'radial-gradient(circle at 35% 30%, #fecdd3 0%, #fb7185 45%, #9f1239 100%)' },
+    ],
+    pillFn: (p) => { const t = THEMES[1].planets.find(x=>x.id===p.id); return { bg:`${t.glow.replace('.6','').replace('.55','').replace('.5','')}.12)`, color:t.color, border:`${t.glow.replace('.6','').replace('.55','').replace('.5','')}.35)` }; },
+  },
+  {
+    id: 'aurora',
+    label: 'C · 极光混色',
+    bg: 'linear-gradient(160deg,#070d12 0%,#04080e 100%)',
+    topbarBg: 'rgba(4,8,14,.97)',
+    logoColor: '#34d399',
+    logoGlow: 'rgba(52,211,153,.5)',
+    appNameColor: '#d1fae5',
+    chipBg: 'rgba(52,211,153,.1)', chipColor: '#34d399', chipBorder: 'rgba(52,211,153,.3)',
+    eyebrowColor: '#34d399',
+    subColor: 'rgba(180,220,200,.4)',
+    nebulae: [
+      { w:200,h:200, bg:'rgba(52,211,153,.1)', t:-50, l:-20, dur:'15s', tx:'10px', ty:'10px', ts:1.07 },
+      { w:170,h:170, bg:'rgba(56,189,248,.08)', t:'35%', l:'52%', dur:'12s', tx:'-14px', ty:'8px', ts:1.05 },
+      { w:130,h:130, bg:'rgba(167,139,250,.08)', t:'65%', l:'15%', dur:'10s', tx:'8px', ty:'-10px', ts:1.06 },
+    ],
+    bottomBg: 'rgba(4,8,14,.94)',
+    lockBg: 'linear-gradient(135deg,#34d399,#059669)',
+    lockGlow: 'rgba(52,211,153,.3)',
+    lockColor: '#022c22',
+    lockText: '✨ Launch My Round',
+    planets: [
+      { id:'science', color:'#34d399', glow:'rgba(52,211,153,.6)',  grad:'radial-gradient(circle at 35% 30%, #a7f3d0 0%, #34d399 45%, #064e3b 100%)' },
+      { id:'history', color:'#38bdf8', glow:'rgba(56,189,248,.55)', grad:'radial-gradient(circle at 35% 30%, #bae6fd 0%, #38bdf8 45%, #0c4a6e 100%)' },
+      { id:'sports',  color:'#a78bfa', glow:'rgba(167,139,250,.55)',grad:'radial-gradient(circle at 35% 30%, #ddd6fe 0%, #a78bfa 45%, #4c1d95 100%)' },
+      { id:'music',   color:'#f472b6', glow:'rgba(244,114,182,.5)', grad:'radial-gradient(circle at 35% 30%, #fbcfe8 0%, #f472b6 45%, #831843 100%)' },
+      { id:'film',    color:'#fbbf24', glow:'rgba(251,191,36,.5)',  grad:'radial-gradient(circle at 35% 30%, #fef08a 0%, #fbbf24 45%, #78350f 100%)' },
+      { id:'tech',    color:'#4ade80', glow:'rgba(74,222,128,.5)',  grad:'radial-gradient(circle at 35% 30%, #bbf7d0 0%, #4ade80 45%, #14532d 100%)' },
+    ],
+    pillFn: (p) => { const t = THEMES[2].planets.find(x=>x.id===p.id); return { bg:`${t.glow.replace('.6','').replace('.55','').replace('.5','')}.12)`, color:t.color, border:`${t.glow.replace('.6','').replace('.55','').replace('.5','')}.35)` }; },
+  },
+];
+
+// ── Build each theme ──
+const row = document.getElementById('themes-row');
+THEMES.forEach(theme => {
+  const selected = new Set();
+  const W = 280, H = 480;
+
+  const col = document.createElement('div');
+  col.className = 'theme-col';
+  col.innerHTML = `<div class="theme-label">${theme.label}</div>`;
+
+  // Phone
+  const phone = document.createElement('div');
+  phone.className = 'phone';
+
+  // Topbar
+  const tb = document.createElement('div');
+  tb.className = 'topbar';
+  tb.style.background = theme.topbarBg;
+  tb.innerHTML = `
+    <div class="logo" style="background:${theme.logoColor};box-shadow:0 0 8px ${theme.logoGlow};"></div>
+    <span class="app-name" style="color:${theme.appNameColor};">Joyly</span>
+    <div class="spacer"></div>
+    <div class="chip" id="chip-${theme.id}" style="background:${theme.chipBg};color:${theme.chipColor};border-color:${theme.chipBorder};">0 / ${MAX}</div>
+  `;
+  phone.appendChild(tb);
+
+  // Scene
+  const scene = document.createElement('div');
+  scene.className = 'scene';
+  scene.style.background = theme.bg;
+
+  // Nebulae
+  theme.nebulae.forEach(n => {
+    const el = document.createElement('div');
+    el.className = 'neb';
+    el.style.cssText = `width:${n.w}px;height:${n.h}px;background:${n.bg};top:${n.t};left:${n.l};animation-duration:${n.dur};--tx:${n.tx};--ty:${n.ty};--ts:${n.ts};`;
+    scene.appendChild(el);
+  });
+
+  // Starfield
+  const sf = document.createElement('div');
+  sf.className = 'starfield';
+  for (let i = 0; i < 55; i++) {
+    const s = document.createElement('div');
+    s.className = 's';
+    const sz = Math.random() < .25 ? 2 : 1;
+    const lo = (.15+Math.random()*.4).toFixed(2);
+    const hi = Math.min(1, +lo+.3+Math.random()*.2).toFixed(2);
+    s.style.cssText = `width:${sz}px;height:${sz}px;top:${(Math.random()*100).toFixed(1)}%;left:${(Math.random()*100).toFixed(1)}%;--d:${(2+Math.random()*4).toFixed(1)}s;--dl:-${(Math.random()*5).toFixed(1)}s;--lo:${lo};--hi:${hi};opacity:${lo};`;
+    sf.appendChild(s);
+  }
+  scene.appendChild(sf);
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'scene-header';
+  hdr.innerHTML = `
+    <div class="eyebrow" style="color:${theme.eyebrowColor};">Your Universe</div>
+    <div class="scene-h2">Vote for your topics</div>
+    <div class="scene-sub" style="color:${theme.subColor};">Tap up to ${MAX} · your picks shape the round</div>
+  `;
+  scene.appendChild(hdr);
+
+  // Planets
+  PLANETS.forEach(pd => {
+    const td = theme.planets.find(x => x.id === pd.id);
+    const px = pd.x * W, py = pd.y * H;
+    const size = 58;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'pw';
+    wrap.id = `${theme.id}-${pd.id}`;
+    wrap.style.left = px + 'px';
+    wrap.style.top = py + 'px';
+    wrap.innerHTML = `
+      <div class="pl" style="width:${size}px;height:${size}px;background:${td.grad};box-shadow:0 0 0 1px ${td.glow.replace('.6','').replace('.55','').replace('.5','')}.25),0 0 16px ${td.glow.replace('.6','').replace('.55','').replace('.5','')}.18),0 4px 14px rgba(0,0,0,.6);">
+        <div class="pe">${pd.emoji}</div>
+        <div class="pn">${pd.label}</div>
+      </div>
+    `;
+    wrap.addEventListener('click', (e) => {
+      const wasActive = selected.has(pd.id);
+      if (!wasActive && selected.size >= MAX) return;
+      if (wasActive) {
+        selected.delete(pd.id);
+        wrap.classList.remove('active');
+      } else {
+        selected.add(pd.id);
+        wrap.classList.add('active');
+        // burst
+        const b = document.createElement('div');
+        b.className = 'burst';
+        b.style.cssText = `width:${size*1.5}px;height:${size*1.5}px;background:${td.glow};left:50%;top:50%;`;
+        wrap.appendChild(b);
+        setTimeout(() => b.remove(), 500);
+      }
+      updateTheme(theme, selected);
+    });
+    scene.appendChild(wrap);
+  });
+
+  phone.appendChild(scene);
+
+  // Bottom
+  const bot = document.createElement('div');
+  bot.className = 'bottom';
+  bot.style.background = theme.bottomBg;
+  bot.innerHTML = `
+    <div class="pills" id="pills-${theme.id}"><span class="empty-hint">Tap a topic above…</span></div>
+    <button class="lock" id="lock-${theme.id}" disabled style="background:${theme.lockBg};box-shadow:0 5px 18px ${theme.lockGlow};color:${theme.lockColor};">
+      ${theme.lockText}
+    </button>
+  `;
+  phone.appendChild(bot);
+  col.appendChild(phone);
+  row.appendChild(col);
+});
+
+function updateTheme(theme, selected) {
+  // chip
+  const chip = document.getElementById(`chip-${theme.id}`);
+  chip.textContent = `${selected.size} / ${MAX}`;
+
+  // pills
+  const pillsEl = document.getElementById(`pills-${theme.id}`);
+  if (selected.size === 0) {
+    pillsEl.innerHTML = '<span class="empty-hint">Tap a topic above…</span>';
+  } else {
+    pillsEl.innerHTML = '';
+    selected.forEach(id => {
+      const pd = PLANETS.find(x => x.id === id);
+      const td = theme.planets.find(x => x.id === id);
+      const pill = document.createElement('div');
+      pill.className = 'pill';
+      // simpler glow reference
+      const c = td.color;
+      const g = td.glow;
+      pill.style.cssText = `background:${g.replace(/[\d.]+\)$/,'.12)')};color:${c};border-color:${g.replace(/[\d.]+\)$/,'.35)')};`;
+      pill.innerHTML = `${pd.emoji} ${pd.label}`;
+      pillsEl.appendChild(pill);
+    });
+  }
+
+  // lock
+  const lock = document.getElementById(`lock-${theme.id}`);
+  lock.disabled = selected.size === 0;
+}
+</script>
+</body>
+</html>

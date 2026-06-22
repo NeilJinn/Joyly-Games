@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>兴趣选择界面设计</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080c18;
+    color: #c8d4de;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+  h1 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: rgba(200,212,222,.6); margin-bottom: 32px; line-height: 1.5; }
+
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .col-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(200,212,222,.4);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  /* === PHONE FRAME === */
+  .phone {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+    background: #0a0b14;
+    border-radius: 32px;
+    border: 1px solid rgba(255,255,255,.1);
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,.7);
+    position: relative;
+  }
+  .phone-topbar {
+    height: 48px;
+    background: rgba(9,13,18,.95);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+  }
+  .phone-topbar .logo {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    background: #78d45e;
+    flex: none;
+    box-shadow: 0 0 8px rgba(120,212,94,.4);
+  }
+  .phone-topbar .title-bar {
+    height: 8px; width: 70px;
+    background: rgba(255,255,255,.15);
+    border-radius: 4px;
+  }
+  .phone-body {
+    padding: 16px;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+  }
+
+  /* ── CURRENT (before) ── */
+  .before-body { background: #111821; }
+
+  .before-header h2 {
+    font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 4px;
+  }
+  .before-section-label {
+    font-size: 11px; font-weight: 700; color: #c8d4de; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .before-section-label span { font-weight: 400; color: rgba(200,212,222,.5); }
+  .before-chips {
+    display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px;
+  }
+  .before-chip {
+    padding: 0 11px;
+    height: 30px;
+    border-radius: 99px;
+    border: 1px solid rgba(255,255,255,.15);
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(200,212,222,.6);
+    display: flex; align-items: center;
+    cursor: pointer;
+  }
+  .before-chip.active {
+    border-color: #5eb8d4;
+    background: rgba(94,184,212,.15);
+    color: #5eb8d4;
+  }
+  .before-chip.active-green {
+    border-color: #78d45e;
+    background: rgba(120,212,94,.15);
+    color: #78d45e;
+  }
+  .before-btn {
+    height: 42px;
+    border-radius: 8px;
+    background: #78d45e;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    color: #080c18;
+    cursor: pointer;
+    width: 100%;
+    margin-top: auto;
+  }
+
+  /* ── AFTER: OPTION 1 — Grid Cards ── */
+  .after1-body {
+    background: linear-gradient(180deg, #0d1829 0%, #080c18 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .after1-body::before {
+    content: '';
+    position: absolute;
+    width: 140px; height: 140px;
+    background: rgba(99,102,241,.12);
+    border-radius: 50%;
+    top: -40px; right: -30px;
+    filter: blur(40px);
+    pointer-events: none;
+  }
+  .after1-body::after {
+    content: '';
+    position: absolute;
+    width: 100px; height: 100px;
+    background: rgba(120,212,94,.08);
+    border-radius: 50%;
+    bottom: 20px; left: -20px;
+    filter: blur(30px);
+    pointer-events: none;
+  }
+  .after1-header {
+    position: relative; z-index: 1;
+  }
+  .after1-header .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: #78d45e;
+    margin-bottom: 4px;
+  }
+  .after1-header h2 {
+    font-size: 17px; font-weight: 800; color: #fff;
+  }
+
+  .after1-section {
+    position: relative; z-index: 1;
+  }
+  .after1-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: rgba(200,212,222,.45);
+    margin-bottom: 8px;
+  }
+  /* Category: 2-column grid cards */
+  .after1-cat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .after1-cat-card {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    padding: 10px 10px 8px;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .after1-cat-card.active {
+    background: rgba(120,212,94,.1);
+    border-color: rgba(120,212,94,.45);
+    box-shadow: 0 0 12px rgba(120,212,94,.1), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .after1-cat-card .cat-icon {
+    font-size: 16px; line-height: 1;
+  }
+  .after1-cat-card .cat-name {
+    font-size: 11px; font-weight: 700; color: #c8d4de;
+  }
+  .after1-cat-card.active .cat-name { color: #78d45e; }
+  /* Tags: larger pill chips with better touch targets */
+  .after1-tag-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .after1-tag {
+    padding: 0 12px;
+    height: 32px;
+    border-radius: 99px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.04);
+    font-size: 12px; font-weight: 600;
+    color: rgba(200,212,222,.65);
+    cursor: pointer;
+    display: flex; align-items: center;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .after1-tag.active {
+    border-color: rgba(94,184,212,.5);
+    background: rgba(94,184,212,.12);
+    color: #5eb8d4;
+    box-shadow: 0 0 8px rgba(94,184,212,.12), inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  .after1-btn {
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #78d45e, #5eb87a);
+    border: none;
+    font-size: 13px; font-weight: 800;
+    color: #080c18;
+    cursor: pointer;
+    width: 100%;
+    margin-top: auto;
+    position: relative; z-index: 1;
+    box-shadow: 0 4px 16px rgba(120,212,94,.25);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+
+  /* ── AFTER: OPTION 2 — Full-width Rows ── */
+  .after2-body {
+    background: linear-gradient(180deg, #0d1829 0%, #080c18 100%);
+    position: relative; overflow: hidden;
+  }
+  .after2-body::before {
+    content: '';
+    position: absolute;
+    width: 160px; height: 160px;
+    background: rgba(94,184,212,.1);
+    border-radius: 50%;
+    top: -50px; left: -40px;
+    filter: blur(50px);
+    pointer-events: none;
+  }
+  .after2-header {
+    position: relative; z-index: 1;
+  }
+  .after2-header .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: #78d45e; margin-bottom: 4px;
+  }
+  .after2-header h2 {
+    font-size: 17px; font-weight: 800; color: #fff;
+  }
+  .after2-section { position: relative; z-index: 1; }
+  .after2-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: rgba(200,212,222,.45); margin-bottom: 8px;
+  }
+  /* full-width rows with left emoji/icon and right check */
+  .after2-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.07);
+    background: rgba(255,255,255,.03);
+    margin-bottom: 5px;
+    cursor: pointer;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .after2-row.active {
+    border-color: rgba(120,212,94,.4);
+    background: rgba(120,212,94,.08);
+    box-shadow: 0 0 10px rgba(120,212,94,.08), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .after2-row.active-cyan {
+    border-color: rgba(94,184,212,.4);
+    background: rgba(94,184,212,.08);
+    box-shadow: 0 0 10px rgba(94,184,212,.08);
+  }
+  .after2-row-icon { font-size: 14px; flex: none; }
+  .after2-row-name { flex: 1; font-size: 12px; font-weight: 700; color: #c8d4de; }
+  .after2-row.active .after2-row-name { color: #78d45e; }
+  .after2-row.active-cyan .after2-row-name { color: #5eb8d4; }
+  .after2-check {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,.15);
+    flex: none;
+  }
+  .after2-row.active .after2-check,
+  .after2-row.active-cyan .after2-check {
+    background: #78d45e;
+    border-color: #78d45e;
+  }
+  .after2-row.active-cyan .after2-check { background: #5eb8d4; border-color: #5eb8d4; }
+  .after2-btn {
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #78d45e, #5eb87a);
+    border: none;
+    font-size: 13px; font-weight: 800;
+    color: #080c18;
+    cursor: pointer;
+    width: 100%;
+    margin-top: auto;
+    position: relative; z-index: 1;
+    box-shadow: 0 4px 16px rgba(120,212,94,.25);
+  }
+
+  /* Selection indicator */
+  .pick-badge {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 6px 0 2px;
+    color: rgba(200,212,222,.35);
+  }
+
+  /* click to select overlay */
+  .col-wrapper {
+    cursor: pointer;
+    position: relative;
+    border-radius: 36px;
+    transition: transform .15s;
+  }
+  .col-wrapper:hover { transform: translateY(-2px); }
+  .col-wrapper.selected .phone {
+    border-color: rgba(120,212,94,.5);
+    box-shadow: 0 0 0 2px rgba(120,212,94,.3), 0 12px 40px rgba(0,0,0,.7);
+  }
+  .col-wrapper.selected::after {
+    content: '✓ 已选';
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: 700;
+    color: #78d45e;
+    letter-spacing: .05em;
+  }
+  .select-indicator {
+    display: none;
+    position: absolute;
+    top: -10px; right: -10px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #78d45e;
+    color: #080c18;
+    font-size: 13px;
+    font-weight: 900;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.5);
+    z-index: 10;
+  }
+  .col-wrapper.selected .select-indicator { display: flex; }
+
+  @media (max-width: 640px) {
+    .comparison { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<h1>兴趣选择界面 — 重设计方向</h1>
+<p class="subtitle">当前：小药丸堆叠，点击区域小，视觉层次弱。以下两种方案都基于磨砂玻璃宇宙风格。</p>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:32px;max-width:920px;margin:0 auto;padding-bottom:40px;align-items:start;">
+
+  <!-- BEFORE -->
+  <div>
+    <div class="col-label">现状（Before）</div>
+    <div class="phone">
+      <div class="phone-topbar">
+        <div class="logo"></div>
+        <div class="title-bar"></div>
+      </div>
+      <div class="phone-body before-body">
+        <div class="before-header">
+          <h2>Pick your choices</h2>
+        </div>
+        <div>
+          <div class="before-section-label">Categories <span>(pick up to 3)</span></div>
+          <div class="before-chips">
+            <div class="before-chip active-green">Science</div>
+            <div class="before-chip">History</div>
+            <div class="before-chip active-green">Sports</div>
+            <div class="before-chip">Music</div>
+            <div class="before-chip">Film</div>
+            <div class="before-chip">Tech</div>
+          </div>
+        </div>
+        <div>
+          <div class="before-section-label">Keywords <span>(pick up to 5)</span></div>
+          <div class="before-chips">
+            <div class="before-chip active">space</div>
+            <div class="before-chip">ancient</div>
+            <div class="before-chip active">90s</div>
+            <div class="before-chip">extreme</div>
+            <div class="before-chip">AI</div>
+            <div class="before-chip">movies</div>
+            <div class="before-chip active">pop</div>
+            <div class="before-chip">indie</div>
+          </div>
+        </div>
+        <button class="before-btn">Lock in choices</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION 1: Grid Cards -->
+  <div class="col-wrapper" id="opt1" onclick="selectOpt('opt1','grid-cards')">
+    <div class="select-indicator">✓</div>
+    <div class="col-label">方案一 · 网格卡片</div>
+    <div class="phone">
+      <div class="phone-topbar">
+        <div class="logo"></div>
+        <div class="title-bar"></div>
+      </div>
+      <div class="phone-body after1-body">
+        <div class="after1-header">
+          <div class="eyebrow">Preferences</div>
+          <h2>Pick your vibe</h2>
+        </div>
+        <div class="after1-section">
+          <div class="after1-section-label">Categories · up to 3</div>
+          <div class="after1-cat-grid">
+            <div class="after1-cat-card active">
+              <div class="cat-icon">🔬</div>
+              <div class="cat-name">Science</div>
+            </div>
+            <div class="after1-cat-card">
+              <div class="cat-icon">📜</div>
+              <div class="cat-name">History</div>
+            </div>
+            <div class="after1-cat-card active">
+              <div class="cat-icon">⚽</div>
+              <div class="cat-name">Sports</div>
+            </div>
+            <div class="after1-cat-card">
+              <div class="cat-icon">🎵</div>
+              <div class="cat-name">Music</div>
+            </div>
+          </div>
+        </div>
+        <div class="after1-section">
+          <div class="after1-section-label">Keywords · up to 5</div>
+          <div class="after1-tag-grid">
+            <div class="after1-tag active">🚀 space</div>
+            <div class="after1-tag">ancient</div>
+            <div class="after1-tag active">90s</div>
+            <div class="after1-tag">extreme</div>
+            <div class="after1-tag active">✨ pop</div>
+            <div class="after1-tag">AI</div>
+            <div class="after1-tag">indie</div>
+          </div>
+        </div>
+        <button class="after1-btn">🔒 Lock in choices</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OPTION 2: Full-width Rows -->
+  <div class="col-wrapper" id="opt2" onclick="selectOpt('opt2','full-rows')">
+    <div class="select-indicator">✓</div>
+    <div class="col-label">方案二 · 全宽列表行</div>
+    <div class="phone">
+      <div class="phone-topbar">
+        <div class="logo"></div>
+        <div class="title-bar"></div>
+      </div>
+      <div class="phone-body after2-body">
+        <div class="after2-header">
+          <div class="eyebrow">Preferences</div>
+          <h2>Pick your vibe</h2>
+        </div>
+        <div class="after2-section">
+          <div class="after2-section-label">Categories · up to 3</div>
+          <div class="after2-row active">
+            <div class="after2-row-icon">🔬</div>
+            <div class="after2-row-name">Science</div>
+            <div class="after2-check"></div>
+          </div>
+          <div class="after2-row">
+            <div class="after2-row-icon">📜</div>
+            <div class="after2-row-name">History</div>
+            <div class="after2-check"></div>
+          </div>
+          <div class="after2-row active">
+            <div class="after2-row-icon">⚽</div>
+            <div class="after2-row-name">Sports</div>
+            <div class="after2-check"></div>
+          </div>
+          <div class="after2-row">
+            <div class="after2-row-icon">🎵</div>
+            <div class="after2-row-name">Music</div>
+            <div class="after2-check"></div>
+          </div>
+        </div>
+        <div class="after2-section">
+          <div class="after2-section-label">Keywords · up to 5</div>
+          <div class="after2-row active-cyan" style="margin-bottom:5px;">
+            <div class="after2-row-icon">🚀</div>
+            <div class="after2-row-name">space</div>
+            <div class="after2-check"></div>
+          </div>
+          <div class="after2-row" style="margin-bottom:5px;">
+            <div class="after2-row-icon">🏛️</div>
+            <div class="after2-row-name">ancient</div>
+            <div class="after2-check"></div>
+          </div>
+          <div class="after2-row active-cyan" style="margin-bottom:5px;">
+            <div class="after2-row-icon">📼</div>
+            <div class="after2-row-name">90s</div>
+            <div class="after2-check"></div>
+          </div>
+        </div>
+        <button class="after2-btn">Lock in choices</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectOpt(id, choice) {
+  document.querySelectorAll('.col-wrapper').forEach(el => el.classList.remove('selected'));
+  document.getElementById(id).classList.add('selected');
+  if (window.recordChoice) recordChoice(choice, id);
+}
+</script>
+</body>
+</html>

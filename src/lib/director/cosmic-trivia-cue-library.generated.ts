@@ -63,113 +63,156 @@ export const DIRECTOR_CUE_REGISTRY = {
       ]
     },
     {
-      "cueKey": "cross.network.delay.filler",
+      "cueKey": "cross.stats.streak.2-question-wrong-streak",
       "scope": "cross",
-      "domain": "network",
+      "domain": "stats",
       "eventPath": [
-        "delay",
-        "filler"
+        "streak",
+        "2-question-wrong-streak"
       ],
-      "purpose": "网络或加载等待时的跨阶段填充",
+      "purpose": "连对两题",
       "policy": {},
       "trigger": {
         "mode": "manual",
-        "phase": "",
+        "phase": "stats",
         "eventKey": "",
         "priority": 100,
         "enabled": true
       },
       "variants": [
         {
-          "id": "cross.network.delay.filler.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/cross/network/delay/filler/line-01.mp3",
-          "text": "The signal is squeezing through an asteroid belt. Very normal technology.",
-          "placeholder": false,
-          "regenerate": false
-        }
-      ]
-    },
-    {
-      "cueKey": "cross.player.disconnected",
-      "scope": "cross",
-      "domain": "player",
-      "eventPath": [
-        "disconnected"
-      ],
-      "purpose": "玩家断线时的轻量提示",
-      "policy": {},
-      "trigger": {
-        "mode": "manual",
-        "phase": "",
-        "eventKey": "",
-        "priority": 100,
-        "enabled": true
-      },
-      "variants": [
-        {
-          "id": "cross.player.disconnected.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/cross/player/disconnected/line-01.mp3",
-          "text": "A player blipped out for a moment. Classic space internet behavior.",
-          "placeholder": false,
-          "regenerate": false
-        }
-      ]
-    },
-    {
-      "cueKey": "cross.player.idle.filler",
-      "scope": "cross",
-      "domain": "player",
-      "eventPath": [
-        "idle",
-        "filler"
-      ],
-      "purpose": "等待玩家操作时的跨阶段填充",
-      "policy": {},
-      "trigger": {
-        "mode": "manual",
-        "phase": "",
-        "eventKey": "",
-        "priority": 100,
-        "enabled": true
-      },
-      "variants": [
-        {
-          "id": "cross.player.idle.filler.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/cross/player/idle/filler/line-01.mp3",
-          "text": "Still waiting on a few taps. No rush, except for the very real rush.",
+          "id": "cross.stats.streak.2-question-wrong-streak.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/2-question-wrong-streak/line-01.mp3",
+          "text": "Good job! Someone got 2 streaks",
           "placeholder": false,
           "regenerate": false
         },
         {
-          "id": "cross.player.idle.filler.line-02",
-          "path": "/games/cosmic-trivia/audio/host/director/cross/player/idle/filler/line-02.mp3",
-          "text": "Someone is still choosing. Maybe it's wisdom. Maybe it's snacks.",
+          "id": "cross.stats.streak.2-question-wrong-streak.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/2-question-wrong-streak/line-02.mp3",
+          "text": "Vala! A steak!",
           "placeholder": false,
-          "regenerate": true
+          "regenerate": false
         }
       ]
     },
     {
-      "cueKey": "cross.player.reconnected",
+      "cueKey": "cross.stats.streak.3-question-right-streak",
       "scope": "cross",
-      "domain": "player",
+      "domain": "stats",
       "eventPath": [
-        "reconnected"
+        "streak",
+        "3-question-right-streak"
       ],
-      "purpose": "玩家重连时的轻量提示",
+      "purpose": "连对三题",
       "policy": {},
       "trigger": {
         "mode": "manual",
-        "phase": "",
+        "phase": "stats",
         "eventKey": "",
         "priority": 100,
         "enabled": true
       },
       "variants": [
         {
-          "id": "cross.player.reconnected.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/cross/player/reconnected/line-01.mp3",
-          "text": "They're back. The signal survived its side quest.",
+          "id": "cross.stats.streak.3-question-right-streak.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/3-question-right-streak/line-01.mp3",
+          "text": "Someone has a streak going. I won't say who, but the scoreboard is whispering.",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "cross.stats.streak.3-question-right-streak.line-02",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/3-question-right-streak/line-02.mp3",
+          "text": "Wow someone is on fire, watch out",
+          "placeholder": false,
+          "regenerate": false
+        },
+        {
+          "id": "cross.stats.streak.3-question-right-streak.line-03",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/3-question-right-streak/line-03.mp3",
+          "text": "Oh ohh, come on, three times in a row?",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.stats.streak.3-question-rightandwrong-streak",
+      "scope": "cross",
+      "domain": "stats",
+      "eventPath": [
+        "streak",
+        "3-question-rightandwrong-streak"
+      ],
+      "purpose": "三连对和三连错同时触发",
+      "policy": {},
+      "trigger": {
+        "mode": "phase-entry",
+        "phase": "stats",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "cross.stats.streak.3-question-rightandwrong-streak.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/3-question-rightandwrong-streak/line-01.mp3",
+          "text": "Oh ohh while someone got a streak with the right answers, someone is wrong  3 times in a row....I won't mention names...but...hmmmm",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.stats.streak.3-question-wrong-streak",
+      "scope": "cross",
+      "domain": "stats",
+      "eventPath": [
+        "streak",
+        "3-question-wrong-streak"
+      ],
+      "purpose": "连错三题",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "stats",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "cross.stats.streak.3-question-wrong-streak.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/3-question-wrong-streak/line-01.mp3",
+          "text": "Oh ohh three times now",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "cross.stats.streak.4more-question-right-streak",
+      "scope": "cross",
+      "domain": "stats",
+      "eventPath": [
+        "streak",
+        "4more-question-right-streak"
+      ],
+      "purpose": "连对四题以上",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "stats",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "cross.stats.streak.4more-question-right-streak.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/4more-question-right-streak/line-01.mp3",
+          "text": "Mammaaa, is on fire! [whisper] or Papi [laugh]",
           "placeholder": false,
           "regenerate": false
         }
@@ -183,7 +226,25 @@ export const DIRECTOR_CUE_REGISTRY = {
         "streak",
         "detected"
       ],
-      "purpose": "连对或连错统计插播",
+      "purpose": "连对两题（通用连胜提示）",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": []
+    },
+    {
+      "cueKey": "global.connector.and",
+      "scope": "global",
+      "domain": "connector",
+      "eventPath": [
+        "and"
+      ],
+      "purpose": "过渡词，rank-1到rank-2之间",
       "policy": {},
       "trigger": {
         "mode": "manual",
@@ -194,9 +255,35 @@ export const DIRECTOR_CUE_REGISTRY = {
       },
       "variants": [
         {
-          "id": "cross.stats.streak.detected.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/cross/stats/streak/detected/line-01.mp3",
-          "text": "Someone has a streak going. I won't say who, but the scoreboard is whispering.",
+          "id": "global.connector.and.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/connector/and/line-01.mp3",
+          "text": "...and",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "global.connector.lastly",
+      "scope": "global",
+      "domain": "connector",
+      "eventPath": [
+        "lastly"
+      ],
+      "purpose": "过渡词，rank-2到rank-3之间",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "global.connector.lastly.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/global/connector/lastly/line-01.mp3",
+          "text": "Lastly,",
           "placeholder": false,
           "regenerate": false
         }
@@ -223,137 +310,6 @@ export const DIRECTOR_CUE_REGISTRY = {
           "id": "global.game.default.line-01",
           "path": "/games/cosmic-trivia/audio/host/director/global/game/default/line-01.mp3",
           "text": "All right, space cadets, let's keep this quiz comet moving.",
-          "placeholder": false,
-          "regenerate": false
-        }
-      ]
-    },
-    {
-      "cueKey": "global.host.pause",
-      "scope": "global",
-      "domain": "host",
-      "eventPath": [
-        "pause"
-      ],
-      "purpose": "主持人暂停游戏",
-      "policy": {},
-      "trigger": {
-        "mode": "manual",
-        "phase": "",
-        "eventKey": "",
-        "priority": 100,
-        "enabled": true
-      },
-      "variants": [
-        {
-          "id": "global.host.pause.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/global/host/pause/line-01.mp3",
-          "text": "Game paused. Everybody freeze in your most intelligent pose.",
-          "placeholder": false,
-          "regenerate": false
-        }
-      ]
-    },
-    {
-      "cueKey": "global.host.resume",
-      "scope": "global",
-      "domain": "host",
-      "eventPath": [
-        "resume"
-      ],
-      "purpose": "主持人恢复游戏",
-      "policy": {},
-      "trigger": {
-        "mode": "manual",
-        "phase": "",
-        "eventKey": "",
-        "priority": 100,
-        "enabled": true
-      },
-      "variants": [
-        {
-          "id": "global.host.resume.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/global/host/resume/line-01.mp3",
-          "text": "And we're back. Please resume pretending this was all under control.",
-          "placeholder": false,
-          "regenerate": false
-        }
-      ]
-    },
-    {
-      "cueKey": "global.network.recovered",
-      "scope": "global",
-      "domain": "network",
-      "eventPath": [
-        "recovered"
-      ],
-      "purpose": "网络恢复时的全局插播",
-      "policy": {},
-      "trigger": {
-        "mode": "manual",
-        "phase": "",
-        "eventKey": "",
-        "priority": 100,
-        "enabled": true
-      },
-      "variants": [
-        {
-          "id": "global.network.recovered.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/global/network/recovered/line-01.mp3",
-          "text": "Signal recovered. Technology has decided to participate again.",
-          "placeholder": false,
-          "regenerate": false
-        }
-      ]
-    },
-    {
-      "cueKey": "global.network.unstable",
-      "scope": "global",
-      "domain": "network",
-      "eventPath": [
-        "unstable"
-      ],
-      "purpose": "网络不稳定时的全局插播",
-      "policy": {},
-      "trigger": {
-        "mode": "manual",
-        "phase": "",
-        "eventKey": "",
-        "priority": 100,
-        "enabled": true
-      },
-      "variants": [
-        {
-          "id": "global.network.unstable.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/global/network/unstable/line-01.mp3",
-          "text": "The network is wobbling. Give it a second to remember its job.",
-          "placeholder": false,
-          "regenerate": false
-        }
-      ]
-    },
-    {
-      "cueKey": "global.player.join.in",
-      "scope": "global",
-      "domain": "player",
-      "eventPath": [
-        "join",
-        "in"
-      ],
-      "purpose": "玩家加入时的全局插播",
-      "policy": {},
-      "trigger": {
-        "mode": "manual",
-        "phase": "",
-        "eventKey": "",
-        "priority": 100,
-        "enabled": true
-      },
-      "variants": [
-        {
-          "id": "global.player.join.in.line-01",
-          "path": "/games/cosmic-trivia/audio/host/director/global/player/join/in/line-01.mp3",
-          "text": "A new player joined. The chaos budget has been increased.",
           "placeholder": false,
           "regenerate": false
         }
@@ -828,6 +784,732 @@ export const DIRECTOR_CUE_REGISTRY = {
       ]
     },
     {
+      "cueKey": "phase.interest-reveal.selection.intro",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "intro"
+      ],
+      "purpose": "引入偏好播报，语气期待，省略号留停顿",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.intro.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/intro/line-01.mp3",
+          "text": "Based on your picks... here's what tonight looks like—",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.no-votes",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "no-votes"
+      ],
+      "purpose": "无人投票，轻松调侃，完全随机感",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.no-votes.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/no-votes/line-01.mp3",
+          "text": "[chuckles] No strong preferences? Bold move. Anything could show up tonight.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-1.general",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-1",
+        "general"
+      ],
+      "purpose": "综合类第一，调侃不可预测性",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-1.general.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-1/general/line-01.mp3",
+          "text": "General knowledge taking the crown? [chuckles] Dangerous choice. Anything goes.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-1.geography",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-1",
+        "geography"
+      ],
+      "purpose": "地理类第一，带点俏皮",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-1.geography.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-1/geography/line-01.mp3",
+          "text": "[curious] Geography at the top... hope everyone's got their maps ready.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-1.history",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-1",
+        "history"
+      ],
+      "purpose": "历史类第一，带点敬意和感慨",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-1.history.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-1/history/line-01.mp3",
+          "text": "[thoughtful] History taking the lead... I love a crowd that knows its past.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-1.movies",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-1",
+        "movies"
+      ],
+      "purpose": "电影类第一，兴奋感",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-1.movies.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-1/movies/line-01.mp3",
+          "text": "Movies! [excited] The film buffs are absolutely in charge tonight.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-1.nature",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-1",
+        "nature"
+      ],
+      "purpose": "自然类第一，温暖认可",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-1.nature.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-1/nature/line-01.mp3",
+          "text": "Nature lovers are calling the shots tonight. [happy] Wholesome — I respect it.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-1.science",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-1",
+        "science"
+      ],
+      "purpose": "科学类第一，调侃nerd能量",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-1.science.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-1/science/line-01.mp3",
+          "text": "Looks like the science fans are running things tonight. [chuckles] Let's get nerdy.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-1.space",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-1",
+        "space"
+      ],
+      "purpose": "太空类第一，惊喜加宇宙感",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-1.space.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-1/space/line-01.mp3",
+          "text": "[surprised] Space and cosmos leading the way... we're going intergalactic tonight.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-1.sports",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-1",
+        "sports"
+      ],
+      "purpose": "体育类第一，高能竞技感",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-1.sports.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-1/sports/line-01.mp3",
+          "text": "Sports takes the top spot. [woo] Let's see if the athletes know their stats.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-2.general",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-2",
+        "general"
+      ],
+      "purpose": "综合类第二，笑着认可",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-2.general.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-2/general/line-01.mp3",
+          "text": "General knowledge also holding its own. [chuckles] The wild cards always show up.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-2.geography",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-2",
+        "geography"
+      ],
+      "purpose": "地理类第二，微惊喜感",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-2.geography.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-2/geography/line-01.mp3",
+          "text": "Geography pulling votes too. [surprised] The world travelers are representing.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-2.history",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-2",
+        "history"
+      ],
+      "purpose": "历史类第二，沉稳跟进",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-2.history.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-2/history/line-01.mp3",
+          "text": "History buffs making their presence known too. [thoughtful] A classic choice.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-2.movies",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-2",
+        "movies"
+      ],
+      "purpose": "电影类第二，轻快愉悦",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-2.movies.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-2/movies/line-01.mp3",
+          "text": "Movie lovers, you're not far behind. [happy] Cinema gets its moment.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-2.nature",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-2",
+        "nature"
+      ],
+      "purpose": "自然类第二，温柔跟进",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-2.nature.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-2/nature/line-01.mp3",
+          "text": "Nature quietly making its mark. [happy] A lovely addition to tonight's lineup.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-2.science",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-2",
+        "science"
+      ],
+      "purpose": "科学类第二，认可科学粉丝",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-2.science.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-2/science/line-01.mp3",
+          "text": "Science nerds, your voice is being heard. [chuckles] Solid pick.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-2.space",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-2",
+        "space"
+      ],
+      "purpose": "太空类第二，带点好奇",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-2.space.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-2/space/line-01.mp3",
+          "text": "Space enthusiasts are in the mix. [curious] The cosmos gets some airtime.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-2.sports",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-2",
+        "sports"
+      ],
+      "purpose": "体育类第二，延续竞技感",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-2.sports.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-2/sports/line-01.mp3",
+          "text": "Sports fans showing up strong as well. [excited] The competitive energy is real.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-3.general",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-3",
+        "general"
+      ],
+      "purpose": "综合类第三，随性收尾",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-3.general.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-3/general/line-01.mp3",
+          "text": "General knowledge at number three. [chuckles] The wild card always finds a way.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-3.geography",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-3",
+        "geography"
+      ],
+      "purpose": "地理类第三，调侃地图控",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-3.geography.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-3/geography/line-01.mp3",
+          "text": "Geography sneaking in at three. [curious] Map nerds, you found each other.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-3.history",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-3",
+        "history"
+      ],
+      "purpose": "历史类第三，轻召唤感",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-3.history.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-3/history/line-01.mp3",
+          "text": "History scholars, assemble. [thoughtful] Seems this one has a dedicated following.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-3.movies",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-3",
+        "movies"
+      ],
+      "purpose": "电影类第三，安抚影迷",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-3.movies.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-3/movies/line-01.mp3",
+          "text": "Film fans — you're not forgotten. [happy] Movies sneaks in at number three.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-3.nature",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-3",
+        "nature"
+      ],
+      "purpose": "自然类第三，叹气带诗意",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-3.nature.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-3/nature/line-01.mp3",
+          "text": "Nature has its gentle supporters. [sighs] This type always finds its people.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-3.science",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-3",
+        "science"
+      ],
+      "purpose": "科学类第三，轻描淡写的nerd梗",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-3.science.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-3/science/line-01.mp3",
+          "text": "Science nerds in the house... [chuckles] this one seems to have its quiet fans too.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-3.space",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-3",
+        "space"
+      ],
+      "purpose": "太空类第三，轻柔宇宙感",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-3.space.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-3/space/line-01.mp3",
+          "text": "The cosmos has its admirers. [curious] Space quietly pulling some interest tonight.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.interest-reveal.selection.rank-3.sports",
+      "scope": "phase",
+      "domain": "interest-reveal",
+      "eventPath": [
+        "selection",
+        "rank-3",
+        "sports"
+      ],
+      "purpose": "体育类第三，轻幽默",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "interest-reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.interest-reveal.selection.rank-3.sports.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/interest-reveal/selection/rank-3/sports/line-01.mp3",
+          "text": "A few sports fans quietly raising their hand. [chuckles] Noted.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
       "cueKey": "phase.post-game.result.outro",
       "scope": "phase",
       "domain": "post-game",
@@ -985,6 +1667,60 @@ export const DIRECTOR_CUE_REGISTRY = {
           "id": "phase.question-intro.question.next.line-03",
           "path": "/games/cosmic-trivia/audio/host/director/phase/question-intro/question/next/line-03.mp3",
           "text": "Attention back to the screen. The quiz gremlin has selected another question.",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.reveal.answer.3-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "eventPath": [
+        "answer",
+        "3-correct"
+      ],
+      "purpose": "三人答对",
+      "policy": {},
+      "trigger": {
+        "mode": "manual",
+        "phase": "reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.reveal.answer.3-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/3-correct/line-01.mp3",
+          "text": "3 players got it right [laugh] Not bad, noooot bad!",
+          "placeholder": false,
+          "regenerate": false
+        }
+      ]
+    },
+    {
+      "cueKey": "phase.reveal.answer.4-correct",
+      "scope": "phase",
+      "domain": "reveal",
+      "eventPath": [
+        "answer",
+        "4-correct"
+      ],
+      "purpose": "4人答对",
+      "policy": {},
+      "trigger": {
+        "mode": "phase-entry",
+        "phase": "reveal",
+        "eventKey": "",
+        "priority": 100,
+        "enabled": true
+      },
+      "variants": [
+        {
+          "id": "phase.reveal.answer.4-correct.line-01",
+          "path": "/games/cosmic-trivia/audio/host/director/phase/reveal/answer/4-correct/line-01.mp3",
+          "text": "Ohhhhh 4 people got it right. [cheering]  Bring it in!",
           "placeholder": false,
           "regenerate": false
         }

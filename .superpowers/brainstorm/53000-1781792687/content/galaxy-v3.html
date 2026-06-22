@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crystal Cosmos — Preference Picker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --white: #ffffff;
+  --paper: #f7f8fc;
+  --fog: #eef0f8;
+  --ink: #1a1d2e;
+  --ink-mid: #3d4260;
+  --ink-soft: #8890b0;
+  --ink-ghost: rgba(26,29,46,.1);
+}
+
+body {
+  min-height: 100vh;
+  background: #f0f1f8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px 48px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.label {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: .15em;
+  text-transform: uppercase; color: rgba(26,29,46,.35);
+  margin-bottom: 20px; text-align: center;
+}
+
+/* ─── Phone shell ─────────────────────────────── */
+.phone {
+  width: 320px;
+  border-radius: 40px;
+  background: var(--white);
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(26,29,46,.06),
+    0 2px 4px rgba(26,29,46,.04),
+    0 8px 32px rgba(26,29,46,.08),
+    0 32px 80px rgba(26,29,46,.12);
+}
+
+/* ─── Topbar ─────────────────────────────────── */
+.topbar {
+  height: 52px;
+  background: rgba(255,255,255,.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(26,29,46,.06);
+  display: flex; align-items: center; padding: 0 18px; gap: 10px;
+  position: relative; z-index: 20;
+}
+.logo {
+  width: 26px; height: 26px; border-radius: 8px; flex: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 2px 8px rgba(99,102,241,.4);
+}
+.app-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 14px; font-weight: 800; color: var(--ink); letter-spacing: -.01em;
+}
+.spacer { flex: 1; }
+.count-chip {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  padding: 4px 11px; border-radius: 20px;
+  background: rgba(99,102,241,.08);
+  border: 1px solid rgba(99,102,241,.15);
+  color: #6366f1;
+  transition: all .3s;
+}
+.count-chip.has-picks {
+  background: rgba(99,102,241,.12);
+  border-color: rgba(99,102,241,.3);
+  color: #4f46e5;
+}
+
+/* ─── Galaxy scene ───────────────────────────── */
+.scene {
+  position: relative;
+  height: 400px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(216,180,254,.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 15%, rgba(147,197,253,.18) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 75%, rgba(196,181,253,.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 25% 85%, rgba(167,243,208,.12) 0%, transparent 45%),
+    linear-gradient(160deg, #f8f7ff 0%, #f0f4ff 50%, #f5f3ff 100%);
+}
+
+/* Watercolour nebula washes */
+.nebula {
+  position: absolute; border-radius: 50%;
+  filter: blur(40px); pointer-events: none; mix-blend-mode: multiply;
+  animation: nebula-drift var(--dur, 20s) ease-in-out infinite alternate var(--dl, 0s);
+}
+@keyframes nebula-drift {
+  from { transform: translate(0,0) scale(1); }
+  to   { transform: translate(var(--tx,8px), var(--ty,6px)) scale(var(--ts,1.04)); }
+}
+
+/* Tiny dark stars */
+.starfield { position: absolute; inset: 0; pointer-events: none; }
+.star {
+  position: absolute; border-radius: 50%; background: rgba(26,29,46,.55);
+  animation: star-pulse var(--d,4s) ease-in-out infinite var(--dl,0s);
+}
+@keyframes star-pulse {
+  0%,100% { opacity: var(--lo,.2); transform: scale(1); }
+  50%      { opacity: var(--hi,.6); transform: scale(1.5); }
+}
+
+/* Header inside scene */
+.scene-header {
+  position: absolute; top: 20px; left: 20px; right: 20px;
+  z-index: 10; pointer-events: none;
+}
+.eyebrow {
+  font-family: 'Syne', sans-serif;
+  font-size: 9px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: #6366f1; margin-bottom: 5px;
+}
+.scene-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.15;
+  letter-spacing: -.02em;
+}
+.scene-sub {
+  font-size: 11px; font-weight: 400; color: var(--ink-soft); margin-top: 4px;
+}
+
+/* ─── Planets ────────────────────────────────── */
+.pw {
+  position: absolute; z-index: 5;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+}
+
+/* Float animation — each planet drifts slightly */
+.pw { animation: float-a var(--float-dur, 6s) ease-in-out infinite var(--float-dl, 0s); }
+@keyframes float-a {
+  0%,100% { transform: translate(-50%, calc(-50% + 0px)); }
+  50%      { transform: translate(-50%, calc(-50% - 5px)); }
+}
+
+/* Glass orb */
+.orb {
+  border-radius: 50%;
+  position: relative;
+  transition: transform .35s cubic-bezier(.34, 1.56, .64, 1), box-shadow .35s;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 3px;
+  user-select: none;
+  /* glass layer */
+  background: var(--orb-bg);
+  box-shadow: var(--orb-shadow);
+  border: 1px solid rgba(255,255,255,.9);
+}
+
+/* glass highlight arc */
+.orb::before {
+  content: '';
+  position: absolute;
+  width: 55%; height: 40%;
+  top: 8%; left: 12%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 30%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 100%);
+  pointer-events: none;
+}
+
+/* rim glint */
+.orb::after {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 220deg, rgba(255,255,255,.0) 0deg, rgba(255,255,255,.18) 30deg, rgba(255,255,255,.0) 60deg);
+  pointer-events: none;
+}
+
+.orb-emoji {
+  font-size: 17px; line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.18));
+  pointer-events: none; position: relative; z-index: 2;
+}
+.orb-label {
+  font-family: 'Syne', sans-serif;
+  font-size: 7.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; pointer-events: none;
+  position: relative; z-index: 2;
+  transition: color .3s;
+}
+
+/* Active state */
+.pw.active .orb {
+  transform: scale(1.38);
+}
+
+/* Active pulse ring */
+.pulse-ring {
+  position: absolute; border-radius: 50%;
+  left: 50%; top: 50%; transform: translate(-50%,-50%);
+  pointer-events: none; opacity: 0;
+  border: 1.5px solid;
+  transition: opacity .3s;
+}
+.pw.active .pulse-ring {
+  animation: ring-out 1.8s ease-out infinite;
+}
+@keyframes ring-out {
+  0%   { transform: translate(-50%,-50%) scale(1); opacity: .6; }
+  100% { transform: translate(-50%,-50%) scale(1.9); opacity: 0; }
+}
+
+/* Click burst */
+@keyframes burst-out {
+  0%   { transform: translate(-50%,-50%) scale(.3); opacity: .5; }
+  100% { transform: translate(-50%,-50%) scale(2.2); opacity: 0; }
+}
+.burst {
+  position: absolute; border-radius: 50%;
+  left: 50%; top: 50%; pointer-events: none; z-index: 3;
+  animation: burst-out .5s ease-out forwards;
+}
+
+/* ─── Bottom panel ───────────────────────────── */
+.bottom {
+  background: rgba(255,255,255,.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(26,29,46,.07);
+  padding: 14px 16px 20px;
+  display: flex; flex-direction: column; gap: 10px;
+  position: relative; z-index: 20;
+}
+
+.pills-row {
+  display: flex; flex-wrap: wrap; gap: 5px; min-height: 26px;
+  align-items: center;
+}
+.empty-hint {
+  font-size: 11px; color: var(--ink-soft);
+  font-style: italic;
+}
+.pill {
+  font-family: 'Syne', sans-serif;
+  padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700;
+  letter-spacing: .03em;
+  display: flex; align-items: center; gap: 4px;
+  border: 1px solid; animation: pop .22s cubic-bezier(.34,1.56,.64,1);
+  backdrop-filter: blur(8px);
+}
+@keyframes pop {
+  from { transform: scale(0) rotate(-6deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.lock-btn {
+  height: 46px; border-radius: 14px; width: 100%; border: none; cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 800; letter-spacing: .04em;
+  transition: transform .15s, box-shadow .2s, opacity .2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(99,102,241,.3), 0 1px 3px rgba(99,102,241,.2);
+}
+.lock-btn:disabled { opacity: .3; cursor: default; }
+.lock-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(99,102,241,.38); }
+.lock-btn:not(:disabled):active { transform: scale(.98); }
+</style>
+</head>
+<body>
+
+<div class="label">Crystal Cosmos · 白底宇宙 · 可交互</div>
+
+<div class="phone" id="phone">
+  <div class="topbar">
+    <div class="logo"></div>
+    <span class="app-name">Joyly</span>
+    <div class="spacer"></div>
+    <div class="count-chip" id="chip">0 / 3 选</div>
+  </div>
+
+  <div class="scene" id="scene">
+    <!-- Nebula washes -->
+    <div class="nebula" style="width:220px;height:220px;background:rgba(196,181,253,.45);top:-80px;left:-50px;--dur:22s;--tx:14px;--ty:10px;--ts:1.05;"></div>
+    <div class="nebula" style="width:180px;height:180px;background:rgba(147,197,253,.35);top:20px;right:-40px;--dur:18s;--dl:-4s;--tx:-10px;--ty:16px;--ts:1.06;"></div>
+    <div class="nebula" style="width:160px;height:160px;background:rgba(167,243,208,.3);bottom:-30px;left:30px;--dur:25s;--dl:-8s;--tx:12px;--ty:-8px;--ts:1.04;"></div>
+    <div class="nebula" style="width:120px;height:120px;background:rgba(253,186,116,.2);bottom:60px;right:10px;--dur:16s;--dl:-12s;--tx:-8px;--ty:6px;--ts:1.07;"></div>
+
+    <!-- Starfield (dark dots) -->
+    <div class="starfield" id="starfield"></div>
+
+    <!-- Header -->
+    <div class="scene-header">
+      <div class="eyebrow">Your Universe</div>
+      <div class="scene-title">What are you<br>into?</div>
+      <div class="scene-sub">Pick up to 3 · your choices shape the round</div>
+    </div>
+
+    <!-- Planets injected by JS -->
+  </div>
+
+  <div class="bottom">
+    <div class="pills-row" id="pills"><span class="empty-hint">Nothing selected yet…</span></div>
+    <button class="lock-btn" id="lock" disabled>Launch My Round →</button>
+  </div>
+</div>
+
+<script>
+const PLANETS = [
+  {
+    id: 'science', emoji: '🔬', label: 'Science',
+    x: .22, y: .46,
+    mid: 'rgba(99,102,241,.25)', deep: 'rgba(79,70,229,.18)',
+    glow: 'rgba(99,102,241,.3)', glowStrong: 'rgba(99,102,241,.55)',
+    ringColor: 'rgba(99,102,241,.5)',
+    pillBg: 'rgba(99,102,241,.08)', pillColor: '#4f46e5', pillBorder: 'rgba(99,102,241,.2)',
+    float: { dur: '7s', dl: '0s' },
+  },
+  {
+    id: 'history', emoji: '📜', label: 'History',
+    x: .72, y: .38,
+    mid: 'rgba(245,158,11,.22)', deep: 'rgba(217,119,6,.18)',
+    glow: 'rgba(245,158,11,.28)', glowStrong: 'rgba(245,158,11,.5)',
+    ringColor: 'rgba(245,158,11,.5)',
+    pillBg: 'rgba(245,158,11,.08)', pillColor: '#b45309', pillBorder: 'rgba(245,158,11,.2)',
+    float: { dur: '8.5s', dl: '-2s' },
+  },
+  {
+    id: 'sports', emoji: '⚽', label: 'Sports',
+    x: .18, y: .72,
+    mid: 'rgba(16,185,129,.22)', deep: 'rgba(5,150,105,.18)',
+    glow: 'rgba(16,185,129,.28)', glowStrong: 'rgba(16,185,129,.5)',
+    ringColor: 'rgba(16,185,129,.5)',
+    pillBg: 'rgba(16,185,129,.08)', pillColor: '#059669', pillBorder: 'rgba(16,185,129,.2)',
+    float: { dur: '6s', dl: '-4s' },
+  },
+  {
+    id: 'music', emoji: '🎵', label: 'Music',
+    x: .64, y: .68,
+    mid: 'rgba(236,72,153,.22)', deep: 'rgba(219,39,119,.18)',
+    glow: 'rgba(236,72,153,.28)', glowStrong: 'rgba(236,72,153,.5)',
+    ringColor: 'rgba(236,72,153,.5)',
+    pillBg: 'rgba(236,72,153,.08)', pillColor: '#be185d', pillBorder: 'rgba(236,72,153,.2)',
+    float: { dur: '9s', dl: '-1s' },
+  },
+  {
+    id: 'film', emoji: '🎬', label: 'Film',
+    x: .42, y: .87,
+    mid: 'rgba(239,68,68,.2)', deep: 'rgba(220,38,38,.16)',
+    glow: 'rgba(239,68,68,.26)', glowStrong: 'rgba(239,68,68,.48)',
+    ringColor: 'rgba(239,68,68,.5)',
+    pillBg: 'rgba(239,68,68,.08)', pillColor: '#b91c1c', pillBorder: 'rgba(239,68,68,.2)',
+    float: { dur: '7.5s', dl: '-5s' },
+  },
+  {
+    id: 'tech', emoji: '💻', label: 'Tech',
+    x: .84, y: .74,
+    mid: 'rgba(6,182,212,.22)', deep: 'rgba(8,145,178,.18)',
+    glow: 'rgba(6,182,212,.28)', glowStrong: 'rgba(6,182,212,.5)',
+    ringColor: 'rgba(6,182,212,.5)',
+    pillBg: 'rgba(6,182,212,.08)', pillColor: '#0e7490', pillBorder: 'rgba(6,182,212,.2)',
+    float: { dur: '8s', dl: '-3s' },
+  },
+];
+
+const MAX = 3;
+const selected = new Set();
+const scene = document.getElementById('scene');
+const W = 320, H = 400;
+
+// Starfield
+const sf = document.getElementById('starfield');
+for (let i = 0; i < 60; i++) {
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() < .2 ? 2 : 1;
+  const lo = (.1 + Math.random() * .35).toFixed(2);
+  const hi = Math.min(.75, +lo + .2 + Math.random() * .2).toFixed(2);
+  s.style.cssText = `
+    width:${sz}px;height:${sz}px;
+    top:${(Math.random()*100).toFixed(1)}%;
+    left:${(Math.random()*100).toFixed(1)}%;
+    --d:${(3+Math.random()*5).toFixed(1)}s;
+    --dl:-${(Math.random()*6).toFixed(1)}s;
+    --lo:${lo};--hi:${hi};opacity:${lo};
+  `;
+  sf.appendChild(s);
+}
+
+// Build planets
+PLANETS.forEach(p => {
+  const SIZE = 62;
+  const px = p.x * W;
+  const py = p.y * H;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'pw';
+  wrap.id = 'pw-' + p.id;
+  wrap.style.cssText = `left:${px}px;top:${py}px;--float-dur:${p.float.dur};--float-dl:${p.float.dl};`;
+
+  // Orb CSS vars
+  const orbBg = `radial-gradient(circle at 33% 28%, rgba(255,255,255,.95) 0%, rgba(255,255,255,.6) 18%, ${p.mid} 50%, ${p.deep} 100%)`;
+  const orbShadow = `0 0 0 1px rgba(255,255,255,.85), 0 6px 24px ${p.glow}, 0 2px 8px rgba(26,29,46,.06), inset 0 -3px 10px ${p.mid}, inset 0 3px 8px rgba(255,255,255,.5)`;
+
+  wrap.innerHTML = `
+    <div class="orb"
+      style="width:${SIZE}px;height:${SIZE}px;--orb-bg:${orbBg};--orb-shadow:${orbShadow};"
+      id="orb-${p.id}"
+    >
+      <div class="orb-emoji">${p.emoji}</div>
+      <div class="orb-label" style="color:${p.pillColor};">${p.label}</div>
+    </div>
+    <div class="pulse-ring" style="width:${SIZE+18}px;height:${SIZE+18}px;border-color:${p.ringColor};"></div>
+  `;
+
+  wrap.addEventListener('click', () => toggle(p));
+  scene.appendChild(wrap);
+});
+
+function toggle(p) {
+  const wrap = document.getElementById('pw-' + p.id);
+  const orb  = document.getElementById('orb-' + p.id);
+  const isOn = selected.has(p.id);
+
+  if (!isOn && selected.size >= MAX) {
+    // shake
+    wrap.style.animation = 'none';
+    wrap.offsetHeight;
+    wrap.style.animation = '';
+    return;
+  }
+
+  if (isOn) {
+    selected.delete(p.id);
+    wrap.classList.remove('active');
+    orb.style.boxShadow = `0 0 0 1px rgba(255,255,255,.85), 0 6px 24px ${p.glow}, 0 2px 8px rgba(26,29,46,.06), inset 0 -3px 10px ${p.mid}, inset 0 3px 8px rgba(255,255,255,.5)`;
+  } else {
+    selected.add(p.id);
+    wrap.classList.add('active');
+    // brighter glow when active
+    orb.style.boxShadow = `0 0 0 1.5px rgba(255,255,255,.95), 0 8px 36px ${p.glowStrong}, 0 0 60px ${p.glow}, 0 2px 8px rgba(26,29,46,.05), inset 0 -3px 10px ${p.mid}, inset 0 3px 8px rgba(255,255,255,.6)`;
+    // burst
+    const b = document.createElement('div');
+    b.className = 'burst';
+    b.style.cssText = `width:62px;height:62px;background:radial-gradient(circle,${p.glowStrong} 0%,transparent 70%);`;
+    wrap.appendChild(b);
+    setTimeout(() => b.remove(), 520);
+  }
+
+  render();
+}
+
+function render() {
+  // chip
+  const chip = document.getElementById('chip');
+  chip.textContent = `${selected.size} / ${MAX} 选`;
+  chip.className = 'count-chip' + (selected.size > 0 ? ' has-picks' : '');
+
+  // pills
+  const pillsEl = document.getElementById('pills');
+  if (selected.size === 0) {
+    pillsEl.innerHTML = '<span class="empty-hint">Nothing selected yet…</span>';
+  } else {
+    pillsEl.innerHTML = '';
+    selected.forEach(id => {
+      const p = PLANETS.find(x => x.id === id);
+      const pill = document.createElement('div');
+      pill.className = 'pill';
+      pill.style.cssText = `background:${p.pillBg};color:${p.pillColor};border-color:${p.pillBorder};`;
+      pill.textContent = `${p.emoji} ${p.label}`;
+      pillsEl.appendChild(pill);
+    });
+  }
+
+  // lock
+  const lock = document.getElementById('lock');
+  lock.disabled = selected.size === 0;
+}
+
+render();
+</script>
+</body>
+</html>

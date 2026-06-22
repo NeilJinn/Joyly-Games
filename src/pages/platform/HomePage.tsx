@@ -7,15 +7,22 @@ import CreateRoomButton from "../../components/platform/CreateRoomButton";
 import JoinRoomForm from "../../components/platform/JoinRoomForm";
 import GameCard from "../../components/platform/GameCard";
 import AuthModal from "../../components/platform/AuthModal";
+import PaymentModal from "../../components/platform/PaymentModal";
 import { useConfig } from "../../hooks/useConfig";
 import { usePairing } from "../../hooks/usePairing";
 import { useAuthStore } from "../../stores/authStore";
+import type { Room } from "../../types/room";
+import type { GameConfig } from "../../types/config";
 
 export default function HomePage() {
   const { config, loading: configLoading } = useConfig();
   const navigate = useNavigate();
   const isSignedIn = useAuthStore((s) => s.isSignedIn);
   const [authOpen, setAuthOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [selectedGame, setSelectedGame] = useState<GameConfig | null>(null);
+  const [pendingGameId, setPendingGameId] = useState<string | null>(null);
+  const [pendingGenericStart, setPendingGenericStart] = useState(false);
   const pairing = usePairing(configLoading ? null : config.localJoinBase);
   const pairInputRef = useRef<HTMLInputElement>(null);
 
@@ -25,13 +32,45 @@ export default function HomePage() {
     if (code) navigate(`/pair/${encodeURIComponent(code.toLowerCase())}`);
   }
 
+  function handleRoomCreated(room: Room) {
+    navigate(`/room/${room.code}`);
+  }
+
+  function openPaymentForGame(gameId: string) {
+    const game = config.games.find((item) => item.id === gameId && item.status === "playable") ?? null;
+    if (!game) return;
+    setSelectedGame(game);
+    setPaymentOpen(true);
+  }
+
   function handlePlay(gameId?: string) {
     if (!isSignedIn) {
+      setPendingGameId(gameId ?? null);
+      setPendingGenericStart(!gameId);
       setAuthOpen(true);
       return;
     }
-    void gameId;
+
+    if (gameId) {
+      openPaymentForGame(gameId);
+      return;
+    }
+
     navigate("/room/setup");
+  }
+
+  function handleAuthenticated() {
+    if (pendingGameId) {
+      openPaymentForGame(pendingGameId);
+      setPendingGameId(null);
+      setPendingGenericStart(false);
+      return;
+    }
+
+    if (pendingGenericStart) {
+      setPendingGenericStart(false);
+      navigate("/room/setup");
+    }
   }
 
   return (
@@ -204,7 +243,21 @@ export default function HomePage() {
         </div>
       </section>
 
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal
+        open={authOpen}
+        onClose={() => {
+          setAuthOpen(false);
+          setPendingGameId(null);
+          setPendingGenericStart(false);
+        }}
+        onAuthenticated={handleAuthenticated}
+      />
+      <PaymentModal
+        open={paymentOpen}
+        game={selectedGame}
+        onClose={() => setPaymentOpen(false)}
+        onRoomCreated={handleRoomCreated}
+      />
     </motion.main>
   );
 }

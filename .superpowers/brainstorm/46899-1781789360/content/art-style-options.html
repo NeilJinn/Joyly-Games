@@ -1,0 +1,182 @@
+<h2>美术风格方向</h2>
+<p class="subtitle">同样是全屏填充布局，三种不同的视觉语言——都是答题阶段的效果预览</p>
+
+<div class="cards" style="grid-template-columns: repeat(3, 1fr); gap: 24px; align-items: start;">
+
+  <!-- Style A: Refined Current — 精炼现有风格 -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#090d12; padding:16px; border-radius:10px; min-height:420px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+      <div style="width:160px; background:#111821; border-radius:18px; border:1px solid rgba(255,255,255,.12); overflow:hidden; box-shadow: 0 8px 32px rgba(0,0,0,.6);">
+        <!-- topbar -->
+        <div style="height:32px; background:rgba(9,13,18,.95); border-bottom:1px solid rgba(255,255,255,.07); display:flex;align-items:center;padding:0 10px; gap:8px;">
+          <div style="width:14px;height:14px;border-radius:4px;background:#78d45e;flex:none;"></div>
+          <div style="height:6px;width:50px;background:rgba(255,255,255,.18);border-radius:3px;"></div>
+        </div>
+        <!-- content -->
+        <div style="padding:10px; display:flex; flex-direction:column; gap:8px; min-height:260px;">
+          <!-- score/question label -->
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="height:5px;width:38px;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+            <div style="height:5px;width:22px;background:rgba(120,212,94,.5);border-radius:2px;"></div>
+          </div>
+          <!-- question text area -->
+          <div style="padding:8px; background:rgba(255,255,255,.04); border-radius:6px; border:1px solid rgba(255,255,255,.06);">
+            <div style="height:5px;width:90%;background:rgba(255,255,255,.22);border-radius:2px;margin-bottom:4px;"></div>
+            <div style="height:5px;width:70%;background:rgba(255,255,255,.14);border-radius:2px;"></div>
+          </div>
+          <!-- 4 answer buttons -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1;">
+            <div style="background:rgba(94,130,244,.18);border:1px solid rgba(94,130,244,.6);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-height:52px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#5e82f4;display:flex;align-items:center;justify-content:center;"><div style="width:6px;height:6px;background:white;border-radius:1px;"></div></div>
+              <div style="height:4px;width:80%;background:rgba(255,255,255,.25);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(17,24,33,.9);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-height:52px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#f4b04a;"></div>
+              <div style="height:4px;width:65%;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(17,24,33,.9);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-height:52px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#e05eb4;"></div>
+              <div style="height:4px;width:75%;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(17,24,33,.9);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;justify-content:space-between;gap:4px;min-height:52px;">
+              <div style="width:16px;height:16px;border-radius:50%;background:#5eb8d4;"></div>
+              <div style="height:4px;width:55%;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · 精炼现有风格</h3>
+      <p>在现有暗色宇宙主题上优化：更大的触控区域、更强的题目区对比度、卡片边框更细腻。风险最低，感觉最熟悉。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;background:rgba(120,212,94,.12);color:#78d45e;border:1px solid rgba(120,212,94,.25);">低风险</span>
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;background:rgba(255,255,255,.06);color:rgba(200,212,222,.7);border:1px solid rgba(255,255,255,.1);">改动最小</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Style B: Bold Arcade — 粗体街机风 -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#07080f; padding:16px; border-radius:10px; min-height:420px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+      <div style="width:160px; background:#0a0b14; border-radius:18px; border:1px solid rgba(120,80,255,.25); overflow:hidden; box-shadow: 0 0 24px rgba(120,80,255,.15), 0 8px 32px rgba(0,0,0,.7);">
+        <!-- topbar -->
+        <div style="height:32px; background:rgba(5,5,12,.95); border-bottom:1px solid rgba(120,80,255,.2); display:flex;align-items:center;padding:0 10px;gap:8px;">
+          <div style="width:14px;height:14px;border-radius:4px;background:linear-gradient(135deg,#a855f7,#6366f1);flex:none;"></div>
+          <div style="height:6px;width:50px;background:rgba(255,255,255,.18);border-radius:3px;"></div>
+        </div>
+        <!-- content -->
+        <div style="padding:10px; display:flex; flex-direction:column; gap:8px; min-height:260px;">
+          <!-- question counter -->
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="height:5px;width:30px;background:rgba(168,85,247,.5);border-radius:2px;"></div>
+            <div style="height:5px;width:20px;background:rgba(99,102,241,.6);border-radius:2px;"></div>
+          </div>
+          <!-- question — high contrast block -->
+          <div style="padding:8px; background:rgba(168,85,247,.1); border-radius:6px; border:1px solid rgba(168,85,247,.25);">
+            <div style="height:5px;width:90%;background:rgba(255,255,255,.3);border-radius:2px;margin-bottom:4px;"></div>
+            <div style="height:5px;width:65%;background:rgba(255,255,255,.18);border-radius:2px;"></div>
+          </div>
+          <!-- 4 answers — colored full backgrounds -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;flex:1;">
+            <div style="background:rgba(239,68,68,.85);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;min-height:52px;">
+              <div style="font-size:10px;font-weight:900;color:rgba(255,255,255,.9);line-height:1;">A</div>
+              <div style="height:4px;width:80%;background:rgba(255,255,255,.4);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(245,158,11,.85);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;min-height:52px;">
+              <div style="font-size:10px;font-weight:900;color:rgba(255,255,255,.9);line-height:1;">B</div>
+              <div style="height:4px;width:60%;background:rgba(255,255,255,.4);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(16,185,129,.85);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;min-height:52px;">
+              <div style="font-size:10px;font-weight:900;color:rgba(255,255,255,.9);line-height:1;">C</div>
+              <div style="height:4px;width:70%;background:rgba(255,255,255,.4);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(99,102,241,.85);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;min-height:52px;">
+              <div style="font-size:10px;font-weight:900;color:rgba(255,255,255,.9);line-height:1;">D</div>
+              <div style="height:4px;width:75%;background:rgba(255,255,255,.4);border-radius:2px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · 粗体街机风</h3>
+      <p>答案按钮用纯色实心背景（红/黄/绿/蓝），参考 Kahoot 的强视觉刺激感。按钮颜色本身成为视觉锚，游戏感很强。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;background:rgba(168,85,247,.12);color:#a855f7;border:1px solid rgba(168,85,247,.25);">视觉冲击强</span>
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;background:rgba(255,255,255,.06);color:rgba(200,212,222,.7);border:1px solid rgba(255,255,255,.1);">改动较大</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Style C: Frosted Glass — 磨砂玻璃宇宙感 -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(160deg,#0d1829 0%,#0a0f1e 50%,#080c18 100%); padding:16px; border-radius:10px; min-height:420px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; overflow:hidden;">
+      <!-- starfield dots -->
+      <div style="position:absolute;inset:0;pointer-events:none;">
+        <div style="position:absolute;width:2px;height:2px;background:rgba(255,255,255,.6);border-radius:50%;top:15%;left:20%;"></div>
+        <div style="position:absolute;width:1px;height:1px;background:rgba(255,255,255,.4);border-radius:50%;top:30%;left:75%;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:rgba(255,255,255,.5);border-radius:50%;top:60%;left:10%;"></div>
+        <div style="position:absolute;width:1px;height:1px;background:rgba(255,255,255,.3);border-radius:50%;top:80%;left:85%;"></div>
+        <div style="position:absolute;width:2px;height:2px;background:rgba(120,212,94,.4);border-radius:50%;top:45%;left:90%;box-shadow:0 0 4px rgba(120,212,94,.6);"></div>
+        <!-- glow blobs -->
+        <div style="position:absolute;width:80px;height:80px;background:rgba(99,102,241,.15);border-radius:50%;top:5%;left:-10%;filter:blur(20px);"></div>
+        <div style="position:absolute;width:60px;height:60px;background:rgba(120,212,94,.1);border-radius:50%;bottom:10%;right:-5%;filter:blur(16px);"></div>
+      </div>
+      <div style="width:160px; background:rgba(255,255,255,.04); border-radius:18px; border:1px solid rgba(255,255,255,.12); overflow:hidden; box-shadow: 0 8px 32px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08); backdrop-filter:blur(20px); position:relative; z-index:1;">
+        <!-- topbar -->
+        <div style="height:32px; background:rgba(255,255,255,.03); border-bottom:1px solid rgba(255,255,255,.06); display:flex;align-items:center;padding:0 10px;gap:8px;">
+          <div style="width:14px;height:14px;border-radius:4px;background:#78d45e;flex:none;box-shadow:0 0 6px rgba(120,212,94,.5);"></div>
+          <div style="height:6px;width:50px;background:rgba(255,255,255,.15);border-radius:3px;"></div>
+        </div>
+        <!-- content -->
+        <div style="padding:10px; display:flex; flex-direction:column; gap:8px; min-height:260px;">
+          <!-- top bar -->
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="height:5px;width:35px;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+            <div style="height:5px;width:18px;background:rgba(120,212,94,.6);border-radius:2px;box-shadow:0 0 4px rgba(120,212,94,.4);"></div>
+          </div>
+          <!-- question -->
+          <div style="padding:8px; background:rgba(255,255,255,.06); border-radius:6px; border:1px solid rgba(255,255,255,.08); box-shadow: inset 0 1px 0 rgba(255,255,255,.06);">
+            <div style="height:5px;width:90%;background:rgba(255,255,255,.25);border-radius:2px;margin-bottom:4px;"></div>
+            <div style="height:5px;width:60%;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+          </div>
+          <!-- 4 answers — glassmorphism -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;flex:1;">
+            <div style="background:rgba(94,130,244,.12);border:1px solid rgba(94,130,244,.4);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;gap:4px;min-height:52px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07);">
+              <div style="width:14px;height:14px;border-radius:50%;background:rgba(94,130,244,.8);box-shadow:0 0 6px rgba(94,130,244,.5);"></div>
+              <div style="height:4px;width:80%;background:rgba(255,255,255,.2);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;gap:4px;min-height:52px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);">
+              <div style="width:14px;height:14px;border-radius:50%;background:rgba(244,176,74,.8);box-shadow:0 0 6px rgba(244,176,74,.4);"></div>
+              <div style="height:4px;width:60%;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;gap:4px;min-height:52px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);">
+              <div style="width:14px;height:14px;border-radius:50%;background:rgba(224,94,180,.8);box-shadow:0 0 6px rgba(224,94,180,.4);"></div>
+              <div style="height:4px;width:75%;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+            <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 6px;display:flex;flex-direction:column;gap:4px;min-height:52px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04);">
+              <div style="width:14px;height:14px;border-radius:50%;background:rgba(94,184,212,.8);box-shadow:0 0 6px rgba(94,184,212,.4);"></div>
+              <div style="height:4px;width:55%;background:rgba(255,255,255,.15);border-radius:2px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · 磨砂玻璃宇宙感</h3>
+      <p>背景加入星点和光晕，卡片用磨砂玻璃质感（backdrop-blur + 微妙内高光）。保留暗色调但更有层次感和沉浸感。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;background:rgba(94,184,212,.12);color:#5eb8d4;border:1px solid rgba(94,184,212,.25);">沉浸感强</span>
+        <span style="padding:2px 8px;border-radius:20px;font-size:11px;background:rgba(255,255,255,.06);color:rgba(200,212,222,.7);border:1px solid rgba(255,255,255,.1);">与现有最相近</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;padding:14px 16px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid rgba(255,255,255,.08);">
+  <p style="margin:0;color:rgba(200,212,222,.7);font-size:13px;">
+    💡 这三种风格也可以混合——比如用 C 的背景氛围 + A 的答案按钮样式。选好大方向之后我们再细化。
+  </p>
+</div>

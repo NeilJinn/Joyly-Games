@@ -1,4 +1,5 @@
 import { getDirectorMessage, getDirectorStep, AUDIO_ADVANCE_FALLBACK_MS } from "./director.js";
+import { DIRECTOR_CUE_REGISTRY } from "../../../public/games/cosmic-trivia/director/cue-library.generated.js";
 import { getQuestionOptions } from "./content-loader.js";
 import { answeredQuestionIds, markQuestionAnswered } from "./question-history.js";
 import { selectRoundQuestions } from "./question-selector.js";
@@ -22,7 +23,8 @@ import { buildFinalHypeSummaries } from "./summaries.js";
 
 const PHASE_TRANSITIONS = {
   "game-setup": "preferences",
-  preferences: "round-prep",
+  preferences: "interest-reveal",
+  "interest-reveal": "round-prep",
   "round-prep": "question-intro",
   "question-intro": "question-read",
   "question-read": "answering",
@@ -197,6 +199,10 @@ export function markDirectorAudioStarted(room, phase = null, playbackKey = "") {
 
 export function canAdvanceCurrentPhase(room) {
   const state = stateKey(room);
+  if (state.phase === "interest-reveal") {
+    const audioState = currentDirectorAudio(room);
+    return Boolean(audioState?.started) && isDirectorAudioComplete(room) && Boolean(state.contentLoadingComplete);
+  }
   const step = getDirectorStep(state.phase);
   if (step?.kind === "timer-and-audio") {
     return isPhaseTimerComplete(room) && !isDirectorAudioPlaying(room);
@@ -205,6 +211,35 @@ export function canAdvanceCurrentPhase(room) {
     return isDirectorAudioComplete(room);
   }
   return true;
+}
+
+function computeTopCategories(room) {
+  const categoryVotes = new Map();
+  for (const player of playerList(room)) {
+    for (const category of (player.preferences?.categories || [])) {
+      categoryVotes.set(category, (categoryVotes.get(category) || 0) + 1);
+    }
+  }
+  return [...categoryVotes.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([cat]) => cat);
+}
+
+const ROUND_CUE_PREFIXES = [
+  "phase.round-prep", "phase.question-intro", "phase.answering",
+  "phase.answer-lock", "phase.reveal", "phase.scoring",
+  "phase.between-questions", "phase.final-hype", "phase.finale",
+  "phase.post-game", "cross.game", "cross.stats", "cross.player",
+];
+
+const ROUND_CUE_PATHS = (DIRECTOR_CUE_REGISTRY.cues || [])
+  .filter(cue => ROUND_CUE_PREFIXES.some(p => cue.cueKey.startsWith(p)))
+  .flatMap(cue => (cue.variants || []).map(v => v.path).filter(Boolean));
+
+function buildRoundPreloadManifest(questions) {
+  const questionAudio = questions.map(q => q.questionAudio).filter(Boolean);
+  return [...new Set([...questionAudio, ...ROUND_CUE_PATHS])];
 }
 
 async function loadRoundContent(room) {
@@ -229,6 +264,7 @@ async function loadRoundContent(room) {
   state.scoredQuestionId = null;
   state.lastResolution = null;
   state.totalQuestions = selected.questions.length;
+  state.roundPreloadManifest = buildRoundPreloadManifest(selected.questions);
   syncQuestionFlags(room);
 }
 
@@ -243,7 +279,19 @@ export async function advanceCosmicTrivia(room) {
   if (!nextPhase) return { advanced: false, phase };
 
   if (phase === "preferences") {
-    await loadRoundContent(room);
+    state.topCategories = computeTopCategories(room);
+    state.contentLoadingComplete = false;
+    enterPhase(room, "interest-reveal");
+    loadRoundContent(room).then(() => {
+      state.contentLoadingComplete = true;
+      bumpPrivateStateVersion(room);
+    }).catch(() => {
+      state.contentLoadingComplete = true;
+      bumpPrivateStateVersion(room);
+    });
+  } else if (phase === "interest-reveal") {
+    enterPhase(room, nextPhase);
+  } else if (phase === "round-prep") {
     enterPhase(room, nextPhase);
   } else if (phase === "answering") {
     const resolution = finalizeCurrentQuestion(room);
@@ -301,6 +349,8 @@ async function createCosmicTriviaStateWithPlayCount(room, playCount = 1) {
     totalQuestions: DEFAULT_QUESTION_COUNT,
     answers: {},
     scores,
+    playerStreaks: {},
+    playerWrongStreaks: {},
     playerStates: Object.fromEntries([...room.players.values()].map(player => [player.id, {
       preferences: { categories: [], tags: [] },
       preferencesLocked: false
@@ -328,10 +378,13 @@ export async function ensureCosmicTriviaState(room) {
   if (!room.gameState) await createCosmicTriviaState(room);
   const state = stateKey(room);
   state.scores ||= {};
+  state.playerStreaks ||= {};
+  state.playerWrongStreaks ||= {};
   state.playerStates ||= {};
   state.tester ||= { selectedPlayerId: null };
   state.questionCountOptions ||= [...QUESTION_COUNT_OPTIONS];
   state.finalHypeSummaries ||= [];
+  state.topCategories ||= [];
   state.questionHistory ||= [];
   state.scoreVisibility ||= "visible";
   state.privateStateVersion ||= 1;

@@ -22,6 +22,30 @@ export function finalizeCurrentQuestion(room) {
     }
   }
 
+  // Update per-player consecutive correct/wrong streaks for answered players only.
+  state.playerStreaks ||= {};
+  state.playerWrongStreaks ||= {};
+  for (const [playerId, choice] of Object.entries(state.answers || {})) {
+    if (choice === question.correctAnswer) {
+      state.playerStreaks[playerId] = (state.playerStreaks[playerId] || 0) + 1;
+      state.playerWrongStreaks[playerId] = 0;
+    } else {
+      state.playerStreaks[playerId] = 0;
+      state.playerWrongStreaks[playerId] = (state.playerWrongStreaks[playerId] || 0) + 1;
+    }
+  }
+
+  // Players with 2+ consecutive correct answers after this question.
+  const streakPlayers = Object.entries(state.playerStreaks)
+    .filter(([, streak]) => streak >= 2)
+    .map(([id, streak]) => ({ id, streak }));
+
+
+  // Players with 2+ consecutive wrong answers after this question.
+  const wrongStreakPlayers = Object.entries(state.playerWrongStreaks)
+    .filter(([, streak]) => streak >= 2)
+    .map(([id, streak]) => ({ id, streak }));
+
   state.scoredQuestionId = question.id;
   const resolution = {
     questionId: question.id,
@@ -32,7 +56,9 @@ export function finalizeCurrentQuestion(room) {
     winnerIds: winners,
     everyoneCorrect: winners.length > 0 && winners.length === activePlayers(room).length,
     noOneCorrect: winners.length === 0,
-    scoredAt: Date.now()
+    scoredAt: Date.now(),
+    ...(streakPlayers.length > 0 && { streakPlayers }),
+    ...(wrongStreakPlayers.length > 0 && { wrongStreakPlayers })
   };
   state.lastResolution = resolution;
   pushQuestionHistory(state, resolution);

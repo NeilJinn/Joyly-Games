@@ -8,11 +8,30 @@ import WinnerBoard from "../../../components/games/cosmic-trivia/WinnerBoard";
 import { useCosmicTriviaDirector } from "../../../hooks/useCosmicTriviaDirector";
 import Joyly01Overlay from "../../../components/ui/Joyly01Overlay";
 import ScoreBurstOverlay from "../../../components/games/cosmic-trivia/ScoreBurstOverlay";
+import ConfettiRain from "../../../components/ui/ConfettiRain";
 
 interface CosmicTriviaHostProps {
   room: Room;
   code: string;
 }
+
+// ── Category display helpers ─────────────────────────────────
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  space: "🚀", science: "🔬", general: "🌍", history: "📜",
+  geography: "🗺️", nature: "🌿", movies: "🎬", sports: "⚽",
+  planets: "🪐", ai: "🤖", light: "💡", inventions: "⚙️",
+  cards: "🃏", language: "💬", oceans: "🌊", animals: "🐾",
+  books: "📚", games: "🎮", earth: "🌎", food: "🍕",
+  music: "🎵", plants: "🌱", weather: "⛅", art: "🎨",
+  tech: "💻", film: "🎬", pop: "🎤", ancient: "🏛️",
+};
+
+const CATEGORY_PALETTE = [
+  { border: "rgba(99,102,241,.55)",  bg: "rgba(99,102,241,.1)",  text: "#818cf8" },
+  { border: "rgba(245,158,11,.5)",   bg: "rgba(245,158,11,.08)", text: "#fbbf24" },
+  { border: "rgba(16,185,129,.5)",   bg: "rgba(16,185,129,.08)", text: "#34d399" },
+];
 
 // ── Sidebar ──────────────────────────────────────────────────
 
@@ -195,7 +214,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
           />
           <DevPanel code={code} room={room} />
         </div>
-        <Joyly01Overlay preset={director.phaseBurstPreset} trigger={director.phaseBurstTrigger} />
+        <ConfettiRain active={director.confettiRainActive} />
       </>
     );
   }
@@ -247,6 +266,53 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
         {trivia.phaseEndsAt && (
           <CountdownBar endsAt={trivia.phaseEndsAt} totalSecs={60} />
         )}
+      </div>
+    );
+  } else if (phase === "interest-reveal") {
+    const { interestRevealStep, topCategories } = director;
+    mainContent = (
+      <div className="flex flex-col items-center justify-center h-full gap-[32px]">
+        <p className="text-white/60 text-[13px] font-[700] tracking-[3px] uppercase m-0">
+          Tonight's vibe
+        </p>
+        <div className="flex gap-[20px] items-end">
+          {topCategories.slice(0, 3).map((cat, i) => {
+            const visible = interestRevealStep > i;
+            const c = CATEGORY_PALETTE[i] ?? CATEGORY_PALETTE[0];
+            const emoji = CATEGORY_EMOJI[cat.toLowerCase()] ?? "✦";
+            const isTop = i === 0;
+            return (
+              <div
+                key={cat}
+                style={{
+                  border: `1px solid ${c.border}`,
+                  background: c.bg,
+                  transform: visible ? "scale(1) translateY(0)" : "scale(0.95) translateY(16px)",
+                  opacity: visible ? 1 : 0,
+                  transition: "opacity 500ms ease, transform 500ms ease",
+                }}
+                className={[
+                  "rounded-[16px] flex flex-col items-center gap-[10px] select-none",
+                  isTop ? "px-[32px] py-[28px]" : "px-[24px] py-[22px]",
+                ].join(" ")}
+              >
+                <span className={isTop ? "text-[48px]" : "text-[36px]"}>{emoji}</span>
+                <span
+                  style={{ color: c.text }}
+                  className={[
+                    "font-[700] capitalize text-center leading-tight",
+                    isTop ? "text-[20px]" : "text-[16px]",
+                  ].join(" ")}
+                >
+                  {cat}
+                </span>
+                <span className="text-white/30 text-[11px] font-[600] tracking-[1.5px] uppercase">
+                  {["#1", "#2", "#3"][i]}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   } else if (

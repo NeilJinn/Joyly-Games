@@ -8,9 +8,10 @@ import { useAuthStore } from "../../stores/authStore";
 interface AuthModalProps {
   open: boolean;
   onClose: () => void;
+  onAuthenticated?: () => void;
 }
 
-export default function AuthModal({ open, onClose }: AuthModalProps) {
+export default function AuthModal({ open, onClose, onAuthenticated }: AuthModalProps) {
   const setAccount = useAuthStore((s) => s.setAccount);
   const [name, setName] = useState("Neil");
   const [email, setEmail] = useState("host@example.com");
@@ -18,6 +19,7 @@ export default function AuthModal({ open, onClose }: AuthModalProps) {
   function handleSubmit() {
     if (!name.trim() || !email.trim()) return;
     setAccount({ displayName: name.trim(), email: email.trim() });
+    onAuthenticated?.();
     onClose();
   }
 

@@ -1,0 +1,1550 @@
+{
+  "groups": {
+    "cosmic-trivia:director:interest-selecting": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1781009192358,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:finale-intro": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1781006860154,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:test-samples": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780942680554,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:preferences-locked": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1781015811856,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:deck-loading": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1781014272833,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:question-intro": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1781016592934,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:question-audio": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780942834886,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answering": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1781008359788,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answer-reveal": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answer-audio": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780942831593,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:scoring": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1781009483479,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:next-question": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1781013965988,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:complete": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780942836104,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-space-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-space-002": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-002": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-003": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-general-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-general-002": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-history-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-geography-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-nature-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-movies-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-sports-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-books-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-games-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-earth-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-earth-002": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-food-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-music-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-plants-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-weather-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    }
+  },
+  "candidates": {
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-again-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781003322593,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-choose-preferences-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992422413,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-desc-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992581302,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-desc-02.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992635313,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-desc-03.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992641912,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-desc-04.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992675770,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-hello-welcome-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781009379925,
+      "transcript": "[excited] Helloooo, welcome!",
+      "transcriptSegments": [
+        "[excited] Helloooo, welcome!"
+      ]
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-round-2-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992756713,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-round-3-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992759441,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:finale-intro:phase-complete-prelude-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781006989042,
+      "transcript": "[happily] Let's take a look at the final leaderboard.",
+      "transcriptSegments": [
+        "[happily] Let's take a look at the final leaderboard."
+      ]
+    },
+    "cosmic-trivia:director:test-samples:phase-v3-test-01-excited.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010206176,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:test-samples:phase-v3-test-02-cheerful.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010211066,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:test-samples:phase-v3-test-03-encouraging.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010212462,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:test-samples:phase-v3-test-04-curious.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010213767,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:test-samples:phase-v3-test-05-victory.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010215233,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:preferences-locked:phase-preferences-locked-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781015654735,
+      "transcript": "[tired]Packing up all the keywords you give me...\n\n[sigh]\nOk...can someone give me a hand?",
+      "transcriptSegments": [
+        "[tired]Packing up all the keywords you give me... [sigh] Ok...can someone give me a hand?"
+      ],
+      "label": "[tired]Packing up all the keywords you give me... [sigh] Ok...can someone give me a hand?",
+      "generatedAudioPaths": [
+        "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp3"
+      ],
+      "generatedFiles": [
+        {
+          "index": 0,
+          "text": "[strong French accent]Your selections are locked in... The deck is being prepared now...",
+          "outputPath": "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp3"
+        }
+      ]
+    },
+    "cosmic-trivia:director:deck-loading:phase-deck-loading-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010011781,
+      "transcript": "We are drawing your questions now... [charming]Give me a second..........................................................[Pause]Hmm......................maybe............... oneeeeee.....moreeeeee.......second?[quesiton]",
+      "transcriptSegments": [
+        "We are drawing your questions now... [charming]Give me a second..........................................................[Pause]Hmm......................maybe............... oneeeeee.....moreeeeee.......second?[quesiton]"
+      ],
+      "label": "We are drawing your questions now... [charming]Give me a second..........................................................[Pause]Hmm......................maybe............... oneeeeee.....moreeeeee.......second?[quesiton]"
+    },
+    "cosmic-trivia:director:question-intro:phase-question-intro-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781016754109,
+      "transcript": "[Tired]Olala,Here comes the next one.",
+      "transcriptSegments": [
+        "[Tired]Olala,Here comes the next one."
+      ],
+      "label": "[Tired]Here comes the next one."
+    },
+    "cosmic-trivia:director:question-intro:phase-question-intro-02.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781013901551,
+      "transcript": "Alright... let's bring up the next one. ",
+      "transcriptSegments": [
+        "Alright... let's bring up the next one."
+      ]
+    },
+    "cosmic-trivia:director:question-intro:phase-question-intro-03.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781013914519,
+      "transcript": "Here we go neeeeeeext...",
+      "transcriptSegments": [
+        "Here we go neeeeeeext..."
+      ],
+      "label": "Here we gooooo next..."
+    },
+    "cosmic-trivia:director:question-audio:phase-question-audio-fallback-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780941631344,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answering:phase-answering-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781009325126,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answering:phase-answering-02.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010030010,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answering:phase-answering-03.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781009479434,
+      "transcript": "[quitely][lowvoice]Lock in your answer on your phone...before we run out of time",
+      "transcriptSegments": [
+        "[quitely][lowvoice]Lock in your answer on your phone...before we run out of time"
+      ],
+      "generatedAudioPaths": [
+        "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-answering-03.mp3",
+        "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-answering-04.mp3"
+      ],
+      "generatedFiles": [
+        {
+          "index": 0,
+          "text": "Lock in your answer on your phone...",
+          "outputPath": "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-answering-03.mp3"
+        },
+        {
+          "index": 1,
+          "text": "Time is running out.",
+          "outputPath": "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-answering-04.mp3"
+        }
+      ],
+      "label": "[quitely][lowvoice]Lock in your answer on your phone...before we run out of time"
+    },
+    "cosmic-trivia:director:answer-reveal:phase-answer-reveal-01.mp3": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answer-reveal:phase-answer-reveal-02.mp3": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answer-reveal:phase-answer-reveal-03.mp3": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answer-audio:phase-answer-audio-fallback-01.mp3": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:scoring:phase-scoring-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010037080,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:scoring:phase-scoring-02.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010041213,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:scoring:phase-scoring-03.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010044764,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:scoring:phase-scoring-no-correct-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010156370,
+      "transcript": "Nobody got it right... that one was a tough one.[laugh]",
+      "transcriptSegments": [
+        "Nobody got it right... that one was a tough one.[laugh]"
+      ]
+    },
+    "cosmic-trivia:director:scoring:phase-scoring-no-correct-02.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010171428,
+      "transcript": "Oops! No one nailed it... wow, that question was sneaky.[Laugh]",
+      "transcriptSegments": [
+        "Oops! No one nailed it... wow, that question was sneaky.[Laugh]"
+      ],
+      "label": "Oops! No one nailed it... wow, that question was sneaky.[Laugh]"
+    },
+    "cosmic-trivia:director:scoring:phase-scoring-no-correct-03.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010175867,
+      "transcript": "Looks like this round stumped everyone. Oops!",
+      "transcriptSegments": [
+        "Looks like this round stumped everyone. Oops!"
+      ],
+      "label": "Looks like this round stumped everyone. Oops!"
+    },
+    "cosmic-trivia:director:next-question:phase-next-question-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010722104,
+      "transcript": "Psst! Psst! Next question coming up... Keep the momentum going.[laugh]",
+      "transcriptSegments": [
+        "Psst! Psst! Next question coming up... Keep the momentum going.[laugh]"
+      ]
+    },
+    "cosmic-trivia:director:next-question:phase-next-question-02.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781009500125,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:next-question:phase-next-question-03.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781009575118,
+      "transcript": "Up next...[laugh] another question.",
+      "transcriptSegments": [
+        "Up next...[laugh] another question."
+      ]
+    },
+    "cosmic-trivia:director:complete:phase-complete-01.mp3": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781009653547,
+      "transcript": "Wohoo! [laugh] That's the end of the game... Congratulations to our top player......and thaaaaank you for playing Cosmic Trivia. We'll see you next time.",
+      "transcriptSegments": [
+        "Wohoo! [laugh] That's the end of the game... Congratulations to our top player......and thaaaaank you for playing Cosmic Trivia. We'll see you next time."
+      ],
+      "label": "Wohoo! [laugh] That's the end of the game... Congratulations to our top player......and thaaaaank you for playing Cosmic Trivia. We'll see you next time."
+    },
+    "cosmic-trivia:question:core-space-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-space-001:question": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992116042,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-space-002:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-space-002:question": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010254268,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-001:question": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780992093102,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-002:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-002:question": {
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1781010315179,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-003:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-science-003:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-general-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-general-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-general-002:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-general-002:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-history-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-history-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-geography-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-geography-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-nature-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-nature-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-movies-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-movies-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-sports-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-sports-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-books-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-books-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-games-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-games-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-earth-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-earth-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-earth-002:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-earth-002:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-food-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-food-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-music-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-music-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-plants-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-plants-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-weather-001:answer": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:question:core-weather-001:question": {
+      "status": "unreviewed",
+      "tags": [],
+      "notes": [],
+      "updatedAt": 1780940680627,
+      "transcript": "",
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:answering:phase-answering-03.mp3:phase-answering-04.mp3": {
+      "id": "cosmic-trivia:director:answering:phase-answering-03.mp3:phase-answering-04.mp3",
+      "groupId": "cosmic-trivia:director:answering",
+      "projectId": null,
+      "kind": "director-candidate",
+      "title": "Time is running out.",
+      "label": "[quitely]Time is running out.",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-answering-04.mp3",
+      "filePath": "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-answering-04.mp3",
+      "text": "Time is running out.",
+      "modelId": "eleven_v3",
+      "voiceId": null,
+      "voiceSettings": null,
+      "fileName": "phase-answering-04.mp3",
+      "updatedAt": 1781009466881,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "[quitely]Time is running out.",
+      "transcriptSegments": [
+        "[quitely]Time is running out."
+      ]
+    },
+    "cosmic-trivia:director:question-intro:phase-question-intro-03.mp4": {
+      "id": "cosmic-trivia:director:question-intro:phase-question-intro-03.mp4",
+      "groupId": "cosmic-trivia:director:question-intro",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "Get ready... Here comes the next question.",
+      "label": "[Happy] Who's ready foooor next?",
+      "phase": "question-intro",
+      "phaseGroup": "question-intro",
+      "fileName": "phase-question-intro-03.mp4",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-question-intro-03.mp4",
+      "filePath": null,
+      "text": "Get ready... Here comes the next question.",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781008285630,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "[Happy] Who's ready foooor next?",
+      "transcriptSegments": [
+        "[Happy] Who's ready foooor next?"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:finale-intro:phase-complete-prelude-01.mp4": {
+      "id": "cosmic-trivia:director:finale-intro:phase-complete-prelude-01.mp4",
+      "groupId": "cosmic-trivia:director:finale-intro",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-complete-prelude-01.mp4",
+      "label": "[upper tone] Druuuuumroll please! Who's ready for the final ranking?",
+      "phase": "finale-intro",
+      "phaseGroup": "finale-intro",
+      "fileName": "phase-complete-prelude-01.mp4",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-complete-prelude-01.mp4",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781008351506,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "[upper tone] Druuuuumroll please! Who's ready for the final ranking?",
+      "transcriptSegments": [
+        "[upper tone] Druuuuumroll please! Who's ready for the final ranking?"
+      ],
+      "generatedAudioPaths": [
+        "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-complete-prelude-01.mp4"
+      ],
+      "generatedFiles": [
+        {
+          "index": 0,
+          "text": "[upper tone] Druuuuumroll please! Who's ready for the final ranking?",
+          "outputPath": "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-complete-prelude-01.mp4"
+        }
+      ]
+    },
+    "cosmic-trivia:director:answering:phase-answering-04.mp4": {
+      "id": "cosmic-trivia:director:answering:phase-answering-04.mp4",
+      "groupId": "cosmic-trivia:director:answering",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-answering-04.mp4",
+      "label": "[quitely]oh boy, check your time...",
+      "phase": "answering",
+      "phaseGroup": "answering",
+      "fileName": "phase-answering-04.mp4",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-answering-04.mp4",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781009328118,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "[quitely]oh boy, check your time...",
+      "transcriptSegments": [
+        "[quitely]oh boy, check your time..."
+      ],
+      "generatedAudioPaths": [
+        "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-answering-04.mp4"
+      ],
+      "generatedFiles": [
+        {
+          "index": 0,
+          "text": "[up beat]check your time...",
+          "outputPath": "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-answering-04.mp4"
+        }
+      ]
+    },
+    "cosmic-trivia:director:interest-selecting:phase-interest-selecting-round-3-01.mp4": {
+      "id": "cosmic-trivia:director:interest-selecting:phase-interest-selecting-round-3-01.mp4",
+      "groupId": "cosmic-trivia:director:interest-selecting",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-interest-selecting-round-3-01.mp4",
+      "label": "Hellooooo! Welcome![sing] Triiiiiviiiiaaaaa![laugh]",
+      "phase": "interest-selecting-prefix",
+      "phaseGroup": "interest-selecting",
+      "fileName": "phase-interest-selecting-round-3-01.mp4",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-interest-selecting-round-3-01.mp4",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781009304176,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Hellooooo! Welcome![sing] Triiiiiviiiiaaaaa![laugh]",
+      "transcriptSegments": [
+        "Hellooooo! Welcome![sing] Triiiiiviiiiaaaaa![laugh]"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:scoring:phase-scoring-no-correct-03.mp4": {
+      "id": "cosmic-trivia:director:scoring:phase-scoring-no-correct-03.mp4",
+      "groupId": "cosmic-trivia:director:scoring",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-scoring-no-correct-03.mp4",
+      "label": "Wohoo. [doubting]Let's see",
+      "phase": "scoring",
+      "phaseGroup": "scoring",
+      "fileName": "phase-scoring-no-correct-03.mp4",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-scoring-no-correct-03.mp4",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781009577368,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Wohoo. [doubting]Let's see",
+      "transcriptSegments": [
+        "Wohoo. [doubting]Let's see"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:next-question:phase-next-question-03.mp4": {
+      "id": "cosmic-trivia:director:next-question:phase-next-question-03.mp4",
+      "groupId": "cosmic-trivia:director:next-question",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-next-question-03.mp4",
+      "label": "Woop woooop!",
+      "phase": "next-question",
+      "phaseGroup": "next-question",
+      "fileName": "phase-next-question-03.mp4",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-next-question-03.mp4",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781014201142,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Woop wooop! Next queeeestion iiiiiiiiiis......",
+      "transcriptSegments": [
+        "Woop wooop! Next queeeestion iiiiiiiiiis......"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:next-question:phase-next-question-03.mp5": {
+      "id": "cosmic-trivia:director:next-question:phase-next-question-03.mp5",
+      "groupId": "cosmic-trivia:director:next-question",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-next-question-03.mp5",
+      "label": "Eeeeeeh! Let's go![shouting]",
+      "phase": "next-question",
+      "phaseGroup": "next-question",
+      "fileName": "phase-next-question-03.mp5",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-next-question-03.mp5",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781014190397,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Eeeeeehiii! Let's gooooo![shouting]",
+      "transcriptSegments": [
+        "Eeeeeehiii! Let's gooooo![shouting]"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:next-question:phase-next-question-03.mp6": {
+      "id": "cosmic-trivia:director:next-question:phase-next-question-03.mp6",
+      "groupId": "cosmic-trivia:director:next-question",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-next-question-03.mp6",
+      "label": "Olala, next question.",
+      "phase": "next-question",
+      "phaseGroup": "next-question",
+      "fileName": "phase-next-question-03.mp6",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-next-question-03.mp6",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781014096461,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Olala, next question.",
+      "transcriptSegments": [
+        "Olala, next question."
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:next-question:phase-next-question-03.mp7": {
+      "id": "cosmic-trivia:director:next-question:phase-next-question-03.mp7",
+      "groupId": "cosmic-trivia:director:next-question",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-next-question-03.mp7",
+      "label": "Good job. Next one",
+      "phase": "next-question",
+      "phaseGroup": "next-question",
+      "fileName": "phase-next-question-03.mp7",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-next-question-03.mp7",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781014099302,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Good job. Next one",
+      "transcriptSegments": [
+        "Good job. Next one"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:deck-loading:phase-deck-loading-01.mp4": {
+      "id": "cosmic-trivia:director:deck-loading:phase-deck-loading-01.mp4",
+      "groupId": "cosmic-trivia:director:deck-loading",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-deck-loading-01.mp4",
+      "label": "[singing]Loading loading loading......I'm a bit slooooooooooooooooooooooooooooooooooooooooooooooooooooow[pause][pause][pause][pause][super slowly][laugh] [singing]GIve me a lilttle bit moooore time please[sad]",
+      "phase": "deck-loading",
+      "phaseGroup": "deck-loading",
+      "fileName": "phase-deck-loading-01.mp4",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-deck-loading-01.mp4",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781014771663,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "[singing]Loading loading loading......I'm a bit slooooooooooooooooooooooooooooooooooooooooooooooooooooow[pause][pause][pause][pause][super slowly][laugh] \n[singing]GIve me a lilttle bit moooore time please[sad]",
+      "transcriptSegments": [
+        "[singing]Loading loading loading......I'm a bit slooooooooooooooooooooooooooooooooooooooooooooooooooooow[pause][pause][pause][pause][super slowly][laugh] [singing]GIve me a lilttle bit moooore time please[sad]"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:deck-loading:phase-deck-loading-01.mp5": {
+      "id": "cosmic-trivia:director:deck-loading:phase-deck-loading-01.mp5",
+      "groupId": "cosmic-trivia:director:deck-loading",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-deck-loading-01.mp5",
+      "label": "[strong French accent][singing]Ok...I'm trying to put the quiz down to your phone....but the internet is a bit of bitch....let me see [pause][pause][pause][pause] I'm just kidding[laugh]....you know, right?",
+      "phase": "deck-loading",
+      "phaseGroup": "deck-loading",
+      "fileName": "phase-deck-loading-01.mp5",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-deck-loading-01.mp5",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781015214902,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "[strong French accent][singing]Ok...I'm trying to put the quiz down to your phone....but the internet is a bit of bitch....let me see\n[pause][pause][pause][pause]\nI'm just kidding[laugh]....you know, right?\n",
+      "transcriptSegments": [
+        "[strong French accent][singing]Ok...I'm trying to put the quiz down to your phone....but the internet is a bit of bitch....let me see [pause][pause][pause][pause] I'm just kidding[laugh]....you know, right?"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:preferences-locked:phase-preferences-locked-01.mp4": {
+      "id": "cosmic-trivia:director:preferences-locked:phase-preferences-locked-01.mp4",
+      "groupId": "cosmic-trivia:director:preferences-locked",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-preferences-locked-01.mp4",
+      "label": "[tired]Oki oki, your selection are locked in. We will soon begin [whisper]someone didn't select anything...lazy ass",
+      "phase": "preferences-locked",
+      "phaseGroup": "preferences-locked",
+      "fileName": "phase-preferences-locked-01.mp4",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp4",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781015709604,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "[tired]Oki oki, your selection are locked in. We will soon begin\n\n[whisper]someone didn't select anything...lazy ass",
+      "transcriptSegments": [
+        "[tired]Oki oki, your selection are locked in. We will soon begin [whisper]someone didn't select anything...lazy ass"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:preferences-locked:phase-preferences-locked-01.mp5": {
+      "id": "cosmic-trivia:director:preferences-locked:phase-preferences-locked-01.mp5",
+      "groupId": "cosmic-trivia:director:preferences-locked",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-preferences-locked-01.mp5",
+      "label": "Processing processing... [tired]There are so many woooooooords!!! [whisper]Any programmer here? [scream]heeeelp!",
+      "phase": "preferences-locked",
+      "phaseGroup": "preferences-locked",
+      "fileName": "phase-preferences-locked-01.mp5",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp5",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781015918361,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Processing processing... [tired]There are so many woooooooords!!! [whisper]Any programmer here? [scream]heeeelp!",
+      "transcriptSegments": [
+        "Processing processing... [tired]There are so many woooooooords!!! [whisper]Any programmer here? [scream]heeeelp!"
+      ],
+      "generatedAudioPaths": [
+        "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp5"
+      ],
+      "generatedFiles": [
+        {
+          "index": 0,
+          "text": "Processing processing... [tired]There are so many woooooooords!!! [whisper]Any programmer here? [scream]heeeelp!",
+          "outputPath": "/Users/neil/Documents/派对游戏/public/games/cosmic-trivia/audio/host/phases/phase-preferences-locked-01.mp5"
+        }
+      ]
+    },
+    "cosmic-trivia:director:question-intro:phase-question-intro-03.mp5": {
+      "id": "cosmic-trivia:director:question-intro:phase-question-intro-03.mp5",
+      "groupId": "cosmic-trivia:director:question-intro",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-question-intro-03.mp5",
+      "label": "The next iiiiiiis....",
+      "phase": "question-intro",
+      "phaseGroup": "question-intro",
+      "fileName": "phase-question-intro-03.mp5",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-question-intro-03.mp5",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781016556394,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "The next iiiiiiis....",
+      "transcriptSegments": [
+        "The next iiiiiiis...."
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:question-intro:phase-question-intro-03.mp6": {
+      "id": "cosmic-trivia:director:question-intro:phase-question-intro-03.mp6",
+      "groupId": "cosmic-trivia:director:question-intro",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-question-intro-03.mp6",
+      "label": "Hmmm! [Thinking]Which question should i go with....[pause] Hmmm.....",
+      "phase": "question-intro",
+      "phaseGroup": "question-intro",
+      "fileName": "phase-question-intro-03.mp6",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-question-intro-03.mp6",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781016552415,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Hmmm! [Thinking]Which question should i go with....[pause]\n\nHmmm.....",
+      "transcriptSegments": [
+        "Hmmm! [Thinking]Which question should i go with....[pause] Hmmm....."
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:question-intro:phase-question-intro-03.mp7": {
+      "id": "cosmic-trivia:director:question-intro:phase-question-intro-03.mp7",
+      "groupId": "cosmic-trivia:director:question-intro",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-question-intro-03.mp7",
+      "label": "Reaaaady? [Pause] [cheerful]Let's go",
+      "phase": "question-intro",
+      "phaseGroup": "question-intro",
+      "fileName": "phase-question-intro-03.mp7",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-question-intro-03.mp7",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781016707863,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "Reaaaady?\n[Pause]\n\n[cheerful]Let's go",
+      "transcriptSegments": [
+        "Reaaaady? [Pause] [cheerful]Let's go"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    },
+    "cosmic-trivia:director:question-intro:phase-question-intro-03.mp8": {
+      "id": "cosmic-trivia:director:question-intro:phase-question-intro-03.mp8",
+      "groupId": "cosmic-trivia:director:question-intro",
+      "projectId": "cosmic-trivia",
+      "kind": "director-candidate",
+      "title": "phase-question-intro-03.mp8",
+      "label": "[Tired] Leeeeet's go [Sign]",
+      "phase": "question-intro",
+      "phaseGroup": "question-intro",
+      "fileName": "phase-question-intro-03.mp8",
+      "audioPath": "/games/cosmic-trivia/audio/host/phases/phase-question-intro-03.mp8",
+      "filePath": null,
+      "text": "",
+      "modelId": "eleven_v3",
+      "voiceId": "NFtCzNwC8iAwT8RlGQFp",
+      "voiceSettings": {
+        "stability": 0.28,
+        "similarity_boost": 0.8,
+        "style": 0.32,
+        "speed": 1,
+        "use_speaker_boost": true
+      },
+      "updatedAt": 1781016705634,
+      "durationSeconds": null,
+      "status": "approved",
+      "tags": [],
+      "notes": [],
+      "transcript": "[Tired] Leeeeet's go\n\n[Sign]",
+      "transcriptSegments": [
+        "[Tired] Leeeeet's go [Sign]"
+      ],
+      "generatedAudioPaths": [],
+      "generatedFiles": []
+    }
+  },
+  "customTags": []
+}
