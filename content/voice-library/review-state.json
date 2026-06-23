@@ -426,6 +426,328 @@
       "transcript": "",
       "updatedAt": 1781351957648,
       "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.intro": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-1.science": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-1.history": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-1.movies": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-1.sports": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-1.space": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-1.nature": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-1.geography": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-1.general": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-2.science": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-2.history": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-2.movies": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-2.sports": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-2.space": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-2.nature": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-2.geography": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-2.general": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-3.science": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-3.history": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-3.movies": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-3.sports": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-3.space": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-3.nature": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-3.geography": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.rank-3.general": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia:director:phase.interest-reveal.selection.no-votes": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-space-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-space-002": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-science-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-science-002": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-science-003": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-general-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-general-002": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-history-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-geography-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-nature-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-movies-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-sports-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-books-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-games-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-earth-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-earth-002": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-food-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-music-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-plants-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
+    },
+    "cosmic-trivia-questions:question:core-weather-001": {
+      "status": "unreviewed",
+      "notes": [],
+      "transcript": "",
+      "updatedAt": 1782129837194,
+      "transcriptSegments": []
     }
   },
   "candidates": {
@@ -700,7 +1022,7 @@
       "notes": [],
       "transcript": "Welcome to Cosmic Trivia. \n\nFirst up: how many questions are we launching into orbit?",
       "transcriptSegments": [
-        "Welcome to Cosmic Trivia. \n\nFirst up: how many questions are we launching into orbit?"
+        "Welcome to Cosmic Trivia. First up: how many questions are we launching into orbit?"
       ],
       "updatedAt": 1781476672581
     },
@@ -736,7 +1058,7 @@
       "notes": [],
       "transcript": "Welcome to Cosmic Trivia!\n\nBefore the game actually kicks off, let's pick the question count.\n\n [whisper] Because apparently infinity was too many. [laugh]",
       "transcriptSegments": [
-        "Welcome to Cosmic Trivia!\n\nBefore the game actually kicks off, let's pick the question count.\n\n [whisper] Because apparently infinity was too many. [laugh]"
+        "Welcome to Cosmic Trivia! Before the game actually kicks off, let's pick the question count. [whisper] Because apparently infinity was too many. [laugh]"
       ],
       "updatedAt": 1781476782560
     },
@@ -1062,7 +1384,7 @@
       "notes": [],
       "transcript": "Final question. This is where legends are made, and also where guesses wear tiny capes. \n\nBeeeee ready! [Anticipated]",
       "transcriptSegments": [
-        "Final question. This is where legends are made, and also where guesses wear tiny capes. \n\nBeeeee ready! [Anticipated]"
+        "Final question. This is where legends are made, and also where guesses wear tiny capes. Beeeee ready! [Anticipated]"
       ],
       "updatedAt": 1781478513216
     },
@@ -2216,7 +2538,7 @@
       "notes": [],
       "transcript": "That's the game. You brought knowledge, guesses, and a surprising amount of confidence. [laugh] And thank you for playing the game, let's do another round! [cheering]\n\n[long pause][wait for 5 seconds][sad] or no more game?[cry]",
       "transcriptSegments": [
-        "That's the game. You brought knowledge, guesses, and a surprising amount of confidence. [laugh] And thank you for playing the game, let's do another round! [cheering]\n\n[long pause][wait for 5 seconds][sad] or no more game?[cry]"
+        "That's the game. You brought knowledge, guesses, and a surprising amount of confidence. [laugh] And thank you for playing the game, let's do another round! [cheering] [long pause][wait for 5 seconds][sad] or no more game?[cry]"
       ],
       "updatedAt": 1781783535103
     },
@@ -3019,7 +3341,7 @@
       "tags": [],
       "transcript": "Changing the question count? Bold strategy. \n\n[Whisper]The quiz machine is pretending not to judge.",
       "transcriptSegments": [
-        "Changing the question count? Bold strategy. \n\n[Whisper]The quiz machine is pretending not to judge."
+        "Changing the question count? Bold strategy. [Whisper]The quiz machine is pretending not to judge."
       ],
       "updatedAt": 1781476894784
     },
@@ -3122,7 +3444,7 @@
       "tags": [],
       "transcript": "Oh ohh while someone got a streak with the right answers, someone is wrong  3 times in a row....I won't mention names...but...hmmmm",
       "transcriptSegments": [
-        "Oh ohh while someone got a streak with the right answers, someone is wrong  3 times in a row....I won't mention names...but...hmmmm"
+        "Oh ohh while someone got a streak with the right answers, someone is wrong 3 times in a row....I won't mention names...but...hmmmm"
       ],
       "updatedAt": 1781778475136
     },
@@ -3144,7 +3466,7 @@
       "tags": [],
       "transcript": "3 players got it right [laugh] ......\n\nNot bad, noooot bad!",
       "transcriptSegments": [
-        "3 players got it right [laugh] ......\n\nNot bad, noooot bad!"
+        "3 players got it right [laugh] ...... Not bad, noooot bad!"
       ],
       "updatedAt": 1781784412108
     },
@@ -3155,7 +3477,7 @@
       "tags": [],
       "transcript": "Ohhoohooo 4 people got it right. [cheering]  Bring it in!",
       "transcriptSegments": [
-        "Ohhoohooo 4 people got it right. [cheering]  Bring it in!"
+        "Ohhoohooo 4 people got it right. [cheering] Bring it in!"
       ],
       "updatedAt": 1781784506394
     },
@@ -3488,6 +3810,270 @@
         "Here's the question:"
       ],
       "updatedAt": 1782127197473
+    },
+    "cosmic-trivia-questions:question:core-history-002:question": {
+      "id": "cosmic-trivia-questions:question:core-history-002:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Which ancient civilization built the Colosseum in Rome?",
+      "transcriptSegments": [
+        "Which ancient civilization built the Colosseum in Rome?"
+      ],
+      "updatedAt": 1782161670224
+    },
+    "cosmic-trivia-questions:question:core-history-003:question": {
+      "id": "cosmic-trivia-questions:question:core-history-003:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "In what year did the Berlin Wall fall?",
+      "transcriptSegments": [
+        "In what year did the Berlin Wall fall?"
+      ],
+      "updatedAt": 1782161718726
+    },
+    "cosmic-trivia-questions:question:core-history-004:question": {
+      "id": "cosmic-trivia-questions:question:core-history-004:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Who was the first woman to win a Nobel Prize?",
+      "transcriptSegments": [
+        "Who was the first woman to win a Nobel Prize?"
+      ],
+      "updatedAt": 1782161723243
+    },
+    "cosmic-trivia-questions:question:core-history-005:question": {
+      "id": "cosmic-trivia-questions:question:core-history-005:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Which country was the first to give women the right to vote in a national election?",
+      "transcriptSegments": [
+        "Which country was the first to give women the right to vote in a national election?"
+      ],
+      "updatedAt": 1782161729229
+    },
+    "cosmic-trivia-questions:question:core-history-006:question": {
+      "id": "cosmic-trivia-questions:question:core-history-006:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "What was the name of the ship that brought the Pilgrims to America in 1620?",
+      "transcriptSegments": [
+        "What was the name of the ship that brought the Pilgrims to America in 1620?"
+      ],
+      "updatedAt": 1782161735501
+    },
+    "cosmic-trivia-questions:question:core-geography-002:question": {
+      "id": "cosmic-trivia-questions:question:core-geography-002:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "What is the largest country in the world by land area?",
+      "transcriptSegments": [
+        "What is the largest country in the world by land area?"
+      ],
+      "updatedAt": 1782163191647
+    },
+    "cosmic-trivia-questions:question:core-geography-003:question": {
+      "id": "cosmic-trivia-questions:question:core-geography-003:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "On which continent is the Amazon rainforest primarily located?",
+      "transcriptSegments": [
+        "On which continent is the Amazon rainforest primarily located?"
+      ],
+      "updatedAt": 1782163227089
+    },
+    "cosmic-trivia-questions:question:core-geography-004:question": {
+      "id": "cosmic-trivia-questions:question:core-geography-004:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "What is the capital city of Australia?",
+      "transcriptSegments": [
+        "What is the capital city of Australia?"
+      ],
+      "updatedAt": 1782163228220
+    },
+    "cosmic-trivia-questions:question:core-geography-005:question": {
+      "id": "cosmic-trivia-questions:question:core-geography-005:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Which is the only continent that lies in all four hemispheres — north, south, east, and west?",
+      "transcriptSegments": [
+        "Which is the only continent that lies in all four hemispheres — north, south, east, and west?"
+      ],
+      "updatedAt": 1782163262965
+    },
+    "cosmic-trivia-questions:question:core-movies-002:question": {
+      "id": "cosmic-trivia-questions:question:core-movies-002:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "In The Lion King, what is the name of Simba's father?",
+      "transcriptSegments": [
+        "In The Lion King, what is the name of Simba's father?"
+      ],
+      "updatedAt": 1782163264102
+    },
+    "cosmic-trivia-questions:question:core-movies-003:question": {
+      "id": "cosmic-trivia-questions:question:core-movies-003:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "What color pill does Neo choose in The Matrix?",
+      "transcriptSegments": [
+        "What color pill does Neo choose in The Matrix?"
+      ],
+      "updatedAt": 1782163265448
+    },
+    "cosmic-trivia-questions:question:core-movies-004:question": {
+      "id": "cosmic-trivia-questions:question:core-movies-004:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Which director made Jurassic Park, Schindler's List, and E.T.?",
+      "transcriptSegments": [
+        "Which director made Jurassic Park, Schindler's List, and E.T.?"
+      ],
+      "updatedAt": 1782163266477
+    },
+    "cosmic-trivia-questions:question:core-movies-005:question": {
+      "id": "cosmic-trivia-questions:question:core-movies-005:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "In which film does the line \"You can't handle the truth!\" appear?",
+      "transcriptSegments": [
+        "In which film does the line \"You can't handle the truth!\" appear?"
+      ],
+      "updatedAt": 1782163267435
+    },
+    "cosmic-trivia-questions:question:core-nature-002:question": {
+      "id": "cosmic-trivia-questions:question:core-nature-002:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "How many legs does a spider have?",
+      "transcriptSegments": [
+        "How many legs does a spider have?"
+      ],
+      "updatedAt": 1782163268746
+    },
+    "cosmic-trivia-questions:question:core-nature-003:question": {
+      "id": "cosmic-trivia-questions:question:core-nature-003:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "What is the only mammal capable of true powered flight?",
+      "transcriptSegments": [
+        "What is the only mammal capable of true powered flight?"
+      ],
+      "updatedAt": 1782163269690
+    },
+    "cosmic-trivia-questions:question:core-nature-004:question": {
+      "id": "cosmic-trivia-questions:question:core-nature-004:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "What is the hardest natural substance found on Earth?",
+      "transcriptSegments": [
+        "What is the hardest natural substance found on Earth?"
+      ],
+      "updatedAt": 1782163270826
+    },
+    "cosmic-trivia-questions:question:core-nature-005:question": {
+      "id": "cosmic-trivia-questions:question:core-nature-005:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Which ocean creature can regrow a lost arm — and in some species regenerate an entire new body from a single severed limb?",
+      "transcriptSegments": [
+        "Which ocean creature can regrow a lost arm — and in some species regenerate an entire new body from a single severed limb?"
+      ],
+      "updatedAt": 1782163271688
+    },
+    "cosmic-trivia-questions:question:core-space-003:question": {
+      "id": "cosmic-trivia-questions:question:core-space-003:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Why do we always see the same side of the Moon from Earth?",
+      "transcriptSegments": [
+        "Why do we always see the same side of the Moon from Earth?"
+      ],
+      "updatedAt": 1782163272571
+    },
+    "cosmic-trivia-questions:question:core-space-004:question": {
+      "id": "cosmic-trivia-questions:question:core-space-004:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Jupiter's Great Red Spot is best described as what?",
+      "transcriptSegments": [
+        "Jupiter's Great Red Spot is best described as what?"
+      ],
+      "updatedAt": 1782163273503
+    },
+    "cosmic-trivia-questions:question:core-space-005:question": {
+      "id": "cosmic-trivia-questions:question:core-space-005:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "Which spacecraft was the first human-made object to leave the Solar System?",
+      "transcriptSegments": [
+        "Which spacecraft was the first human-made object to leave the Solar System?"
+      ],
+      "updatedAt": 1782163274436
+    },
+    "cosmic-trivia-questions:question:core-sports-002:question": {
+      "id": "cosmic-trivia-questions:question:core-sports-002:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "In basketball, how many points is a free throw worth?",
+      "transcriptSegments": [
+        "In basketball, how many points is a free throw worth?"
+      ],
+      "updatedAt": 1782163275888
+    },
+    "cosmic-trivia-questions:question:core-sports-003:question": {
+      "id": "cosmic-trivia-questions:question:core-sports-003:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "How many rings appear on the Olympic flag?",
+      "transcriptSegments": [
+        "How many rings appear on the Olympic flag?"
+      ],
+      "updatedAt": 1782163276677
+    },
+    "cosmic-trivia-questions:question:core-sports-004:question": {
+      "id": "cosmic-trivia-questions:question:core-sports-004:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "In which sport would a player use a shuttlecock?",
+      "transcriptSegments": [
+        "In which sport would a player use a shuttlecock?"
+      ],
+      "updatedAt": 1782163277472
+    },
+    "cosmic-trivia-questions:question:core-sports-005:question": {
+      "id": "cosmic-trivia-questions:question:core-sports-005:question",
+      "notes": [],
+      "status": "approved",
+      "tags": [],
+      "transcript": "What is the term used in tennis when both players are tied at 40 to 40?",
+      "transcriptSegments": [
+        "What is the term used in tennis when both players are tied at 40 to 40?"
+      ],
+      "updatedAt": 1782163278393
     }
   },
   "customTags": [

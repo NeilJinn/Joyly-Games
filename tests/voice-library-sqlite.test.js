@@ -60,7 +60,7 @@ function sampleCatalog(audioPath = "/games/cosmic-trivia/audio/host/director/pha
 test("voice library sqlite store syncs cue, line, and review metadata", async () => {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), "voice-library-db-"));
   try {
-    const db = createVoiceLibraryDatabase(path.join(tempDir, "voice-library.sqlite"));
+    const db = createVoiceLibraryDatabase(path.join(tempDir, "trivia-content.sqlite"));
     const reviewState = {
       candidates: {
         "phase.answering.answer.open.line-01": {
@@ -89,7 +89,7 @@ test("voice library sqlite store syncs cue, line, and review metadata", async ()
 test("voice library sqlite store saves edited transcript and marks regenerate", async () => {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), "voice-library-db-"));
   try {
-    const db = createVoiceLibraryDatabase(path.join(tempDir, "voice-library.sqlite"));
+    const db = createVoiceLibraryDatabase(path.join(tempDir, "trivia-content.sqlite"));
     const reviewState = { candidates: {} };
     syncVoiceLibraryDatabase(db, { catalog: sampleCatalog(), reviewState });
 
@@ -117,7 +117,7 @@ test("voice library sqlite store validates ready assets when file and text hash 
     await mkdir(path.dirname(audioFile), { recursive: true });
     await writeFile(audioFile, "fake audio");
 
-    const db = createVoiceLibraryDatabase(path.join(tempDir, "voice-library.sqlite"));
+    const db = createVoiceLibraryDatabase(path.join(tempDir, "trivia-content.sqlite"));
     syncVoiceLibraryDatabase(db, {
       catalog: sampleCatalog(audioPath),
       reviewState: {
@@ -146,7 +146,7 @@ test("voice library sqlite store validates ready assets when file and text hash 
 test("voice library sqlite store creates new cues with subevents and trigger rules", async () => {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), "voice-library-db-"));
   try {
-    const db = createVoiceLibraryDatabase(path.join(tempDir, "voice-library.sqlite"));
+    const db = createVoiceLibraryDatabase(path.join(tempDir, "trivia-content.sqlite"));
     const cue = createVoiceCue(db, {
       gameId: "cosmic-trivia",
       projectTitle: "Cosmic Trivia",
@@ -184,7 +184,7 @@ test("voice library sqlite store creates new cues with subevents and trigger rul
 test("voice library sqlite store appends lines to an existing cue with the next file name", async () => {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), "voice-library-db-"));
   try {
-    const db = createVoiceLibraryDatabase(path.join(tempDir, "voice-library.sqlite"));
+    const db = createVoiceLibraryDatabase(path.join(tempDir, "trivia-content.sqlite"));
     syncVoiceLibraryDatabase(db, { catalog: sampleCatalog(), reviewState: { candidates: {} } });
 
     const line = createVoiceLine(db, {
@@ -207,7 +207,7 @@ test("voice library sqlite store appends lines to an existing cue with the next 
 test("voice library sqlite sync preserves existing trigger rules when catalog has no trigger metadata", async () => {
   const tempDir = await mkdtemp(path.join(os.tmpdir(), "voice-library-db-"));
   try {
-    const db = createVoiceLibraryDatabase(path.join(tempDir, "voice-library.sqlite"));
+    const db = createVoiceLibraryDatabase(path.join(tempDir, "trivia-content.sqlite"));
     createVoiceCue(db, {
       gameId: "cosmic-trivia",
       projectTitle: "Cosmic Trivia",
@@ -245,7 +245,7 @@ test("voice library catalog exposes question audio as a separate project that sy
     assert.ok(firstQuestionGroup.domain);
     assert.ok(firstQuestionGroup.eventPath.includes("prompt"));
 
-    const db = createVoiceLibraryDatabase(path.join(tempDir, "voice-library.sqlite"));
+    const db = createVoiceLibraryDatabase(path.join(tempDir, "trivia-content.sqlite"));
     syncVoiceLibraryDatabase(db, { catalog, reviewState: {}, publicRoot: path.join(tempDir, "public") });
     const questionRows = listVoiceLibraryLines(db, { projectId: "cosmic-trivia-questions" });
 

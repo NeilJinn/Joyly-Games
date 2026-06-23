@@ -1,53 +1,23 @@
 import { writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
+import { DatabaseSync } from "node:sqlite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
-const authoringPath = path.join(projectRoot, "content", "games", "cosmic-trivia", "authoring", "questions.xlsx");
+const dbPath = path.join(projectRoot, "content", "voice-library", "trivia-content.sqlite");
 const outputPath = path.join(projectRoot, "content", "games", "cosmic-trivia", "question-packs", "core.json");
 
-const columns = [
-  "id",
-  "category",
-  "tags",
-  "difficulty",
-  "question",
-  "answera",
-  "answerb",
-  "answerc",
-  "answerd",
-  "correctanswer",
-  "fact",
-  "questionaudio",
-  "enabled"
-];
-
-function normalizeHeader(value) {
-  return String(value ?? "").trim().toLowerCase();
-}
-
-function cellText(value) {
-  return String(value ?? "").trim();
-}
-
-function isRowBlank(row) {
-  return row.every(value => cellText(value) === "");
-}
-
 function parseTags(value) {
-  return cellText(value)
-    .split(",")
-    .map(tag => tag.trim())
-    .filter(Boolean);
-}
-
-function parseEnabled(value) {
-  const text = cellText(value).toLowerCase();
-  if (text === "" || text === "true" || text === "1" || text === "yes") return true;
-  if (text === "false" || text === "0" || text === "no") return false;
-  throw new Error(`enabled must be true or false, got "${value}"`);
+  try {
+    const parsed = JSON.parse(value || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return String(value || "")
+      .split(",")
+      .map(tag => tag.trim())
+      .filter(Boolean);
+  }
 }
 
 function fail(errors) {
@@ -55,25 +25,21 @@ function fail(errors) {
   process.exitCode = 1;
 }
 
-function questionFromRow(row, rowNumber, indexByColumn, errors, seenIds) {
-  const get = name => row[indexByColumn[normalizeHeader(name)]];
-  const enabled = parseEnabled(get("enabled"));
-  if (!enabled) return null;
+function questionFromRow(row, errors, seenIds) {
+  const id = String(row.id || "").trim();
+  const category = String(row.category || "").trim();
+  const tags = parseTags(row.tags_json);
+  const difficulty = String(row.difficulty || "").trim();
+  const question = String(row.question || "").trim();
+  const answerA = String(row.answer_a || "").trim();
+  const answerB = String(row.answer_b || "").trim();
+  const answerC = String(row.answer_c || "").trim();
+  const answerD = String(row.answer_d || "").trim();
+  const correctAnswer = String(row.correct_answer || "").trim().toLowerCase();
+  const fact = String(row.fact || "").trim();
+  const questionAudio = String(row.question_audio || "").trim();
 
-  const id = cellText(get("id"));
-  const category = cellText(get("category"));
-  const tags = parseTags(get("tags"));
-  const difficulty = cellText(get("difficulty"));
-  const question = cellText(get("question"));
-  const answerA = cellText(get("answerA"));
-  const answerB = cellText(get("answerB"));
-  const answerC = cellText(get("answerC"));
-  const answerD = cellText(get("answerD"));
-  const correctAnswer = cellText(get("correctAnswer")).toLowerCase();
-  const fact = cellText(get("fact"));
-  const questionAudio = cellText(get("questionAudio"));
-
-  const label = `Row ${rowNumber}`;
+  const label = `Row ${id || "(unknown)"}`;
 
   if (!id) errors.push(`${label}: id is required`);
   if (!category) errors.push(`${label} (${id || "missing id"}): category is required`);
@@ -118,40 +84,23 @@ function questionFromRow(row, rowNumber, indexByColumn, errors, seenIds) {
   };
 }
 
-async function loadWorkbook() {
-  const input = await FileBlob.load(authoringPath);
-  return SpreadsheetFile.importXlsx(input);
-}
-
 async function main() {
-  const workbook = await loadWorkbook();
-  let sheet;
-  try {
-    sheet = workbook.worksheets.getItem("Questions");
-  } catch {
-    sheet = workbook.worksheets.getActiveWorksheet();
-  }
+  const db = new DatabaseSync(dbPath);
+  const rows = db.prepare(
+    "SELECT * FROM questions WHERE game_id = 'cosmic-trivia' AND enabled = 1"
+  ).all();
+  db.close();
 
-  const usedRange = sheet.getUsedRange();
-  const values = usedRange?.values || [];
   const errors = [];
-
-  if (!values.length) {
-    errors.push("The Questions sheet is empty.");
-  }
-
-  const headers = (values[0] || []).map(normalizeHeader);
-  const indexByColumn = Object.fromEntries(headers.map((header, index) => [header, index]));
-  for (const column of columns) {
-    if (!(column in indexByColumn)) errors.push(`Missing required column "${column}"`);
-  }
-
   const questions = [];
   const seenIds = new Set();
-  for (let rowIndex = 1; rowIndex < values.length; rowIndex += 1) {
-    const row = values[rowIndex] || [];
-    if (isRowBlank(row)) continue;
-    const question = questionFromRow(row, rowIndex + 1, indexByColumn, errors, seenIds);
+
+  if (!rows.length) {
+    errors.push("No enabled questions found in the database.");
+  }
+
+  for (const row of rows) {
+    const question = questionFromRow(row, errors, seenIds);
     if (question) questions.push(question);
   }
 

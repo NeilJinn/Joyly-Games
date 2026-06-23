@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
 const sourcePath = path.join(projectRoot, "content", "games", "cosmic-trivia", "director", "cues.json");
-const dbPath = path.join(projectRoot, "content", "voice-library", "voice-library.sqlite");
+const dbPath = path.join(projectRoot, "content", "voice-library", "trivia-content.sqlite");
 const outputPath = path.join(projectRoot, "public", "games", "cosmic-trivia", "director", "cue-library.generated.js");
 const tsOutputPath = path.join(projectRoot, "src", "lib", "director", "cosmic-trivia-cue-library.generated.ts");
 const VALID_SCOPES = new Set(["phase", "global", "cross"]);

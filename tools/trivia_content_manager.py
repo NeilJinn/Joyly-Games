@@ -14,18 +14,18 @@ import shutil
 import tkinter as tk
 from dataclasses import dataclass
 from pathlib import Path
-from tkinter import messagebox, scrolledtext, ttk
+from tkinter import filedialog, messagebox, scrolledtext, ttk
 from urllib import error, request
 import webbrowser
 
 
 APP_TITLE = "Voice Library Generator"
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DB_PATH = PROJECT_ROOT / "content" / "voice-library" / "voice-library.sqlite"
+DB_PATH = PROJECT_ROOT / "content" / "voice-library" / "trivia-content.sqlite"
 PUBLIC_ROOT = PROJECT_ROOT / "public"
 MANIFEST_PATH = PROJECT_ROOT / "content" / "games" / "cosmic-trivia" / "audio" / "tts-manifest.json"
 REVIEW_STATE_PATH = PROJECT_ROOT / "content" / "voice-library" / "review-state.json"
-VOICE_LIBRARY_URL = f"file://{PROJECT_ROOT / 'public' / 'voice-library' / 'index.html'}"
+
 DIRECTOR_TS_PATH = PROJECT_ROOT / "src" / "lib" / "director" / "cosmic-trivia-director.ts"
 CONFIG_PATH = Path.home() / ".voice-library-generator.json"
 DEFAULT_REGENERATE_ONLY = False
@@ -829,8 +829,12 @@ def generate_speech(api_key: str, base_url: str, voice_id: str, model_id: str, o
         },
     )
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with request.urlopen(req, timeout=60 * 10, context=create_https_context()) as response, output_path.open("wb") as output_file:
-        shutil.copyfileobj(response, output_file, length=1024 * 64)
+    try:
+        with request.urlopen(req, timeout=60 * 10, context=create_https_context()) as response, output_path.open("wb") as output_file:
+            shutil.copyfileobj(response, output_file, length=1024 * 64)
+    except __import__("urllib").error.HTTPError as e:
+        body = e.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"ElevenLabs HTTP {e.code}: {body[:500]}") from e
 
 
 def ensure_director_triggered_column() -> None:
@@ -961,6 +965,13 @@ def generate_local_marked(api_key: str, voice_id_override: str = "", line_ids: l
 
     generated: list[dict] = []
     skipped: list[dict] = []
+    errors: list[dict] = []
+    log_lines: list[str] = []
+
+    def log(msg: str) -> None:
+        print(msg)
+        log_lines.append(msg)
+
     with db_connection() as conn:
         if line_ids:
             unique_ids = list(dict.fromkeys(line_ids))
@@ -989,42 +1000,184 @@ def generate_local_marked(api_key: str, voice_id_override: str = "", line_ids: l
                 ORDER BY l.line_id
                 """
             ).fetchall()
+
+        log(f"Found {len(rows)} row(s) to process.")
         for row in rows:
             line_id = row["line_id"]
             text = row["transcript"].strip()
             if not split_voice_text(text):
+                reason = f"transcript is empty (source_text not copied to transcript, or no text set)"
+                log(f"  SKIP {line_id}: {reason}")
                 skipped.append({"id": line_id, "reason": "missing-text"})
                 continue
             if has_test_marker(line_id, row["file_name"], text):
+                log(f"  SKIP {line_id}: test-sample marker")
                 skipped.append({"id": line_id, "reason": "test-sample"})
                 continue
             output_path = audio_path_to_file_path(row["audio_path"])
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            generate_speech(
-                api_key=api_key,
-                base_url=base_url,
-                voice_id=default_voice_id,
-                model_id=model_id,
-                output_format=output_format,
-                text=text,
-                voice_settings=voice_settings,
-                output_path=output_path,
-            )
-            tags = [tag for tag in normalize_tags(parse_json_cell(row["tags_json"], [])) if tag != "regenerate"]
-            conn.execute(
-                """
-                UPDATE voice_review_state
-                SET status = ?, tags_json = ?, updated_at = ?
-                WHERE line_id = ?
-                """,
-                ("pending", json.dumps(tags), int(__import__("time").time() * 1000), line_id),
-            )
-            update_asset_record(conn, line_id, row["audio_path"], text, "ready")
-            mirror_review_state_candidate(line_id, transcript=text, tags=tags, status="pending")
-            generated.append({"id": line_id, "outputPath": str(output_path)})
+            log(f"  → Generating: {line_id}")
+            log(f"    text: {text[:80]}{'…' if len(text) > 80 else ''}")
+            log(f"    output: {output_path}")
+            try:
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                generate_speech(
+                    api_key=api_key,
+                    base_url=base_url,
+                    voice_id=default_voice_id,
+                    model_id=model_id,
+                    output_format=output_format,
+                    text=text,
+                    voice_settings=voice_settings,
+                    output_path=output_path,
+                )
+                tags = [tag for tag in normalize_tags(parse_json_cell(row["tags_json"], [])) if tag != "regenerate"]
+                conn.execute(
+                    """
+                    UPDATE voice_review_state
+                    SET status = ?, tags_json = ?, updated_at = ?
+                    WHERE line_id = ?
+                    """,
+                    ("pending", json.dumps(tags), int(__import__("time").time() * 1000), line_id),
+                )
+                update_asset_record(conn, line_id, row["audio_path"], text, "ready")
+                mirror_review_state_candidate(line_id, transcript=text, tags=tags, status="pending")
+                generated.append({"id": line_id, "outputPath": str(output_path)})
+                log(f"    ✓ Done")
+            except Exception as exc:  # noqa: BLE001
+                log(f"    ✗ FAILED: {exc}")
+                errors.append({"id": line_id, "error": str(exc)})
         conn.commit()
     manifest_log = build_runtime_manifest() if generated else ""
-    return {"generated": generated, "skipped": skipped, "manifestLog": manifest_log}
+    if errors:
+        log(f"\n{len(errors)} error(s) occurred during generation.")
+    return {"generated": generated, "skipped": skipped, "errors": errors, "manifestLog": manifest_log, "log": log_lines}
+
+
+# ── Questions helpers ──────────────────────────────────────────────────────────
+
+def load_questions_from_db() -> list[dict]:
+    """Load all questions from the SQLite questions table."""
+    if not DB_PATH.exists():
+        return []
+    conn = sqlite3.connect(str(DB_PATH))
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute(
+        "SELECT id, category, difficulty, question, question_audio, enabled FROM questions "
+        "WHERE game_id = 'cosmic-trivia' ORDER BY id"
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def question_audio_exists(audio_path: str) -> bool:
+    if not audio_path:
+        return False
+    return (PUBLIC_ROOT / str(audio_path).lstrip("/")).exists()
+
+
+def insert_questions_from_json(questions: list[dict], dry_run: bool = False) -> tuple[int, int]:
+    """Insert questions into SQLite. Returns (inserted, skipped)."""
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    inserted = 0
+    skipped = 0
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        conn.row_factory = sqlite3.Row
+        for q in questions:
+            if dry_run:
+                skipped += 1
+                continue
+            conn.execute(
+                """INSERT OR IGNORE INTO questions
+                   (id, game_id, category, tags_json, difficulty, question,
+                    answer_a, answer_b, answer_c, answer_d, correct_answer,
+                    fact, question_audio, answer_audio, enabled, created_at, updated_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    q["id"], "cosmic-trivia", q["category"],
+                    json.dumps(q.get("tags", [])), q["difficulty"], q["question"],
+                    q.get("answerA", ""), q.get("answerB", ""),
+                    q.get("answerC", ""), q.get("answerD", ""),
+                    str(q.get("correctAnswer", "")).lower(), q.get("fact", ""),
+                    q.get("questionAudio", ""), q.get("answerAudio", ""), 1, now, now,
+                ),
+            )
+            if conn.execute("SELECT changes()").fetchone()[0]:
+                inserted += 1
+            else:
+                skipped += 1
+        conn.commit()
+    return inserted, skipped
+
+
+def register_question_voice_cues(questions: list[dict]) -> tuple[int, int]:
+    """Register voice cues for questions. Returns (added, skipped)."""
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    added = 0
+    skipped = 0
+    with sqlite3.connect(str(DB_PATH)) as conn:
+        conn.row_factory = sqlite3.Row
+        for q in questions:
+            qid = q["id"]
+            cue_key = f"question.{qid}.read"
+            line_id = f"{qid}-line-01"
+            exists = conn.execute(
+                "SELECT 1 FROM voice_cues WHERE cue_key = ?", (cue_key,)
+            ).fetchone()
+            if exists:
+                skipped += 1
+                continue
+            audio_path = q.get("questionAudio", "")
+            source_text = q["question"]
+            file_name = Path(audio_path).name if audio_path else ""
+            conn.execute(
+                """INSERT INTO voice_cues
+                   (cue_key, game_id, project_title, group_id, title, scope, domain,
+                    event_path_json, updated_at, director_triggered)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (cue_key, "cosmic-trivia", "题目朗读", f"questions.{q['category']}",
+                 source_text[:60], "question", "read", json.dumps([qid]), now, 0),
+            )
+            conn.execute(
+                """INSERT INTO voice_lines
+                   (line_id, cue_key, game_id, kind, file_name, audio_path, source_text,
+                    source_text_hash, tone, audience, visibility, active, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (line_id, cue_key, "cosmic-trivia", "line", file_name, audio_path,
+                 source_text, text_hash(source_text), "neutral", "all", "public", 1, now),
+            )
+            conn.execute(
+                """INSERT INTO voice_review_state (line_id, status, tags_json, transcript, updated_at)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (line_id, "unreviewed", "[]", "", now),
+            )
+            conn.execute(
+                """INSERT INTO voice_assets
+                   (line_id, audio_path, file_hash, file_size, text_hash, asset_status, checked_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (line_id, audio_path, None, None, text_hash(source_text), "missing", now),
+            )
+            added += 1
+        conn.commit()
+    return added, skipped
+
+
+def auto_assign_ids_and_audio(questions: list[dict], existing_ids: set[str]) -> None:
+    """Assign missing IDs and questionAudio fields in-place."""
+    import re as _re
+    for q in questions:
+        if not q.get("id"):
+            category = q.get("category", "general")
+            pattern = _re.compile(rf"^core-{_re.escape(category)}-(\d+)$")
+            max_num = max(
+                (int(m.group(1)) for qid in existing_ids if (m := pattern.match(qid))),
+                default=0,
+            )
+            q["id"] = f"core-{category}-{max_num + 1:03d}"
+        existing_ids.add(q["id"])
+        if not q.get("questionAudio"):
+            q["questionAudio"] = f"/games/cosmic-trivia/audio/{q['id']}-question.mp3"
 
 
 class VoiceLibraryGeneratorApp(tk.Tk):
@@ -1103,7 +1256,7 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.audit_button.grid(row=0, column=3, padx=(0, 8))
         self.generate_selected_button = ttk.Button(button_row, text="Regenerate selected", command=self.generate_selected)
         self.generate_selected_button.grid(row=0, column=4, padx=(0, 8))
-        ttk.Button(button_row, text="Open Voice Library", command=lambda: webbrowser.open(VOICE_LIBRARY_URL)).grid(row=0, column=5)
+
 
         settings_row = ttk.Frame(top)
         settings_row.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(14, 0))
@@ -1218,8 +1371,10 @@ class VoiceLibraryGeneratorApp(tk.Tk):
 
         right_detail = ttk.Frame(right, padding=12)
         right_log = ttk.Frame(right, padding=12)
+        right_questions = ttk.Frame(right, padding=12)
         right.add(right_detail, text="Details")
         right.add(right_log, text="Log")
+        right.add(right_questions, text="Questions")
 
         right_detail.columnconfigure(0, weight=1)
         right_detail.rowconfigure(1, weight=1)
@@ -1233,6 +1388,8 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         editor_header = ttk.Frame(right_detail)
         editor_header.grid(row=2, column=0, sticky="ew", pady=(12, 4))
         editor_header.columnconfigure(0, weight=1)
+        editor_header.columnconfigure(1, weight=1)
+        editor_header.columnconfigure(2, weight=1)
         ttk.Label(editor_header, text="Editable transcript", font=("Helvetica", 12, "bold")).grid(row=0, column=0, columnspan=3, sticky="w")
         self.play_button = ttk.Button(editor_header, text="Play", command=self.play_selected_audio)
         self.play_button.grid(row=1, column=0, sticky="ew", padx=(0, 6), pady=(6, 0))
@@ -1269,6 +1426,55 @@ class VoiceLibraryGeneratorApp(tk.Tk):
         self.log_text = scrolledtext.ScrolledText(right_log, wrap=tk.WORD, height=20, font=("Helvetica", 10))
         self.log_text.grid(row=1, column=0, sticky="nsew", pady=(8, 0))
         self.log_text.configure(state="disabled")
+
+        # ── Questions tab ──────────────────────────────────────────────────────
+        right_questions.columnconfigure(0, weight=1)
+        right_questions.rowconfigure(1, weight=1)
+
+        q_header = ttk.Frame(right_questions)
+        q_header.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+        q_header.columnconfigure(0, weight=1)
+        ttk.Label(q_header, text="Questions", font=("Helvetica", 13, "bold")).grid(row=0, column=0, sticky="w")
+        ttk.Label(q_header, text="All trivia questions in the SQLite database.", style="Subtle.TLabel").grid(row=1, column=0, sticky="w", pady=(2, 0))
+
+        q_button_row = ttk.Frame(right_questions)
+        q_button_row.grid(row=2, column=0, sticky="ew", pady=(8, 0))
+        self.q_add_button = ttk.Button(q_button_row, text="Add Questions from JSON", command=self._questions_add_from_json)
+        self.q_add_button.grid(row=0, column=0, padx=(0, 8))
+        self.q_rebuild_button = ttk.Button(q_button_row, text="Rebuild core.json", command=self._questions_rebuild)
+        self.q_rebuild_button.grid(row=0, column=1, padx=(0, 8))
+        self.q_refresh_button = ttk.Button(q_button_row, text="Refresh", command=self._questions_refresh)
+        self.q_refresh_button.grid(row=0, column=2)
+
+        q_table_frame = ttk.Frame(right_questions)
+        q_table_frame.grid(row=1, column=0, sticky="nsew", pady=(8, 0))
+        q_table_frame.columnconfigure(0, weight=1)
+        q_table_frame.rowconfigure(0, weight=1)
+
+        q_cols = ("id", "category", "difficulty", "question", "audio")
+        self.q_tree = ttk.Treeview(q_table_frame, columns=q_cols, show="headings", selectmode="browse")
+        self.q_tree.heading("id", text="ID")
+        self.q_tree.heading("category", text="Category")
+        self.q_tree.heading("difficulty", text="Difficulty")
+        self.q_tree.heading("question", text="Question")
+        self.q_tree.heading("audio", text="Audio")
+        self.q_tree.column("id", width=160, anchor="w")
+        self.q_tree.column("category", width=90, anchor="w")
+        self.q_tree.column("difficulty", width=80, anchor="center")
+        self.q_tree.column("question", width=320, anchor="w")
+        self.q_tree.column("audio", width=70, anchor="center")
+        self.q_tree.grid(row=0, column=0, sticky="nsew")
+
+        q_yscroll = ttk.Scrollbar(q_table_frame, orient=tk.VERTICAL, command=self.q_tree.yview)
+        q_xscroll = ttk.Scrollbar(q_table_frame, orient=tk.HORIZONTAL, command=self.q_tree.xview)
+        self.q_tree.configure(yscrollcommand=q_yscroll.set, xscrollcommand=q_xscroll.set)
+        q_yscroll.grid(row=0, column=1, sticky="ns")
+        q_xscroll.grid(row=1, column=0, sticky="ew")
+
+        self.q_count_var = tk.StringVar(value="")
+        ttk.Label(right_questions, textvariable=self.q_count_var, style="Subtle.TLabel").grid(row=3, column=0, sticky="w", pady=(6, 0))
+
+        self.after(150, self._questions_refresh)
 
         self.status_var = tk.StringVar(value="Ready.")
         status_bar = ttk.Label(self, textvariable=self.status_var, padding=(16, 6))
@@ -2022,14 +2228,12 @@ class VoiceLibraryGeneratorApp(tk.Tk):
                 generated = response.get("generated", []) or []
                 skipped_payload = response.get("skipped", []) or []
                 catalog, refreshed_state, targets = self._fetch_snapshot()
-                lines = [
-                    f"Generated {len(generated)} voice line(s).",
-                    f"Skipped {len(skipped_payload)} voice line(s).",
+                errors_payload = response.get("errors", []) or []
+                lines = response.get("log", []) or []
+                lines += [
+                    "",
+                    f"Summary: {len(generated)} generated, {len(skipped_payload)} skipped, {len(errors_payload)} errors.",
                 ]
-                for item in generated:
-                    lines.append(f"Generated: {item.get('id')} -> {item.get('outputPath')}")
-                for item in skipped_payload:
-                    lines.append(f"Skipped: {item.get('id')} ({item.get('reason')})")
                 if response.get("manifestLog"):
                     lines.append(response["manifestLog"])
                 self.task_queue.put(
@@ -2106,6 +2310,126 @@ class VoiceLibraryGeneratorApp(tk.Tk):
             line_ids=[row.candidate_id for row in rows],
         )
 
+    # ── Questions tab methods ──────────────────────────────────────────────────
+
+    def _questions_refresh(self) -> None:
+        """Reload the questions list from SQLite."""
+        for item in self.q_tree.get_children():
+            self.q_tree.delete(item)
+        questions = load_questions_from_db()
+        for q in questions:
+            audio_ok = question_audio_exists(q.get("question_audio", ""))
+            disabled = not q.get("enabled", 1)
+            self.q_tree.insert(
+                "", "end",
+                values=(
+                    q["id"],
+                    q["category"],
+                    q["difficulty"],
+                    truncate(q["question"], 60),
+                    "ok" if audio_ok else "missing",
+                ),
+                tags=("disabled",) if disabled else ("audio-missing",) if not audio_ok else (),
+            )
+        self.q_tree.tag_configure("disabled", foreground="#aaaaaa")
+        self.q_tree.tag_configure("audio-missing", foreground="#cc6600")
+        enabled_count = sum(1 for q in questions if q.get("enabled", 1))
+        self.q_count_var.set(f"{len(questions)} question(s) total, {enabled_count} enabled")
+
+    def _questions_add_from_json(self) -> None:
+        """Open a file dialog, load questions JSON, insert to SQLite, register voice cues."""
+        path = filedialog.askopenfilename(
+            title="Select questions JSON file",
+            filetypes=[("JSON files", "*.json"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+        try:
+            with open(path, encoding="utf-8") as f:
+                raw = json.load(f)
+        except Exception as exc:
+            messagebox.showerror(APP_TITLE, f"Could not read file: {exc}")
+            return
+
+        if not isinstance(raw, list):
+            messagebox.showerror(APP_TITLE, "JSON must be an array of question objects.")
+            return
+
+        # Validate required fields
+        required = ["category", "tags", "difficulty", "question",
+                    "answerA", "answerB", "answerC", "answerD", "correctAnswer", "fact"]
+        errors: list[str] = []
+        for i, q in enumerate(raw):
+            for field in required:
+                if not q.get(field):
+                    errors.append(f"Question {i + 1}: missing '{field}'")
+            ca = str(q.get("correctAnswer", "")).strip().lower()
+            if ca not in ("a", "b", "c", "d"):
+                errors.append(f"Question {i + 1}: correctAnswer must be a/b/c/d")
+        if errors:
+            messagebox.showerror(APP_TITLE, "Validation errors:\n" + "\n".join(errors[:10]))
+            return
+
+        # Assign IDs
+        existing_ids: set[str] = {self.q_tree.item(iid)["values"][0] for iid in self.q_tree.get_children()}
+        auto_assign_ids_and_audio(raw, existing_ids)
+
+        preview = "\n".join(f"  {q['id']} [{q['category']}] {q['question'][:50]}" for q in raw[:10])
+        if len(raw) > 10:
+            preview += f"\n  … and {len(raw) - 10} more"
+        if not messagebox.askyesno(APP_TITLE, f"Add {len(raw)} question(s)?\n\n{preview}"):
+            return
+
+        self.q_add_button.configure(state="disabled", text="Adding…")
+
+        def worker() -> None:
+            try:
+                inserted, skipped = insert_questions_from_json(raw)
+                cues_added, cues_skipped = register_question_voice_cues(raw)
+                msg = (
+                    f"Added {inserted} question(s) to SQLite"
+                    + (f", skipped {skipped} duplicate(s)" if skipped else "")
+                    + f".\nRegistered {cues_added} voice cue(s)"
+                    + (f", skipped {cues_skipped} already present" if cues_skipped else "")
+                    + "."
+                )
+                self.after(0, lambda: self._questions_add_done(msg))
+            except Exception as exc:
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Failed to add questions: {exc}"))
+            finally:
+                self.after(0, lambda: self.q_add_button.configure(state="normal", text="Add Questions from JSON"))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _questions_add_done(self, msg: str) -> None:
+        self._questions_refresh()
+        messagebox.showinfo(APP_TITLE, msg)
+        # Also rebuild core.json
+        self._questions_rebuild(silent=True)
+
+    def _questions_rebuild(self, *, silent: bool = False) -> None:
+        """Run npm run build:trivia to regenerate core.json from SQLite."""
+        self.q_rebuild_button.configure(state="disabled", text="Rebuilding…")
+
+        def worker() -> None:
+            try:
+                result = subprocess.run(
+                    ["npm", "run", "build:trivia"],
+                    cwd=PROJECT_ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+                if result.returncode != 0:
+                    raise RuntimeError(result.stderr or result.stdout or "build:trivia failed")
+                summary = "\n".join(line for line in result.stdout.splitlines() if line.strip())
+                if not silent:
+                    self.after(0, lambda: messagebox.showinfo(APP_TITLE, f"core.json rebuilt.\n\n{summary}".strip()))
+            except Exception as exc:
+                self.after(0, lambda: messagebox.showerror(APP_TITLE, f"Rebuild failed:\n{exc}"))
+            finally:
+                self.after(0, lambda: self.q_rebuild_button.configure(state="normal", text="Rebuild core.json"))
+
+        threading.Thread(target=worker, daemon=True).start()
 
 
 def main() -> None:

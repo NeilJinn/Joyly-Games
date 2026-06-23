@@ -1,6 +1,6 @@
 import unittest
 
-from tools.voice_library_generator import (
+from tools.trivia_content_manager import (
     DEFAULT_REGENERATE_ONLY,
     REVIEW_STATUS_OPTIONS,
     TargetRow,

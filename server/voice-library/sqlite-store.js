@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
-export const DEFAULT_VOICE_LIBRARY_DB_PATH = path.join(ROOT, "content", "voice-library", "voice-library.sqlite");
+export const DEFAULT_VOICE_LIBRARY_DB_PATH = path.join(ROOT, "content", "voice-library", "trivia-content.sqlite");
 const DEFAULT_PUBLIC_ROOT = path.join(ROOT, "public");
 const DEFAULT_GAME_ID = "cosmic-trivia";
 const DEFAULT_PROJECT_TITLE = "Cosmic Trivia";
