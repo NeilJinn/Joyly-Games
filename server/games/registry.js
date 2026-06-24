@@ -1,9 +1,9 @@
 import { cosmicTriviaRuntime } from "./cosmic-trivia.js";
-import { fateWerewolfRuntime } from "./fate-werewolf.js";
+import { werewolfRuntime } from "../../games/werewolf/server/game.js";
 
 const gameRuntimes = {
   "cosmic-trivia": cosmicTriviaRuntime,
-  "fate-werewolf": fateWerewolfRuntime
+  "fate-werewolf": werewolfRuntime
 };
 
 export function runtimeFor(gameId) {
