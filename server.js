@@ -19,7 +19,7 @@ import {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
-const distDir = path.join(__dirname, "dist");
+const distDir = path.join(__dirname, "build");
 const useReactBuild = existsSync(path.join(distDir, "index.html"));
 const cosmicTriviaMusicDir = path.join(publicDir, "games", "cosmic-trivia", "audio", "music");
 const port = Number(process.env.PORT || 4173);

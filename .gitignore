@@ -2,7 +2,8 @@
 node_modules
 .worktrees
 __pycache__/
-dist
+build/
+dist/
 build
 *.log
 *.sqlite-shm
