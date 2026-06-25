@@ -1,5 +1,5 @@
-import { getQuestionOptions } from "./cosmic-trivia/content-loader.js";
-import { activePlayers } from "../players/status.js";
+import { getQuestionOptions } from "./content-loader.js";
+import { activePlayers } from "../../../server/players/status.js";
 import {
   stateKey,
   testerKey,
@@ -12,7 +12,7 @@ import {
   QUESTION_COUNT_OPTIONS,
   publicCosmicTriviaState,
   privateCosmicTriviaState
-} from "./cosmic-trivia/state.js";
+} from "./state.js";
 import {
   enterPhase,
   directorDelay,
@@ -23,10 +23,10 @@ import {
   markDirectorAudioComplete,
   markDirectorAudioStarted,
   markDirectorAudioStatus
-} from "./cosmic-trivia/flow.js";
-import { finalizeCurrentQuestion } from "./cosmic-trivia/scoring.js";
-import { markQuestionAnswered } from "./cosmic-trivia/question-history.js";
-import { getDirectorMessage, getDirectorStep } from "./cosmic-trivia/director.js";
+} from "./flow.js";
+import { finalizeCurrentQuestion } from "./scoring.js";
+import { markQuestionAnswered } from "./question-history.js";
+import { getDirectorMessage, getDirectorStep } from "./director.js";
 
 const ALL_ANSWERED_GRACE_MS = 1_800;
 

@@ -1,4 +1,4 @@
-import { activePlayers, activePlayerIds } from "../../players/status.js";
+import { activePlayers, activePlayerIds } from "../../../server/players/status.js";
 import { getDirectorStep, getDirectorMessage, getDirectorTimerMs } from "./director.js";
 
 export const QUESTION_COUNT_OPTIONS = [5, 8, 10, 12];

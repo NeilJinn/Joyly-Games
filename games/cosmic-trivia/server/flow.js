@@ -3,7 +3,7 @@ import { DIRECTOR_CUE_REGISTRY } from "../../../public/games/cosmic-trivia/direc
 import { getQuestionOptions } from "./content-loader.js";
 import { answeredQuestionIds, markQuestionAnswered } from "./question-history.js";
 import { selectRoundQuestions } from "./question-selector.js";
-import { activePlayers } from "../../players/status.js";
+import { activePlayers } from "../../../server/players/status.js";
 import {
   stateKey,
   testerKey,

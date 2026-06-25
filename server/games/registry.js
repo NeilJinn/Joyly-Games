@@ -1,4 +1,4 @@
-import { cosmicTriviaRuntime } from "./cosmic-trivia.js";
+import { cosmicTriviaRuntime } from "../../games/cosmic-trivia/server/index.js";
 import { werewolfRuntime } from "../../games/werewolf/server/game.js";
 
 const gameRuntimes = {

@@ -1,4 +1,4 @@
-import { activePlayers } from "../../players/status.js";
+import { activePlayers } from "../../../server/players/status.js";
 import { stateKey, currentQuestion, answerCount } from "./state.js";
 
 export function pushQuestionHistory(state, entry) {
