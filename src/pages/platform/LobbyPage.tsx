@@ -7,7 +7,7 @@ import PlayerStage from "../../components/platform/PlayerStage";
 import GamePickerModal from "../../components/platform/GamePickerModal";
 import HostPhoneLobbyView from "../../components/platform/HostPhoneLobbyView";
 import CosmicTriviaHost from "../games/cosmic-trivia/BigScreenPage";
-import FateWerewolfBigScreen from "../games/fate-werewolf/BigScreenPage";
+import FateWerewolfBigScreen from "../../../games/werewolf/client/BigScreenPage";
 import { useSSE } from "../../hooks/useSSE";
 import { useRoomStore } from "../../stores/roomStore";
 import { useAuthStore } from "../../stores/authStore";
@@ -113,7 +113,7 @@ export default function LobbyPage() {
       <NavBar />
 
       {room.status === "playing" ? (
-        <div style={{ height: "calc(100vh - 52px)" }}>
+        <div style={{ height: "calc(100vh - 52px)", overflow: "hidden" }}>
           {room.selectedGame?.id === "cosmic-trivia" ? (
             <CosmicTriviaHost room={room} code={code!} />
           ) : room.selectedGame?.id === "fate-werewolf" ? (

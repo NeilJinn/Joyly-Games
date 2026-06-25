@@ -13,8 +13,8 @@ import AvatarPage from "./pages/player/AvatarPage";
 import WaitingPage from "./pages/player/WaitingPage";
 import InRoomPage from "./pages/player/InRoomPage";
 import PairPhonePage from "./pages/player/PairPhonePage";
-import FateWerewolfBigScreen from "./pages/games/fate-werewolf/BigScreenPage";
-import FateWerewolfPhone from "./pages/games/fate-werewolf/PhonePage";
+import FateWerewolfBigScreen from "../games/werewolf/client/BigScreenPage";
+import FateWerewolfPhone from "../games/werewolf/client/PhonePage";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function RoomCodeRedirect() {
