@@ -7,17 +7,6 @@ import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { findGame, games, playableGames } from "./server/platform/game-catalog.js";
 import { runtimeFor } from "./server/games/registry.js";
-import { getVoiceLibraryCatalog } from "./server/voice-library/catalog.js";
-import { regenerateTaggedVoiceLibraryAudio } from "./server/voice-library/regenerate.js";
-import { joinVoiceSegments, splitVoiceText } from "./server/voice-library/text.js";
-import { loadVoiceLibraryReviewState, saveVoiceLibraryReviewState } from "./server/voice-library/review-state.js";
-import {
-  createVoiceLibraryDatabase,
-  listVoiceLibraryLines,
-  syncVoiceLibraryDatabase,
-  updateVoiceLibraryLineTranscript,
-  validateVoiceLibraryAssets
-} from "./server/voice-library/sqlite-store.js";
 import { getAvatarCatalog } from "./server/players/avatar-catalog.js";
 import { normalizePlayerProfile, testPlayers } from "./server/players/player-info.js";
 import {
@@ -35,7 +24,6 @@ const useReactBuild = existsSync(path.join(distDir, "index.html"));
 const cosmicTriviaMusicDir = path.join(publicDir, "games", "cosmic-trivia", "audio", "music");
 const port = Number(process.env.PORT || 4173);
 const host = process.env.HOST || "0.0.0.0";
-const voiceLibraryDb = createVoiceLibraryDatabase();
 const localOnlyToolsEnabled = process.env.JOYLY_LOCAL_TOOLS === "true" || process.env.NODE_ENV !== "production";
 
 const rooms = new Map();

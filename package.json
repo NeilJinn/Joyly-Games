@@ -12,15 +12,15 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "start": "node server.js",
-    "test": "node --test tests/*.test.js",
+    "test": "node --test dev-tools/tests/*.test.js",
     "test:ui": "vitest run",
     "test:ui:watch": "vitest",
-    "build:trivia": "node scripts/build-cosmic-trivia-pack.js",
-    "add:trivia-questions": "python3 scripts/add_trivia_questions.py",
-    "build:trivia-director-cues": "node scripts/build-cosmic-trivia-director-cues.js",
-    "validate:cosmic-trivia": "node scripts/validate-cosmic-trivia-pack.js",
-    "generate:cosmic-trivia-host-audio": "node scripts/generate-cosmic-trivia-host-audio.js",
-    "generate:cosmic-trivia-question-audio": "node scripts/generate-cosmic-trivia-question-audio.js"
+    "build:trivia": "node dev-tools/scripts/build-cosmic-trivia-pack.js",
+    "add:trivia-questions": "python3 dev-tools/scripts/add_trivia_questions.py",
+    "build:trivia-director-cues": "node dev-tools/scripts/build-cosmic-trivia-director-cues.js",
+    "validate:cosmic-trivia": "node dev-tools/scripts/validate-cosmic-trivia-pack.js",
+    "generate:cosmic-trivia-host-audio": "node dev-tools/scripts/generate-cosmic-trivia-host-audio.js",
+    "generate:cosmic-trivia-question-audio": "node dev-tools/scripts/generate-cosmic-trivia-question-audio.js"
   },
   "dependencies": {
     "framer-motion": "^11.0.0",
