@@ -14,7 +14,16 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@platform/*": ["src/components/platform/*"],
+      "@room/*": ["src/pages/player/*"],
+      "@types/*": ["src/types/*"],
+      "@ui/*": ["src/components/ui/*"],
+      "@stores/*": ["src/stores/*"],
+      "@hooks/*": ["src/hooks/*"]
+    }
   },
   "include": ["src"]
 }
