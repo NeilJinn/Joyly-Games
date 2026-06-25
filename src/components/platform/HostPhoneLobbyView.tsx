@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GamePickerModal from "./GamePickerModal";
 import AvatarStack from "../player/AvatarStack";
-import CosmicTriviaPhone from "../../pages/games/cosmic-trivia/PhonePage";
+import CosmicTriviaPhone from "../../../games/cosmic-trivia/client/PhonePage";
 import { useAuthStore } from "../../stores/authStore";
 import { useConfig } from "../../hooks/useConfig";
 import { loadPlayerIdentity } from "../../types/player";

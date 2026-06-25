@@ -1,4 +1,4 @@
-import { useCountdown } from "../../../hooks/useCountdown";
+import { useCountdown } from "../hooks/useCountdown";
 
 interface CountdownBarProps {
   endsAt: number | null;

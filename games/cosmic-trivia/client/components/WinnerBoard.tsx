@@ -1,5 +1,5 @@
-import AvatarStack from "../../player/AvatarStack";
-import type { Player } from "../../../types/room";
+import AvatarStack from "@player/AvatarStack";
+import type { Player } from "@types/room";
 
 interface WinnerBoardProps {
   players: Player[];

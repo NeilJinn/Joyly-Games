@@ -6,7 +6,7 @@ import LobbyControls from "../../components/platform/LobbyControls";
 import PlayerStage from "../../components/platform/PlayerStage";
 import GamePickerModal from "../../components/platform/GamePickerModal";
 import HostPhoneLobbyView from "../../components/platform/HostPhoneLobbyView";
-import CosmicTriviaHost from "../games/cosmic-trivia/BigScreenPage";
+import CosmicTriviaHost from "../../../games/cosmic-trivia/client/BigScreenPage";
 import FateWerewolfBigScreen from "../../../games/werewolf/client/BigScreenPage";
 import { useSSE } from "../../hooks/useSSE";
 import { useRoomStore } from "../../stores/roomStore";

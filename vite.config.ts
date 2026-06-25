@@ -1,7 +1,8 @@
-import path from "path";
+// @ts-nocheck
+import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import { fileURLToPath } from "url";
+import path from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -13,6 +14,7 @@ export default defineConfig({
       '@room': path.resolve(__dirname, 'src/pages/player'),
       '@types': path.resolve(__dirname, 'src/types'),
       '@ui': path.resolve(__dirname, 'src/components/ui'),
+      '@player': path.resolve(__dirname, 'src/components/player'),
       '@stores': path.resolve(__dirname, 'src/stores'),
       '@hooks': path.resolve(__dirname, 'src/hooks'),
     },

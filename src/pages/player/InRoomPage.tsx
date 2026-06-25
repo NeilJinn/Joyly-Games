@@ -5,7 +5,7 @@ import PhoneLayout from "../../components/player/PhoneLayout";
 import { useSSE } from "../../hooks/useSSE";
 import { useRoomStore } from "../../stores/roomStore";
 import { useAuthStore } from "../../stores/authStore";
-import CosmicTriviaPhone from "../games/cosmic-trivia/PhonePage";
+import CosmicTriviaPhone from "../../../games/cosmic-trivia/client/PhonePage";
 
 export default function InRoomPage() {
   const { code } = useParams<{ code: string }>();

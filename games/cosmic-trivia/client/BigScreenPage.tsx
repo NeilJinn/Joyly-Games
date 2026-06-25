@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import type { Room, Player } from "../../../types/room";
-import type { CosmicTriviaState } from "../../../types/cosmic-trivia";
-import AnswerGrid from "../../../components/games/cosmic-trivia/AnswerGrid";
-import CountdownBar from "../../../components/games/cosmic-trivia/CountdownBar";
-import ScoreRow from "../../../components/games/cosmic-trivia/ScoreRow";
-import WinnerBoard from "../../../components/games/cosmic-trivia/WinnerBoard";
-import { useCosmicTriviaDirector } from "../../../hooks/useCosmicTriviaDirector";
-import Joyly01Overlay from "../../../components/ui/Joyly01Overlay";
-import ScoreBurstOverlay from "../../../components/games/cosmic-trivia/ScoreBurstOverlay";
-import ConfettiRain from "../../../components/ui/ConfettiRain";
+import type { Room, Player } from "@types/room";
+import type { CosmicTriviaState } from "@types/cosmic-trivia";
+import AnswerGrid from "./components/AnswerGrid";
+import CountdownBar from "./components/CountdownBar";
+import ScoreRow from "./components/ScoreRow";
+import WinnerBoard from "./components/WinnerBoard";
+import { useCosmicTriviaDirector } from "./hooks/useCosmicTriviaDirector";
+import Joyly01Overlay from "./components/Joyly01Overlay";
+import ScoreBurstOverlay from "./components/ScoreBurstOverlay";
+import ConfettiRain from "./components/ConfettiRain";
 
 interface CosmicTriviaHostProps {
   room: Room;

@@ -1,7 +1,7 @@
 import { motion, useAnimation } from "framer-motion";
 import { useEffect, useRef } from "react";
-import AvatarStack from "../../player/AvatarStack";
-import type { Player } from "../../../types/room";
+import AvatarStack from "@player/AvatarStack";
+import type { Player } from "@types/room";
 
 interface ScoreRowProps {
   player: Player;

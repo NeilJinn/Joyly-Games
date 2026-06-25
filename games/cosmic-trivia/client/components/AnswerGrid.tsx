@@ -1,5 +1,5 @@
-import type { CosmicAnswer } from "../../../types/cosmic-trivia";
-import { ANSWER_LETTERS } from "../../../types/cosmic-trivia";
+import type { CosmicAnswer } from "@types/cosmic-trivia";
+import { ANSWER_LETTERS } from "@types/cosmic-trivia";
 
 const LETTER_COLORS = ["#5e82f4", "#f4b04a", "#e05eb4", "#5eb8d4"] as const;
 

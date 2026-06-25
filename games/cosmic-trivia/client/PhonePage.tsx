@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import type { Room } from "../../../types/room";
-import type { CosmicTriviaState, CosmicPrivateState } from "../../../types/cosmic-trivia";
-import { loadPlayerIdentity } from "../../../types/player";
-import PhoneLayout from "../../../components/player/PhoneLayout";
-import AnswerGrid from "../../../components/games/cosmic-trivia/AnswerGrid";
-import PreferencesPicker from "../../../components/games/cosmic-trivia/PreferencesPicker";
-import Joyly01Overlay from "../../../components/ui/Joyly01Overlay";
-import PhoneSadEmojiRain from "../../../components/games/cosmic-trivia/PhoneSadEmojiRain";
-import ConfettiRain from "../../../components/ui/ConfettiRain";
+import type { Room } from "@types/room";
+import type { CosmicTriviaState, CosmicPrivateState } from "@types/cosmic-trivia";
+import { loadPlayerIdentity } from "@types/player";
+import PhoneLayout from "@player/PhoneLayout";
+import AnswerGrid from "./components/AnswerGrid";
+import PreferencesPicker from "./components/PreferencesPicker";
+import Joyly01Overlay from "./components/Joyly01Overlay";
+import PhoneSadEmojiRain from "./components/PhoneSadEmojiRain";
+import ConfettiRain from "./components/ConfettiRain";
 
 interface CosmicTriviaPhoneProps {
   room: Room;
