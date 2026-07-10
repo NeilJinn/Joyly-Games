@@ -40,15 +40,82 @@ const DAY_SUBTITLES: Record<string, string> = {
 }
 
 type CardStage = 'init' | 'center' | 'flip' | 'slide-right'
+const FOREGROUND_UI_SCALE = 0.6
+const DAY_EVENT_TOP = 150
+const DAY_DIVIDER_TOP = 432
+const DAY_NARRATION_TOP = 478
+const DAY_ACTIVE_CONTENT_TOP = 548
 
 // ── Corner decorations — same on every screen ────────────────────────────────
-// Exact values from design HTML
+export function getCornerDecorationLayout(boardWidth = 1440, boardHeight = 810) {
+  const topInset = 31
+  const sideInset = 31
+  const bottomInset = 31
+  const sourceWidth = 696
+  const sourceHeight = 975
+  const sourceInnerBottomLineOffset = 13
+  const scale = (boardHeight - topInset - bottomInset) / sourceHeight
+  const width = sourceWidth * scale
+  const height = sourceHeight * scale
+  const innerBottomLineOffset = sourceInnerBottomLineOffset * scale
+
+  return {
+    top: topInset,
+    topInset,
+    sideInset,
+    bottomInset,
+    innerBottomLineOffset,
+    scaleX: scale,
+    scaleY: scale,
+    left: {
+      left: sideInset,
+      width,
+      height,
+    },
+    right: {
+      left: boardWidth - sideInset - width,
+      width,
+      height,
+    },
+  }
+}
+
+export function getBottomIllustrationLayout() {
+  const { bottomInset, innerBottomLineOffset } = getCornerDecorationLayout()
+  const downwardNudge = 20
+  return {
+    left: 35,
+    bottom: bottomInset + innerBottomLineOffset - downwardNudge,
+    width: 1369,
+    height: 393,
+  }
+}
+
 function CornerDecs() {
+  const layout = getCornerDecorationLayout()
+
   return (
     <>
-      <div style={{ position: 'absolute', left: 0, top: 0, width: 696, height: 975, transform: 'matrix(-1,0,0,1,720,31)', transformOrigin: '0 0', background: `url(${A('dec-corner-desat.png')}) center / cover no-repeat`, pointerEvents: 'none', zIndex: 1 }} />
-      <div style={{ position: 'absolute', left: 720, top: 31, width: 696, height: 975, background: `url(${A('dec-corner-desat.png')}) center / cover no-repeat`, pointerEvents: 'none', zIndex: 1 }} />
+      <div style={{ position: 'absolute', left: layout.left.left, top: layout.top, width: layout.left.width, height: layout.left.height, transform: 'scaleX(-1)', transformOrigin: 'center center', background: `url(${A('dec-corner-desat.png')}) center / 100% 100% no-repeat`, pointerEvents: 'none', zIndex: 1 }} />
+      <div style={{ position: 'absolute', left: layout.right.left, top: layout.top, width: layout.right.width, height: layout.right.height, background: `url(${A('dec-corner-desat.png')}) center / 100% 100% no-repeat`, pointerEvents: 'none', zIndex: 1 }} />
     </>
+  )
+}
+
+function ForegroundScale({ children, zIndex = 3 }: { children: React.ReactNode; zIndex?: number }) {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        transform: `scale(${FOREGROUND_UI_SCALE})`,
+        transformOrigin: 'top center',
+        zIndex,
+        pointerEvents: 'none',
+      }}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -83,9 +150,10 @@ function AvatarBubble({ nickname, alive, isSpeaking }: { nickname: string; alive
 function Illus({ src, bgSize, wipeOut = false }: { src: string; bgSize: string; wipeOut?: boolean }) {
   const [animKey, setAnimKey] = useState(0)
   const prev = useRef(src)
+  const layout = getBottomIllustrationLayout()
   if (prev.current !== src) { prev.current = src; setAnimKey(k => k + 1) }
   return (
-    <div key={animKey} className={wipeOut ? 'ww-illus-out' : 'ww-illus'} style={{ position: 'absolute', left: 35, bottom: 0, width: 1369, height: 393, background: `url(${src}) ${bgSize} no-repeat`, pointerEvents: 'none', zIndex: 2 }} />
+    <div key={animKey} className={wipeOut ? 'ww-illus-out' : 'ww-illus'} style={{ position: 'absolute', left: layout.left, bottom: layout.bottom, width: layout.width, height: layout.height, background: `url(${src}) ${bgSize} no-repeat`, pointerEvents: 'none', zIndex: 2 }} />
   )
 }
 
@@ -167,12 +235,14 @@ function LobbyBoard({ players }: { players: { id: string; nickname: string }[] }
     <div style={{ width: 1440, height: 810, position: 'relative', overflow: 'hidden', fontFamily: "'Jaini', serif" }}>
       <div style={{ position: 'absolute', inset: 0, background: `url(${A('bg-night-deep.jpg')}) center / cover no-repeat`, zIndex: 0 }} />
       <CornerDecs />
-      <span style={{ position: 'absolute', left: 508, top: 309, width: 424, height: 53, fontFamily: "'Jaini', serif", fontSize: 40, lineHeight: '100%', textAlign: 'center', color: 'rgba(255,255,255,.85)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
-        等待玩家加入...
-      </span>
-      <div style={{ position: 'absolute', left: 302, top: 415, width: 858, height: 334, display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', rowGap: 34, columnGap: 0, zIndex: 3 }}>
-        {players.map(p => <AvatarBubble key={p.id} nickname={p.nickname} alive={true} />)}
-      </div>
+      <ForegroundScale>
+        <span style={{ position: 'absolute', left: 508, top: 309, width: 424, height: 53, fontFamily: "'Jaini', serif", fontSize: 40, lineHeight: '100%', textAlign: 'center', color: 'rgba(255,255,255,.85)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
+          等待玩家加入...
+        </span>
+        <div style={{ position: 'absolute', left: 302, top: 415, width: 858, height: 334, display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', rowGap: 34, columnGap: 0, zIndex: 3 }}>
+          {players.map(p => <AvatarBubble key={p.id} nickname={p.nickname} alive={true} />)}
+        </div>
+      </ForegroundScale>
       {/* Screen 1 intentionally has no bottom illustration */}
     </div>
   )
@@ -187,6 +257,7 @@ function WerewolfBoard({ pub }: { pub: WerewolfPublicState }) {
   const headline  = director.headline || ''
   const narration = director.narrationText || pub.directorMessage || ''
   const subtitle  = DAY_SUBTITLES[pub.phase] ?? ''
+  const hasDayEventTitle = Boolean(!isNight && subtitle && subtitle !== headline)
 
   // Show player grid only during day phases (Screen 3/4 layout)
   // role-assignment: headline fills center, no grid overlap
@@ -194,7 +265,7 @@ function WerewolfBoard({ pub }: { pub: WerewolfPublicState }) {
 
   // Grid position: role-assignment uses lobby coords, day phases use day coords
   const gridLeft = pub.phase === 'role-assignment' ? 302 : 291
-  const gridTop  = pub.phase === 'role-assignment' ? 415 : 449
+  const gridTop  = pub.phase === 'role-assignment' ? 415 : (hasDayEventTitle ? DAY_ACTIVE_CONTENT_TOP : DAY_ACTIVE_CONTENT_TOP - 56)
 
   // Arcana card animation
   const [cardStage, setCardStage] = useState<CardStage>('init')
@@ -234,128 +305,122 @@ function WerewolfBoard({ pub }: { pub: WerewolfPublicState }) {
 
       <CornerDecs />
 
-      {/* ── SCREEN 2 — Night stage ─────────────────────────────── */}
-      {isNight && pub.phase !== 'role-assignment' && (
-        <>
-          {/* banner-top.png + moon-emblem.png — exact positions from Screen 2 HTML */}
-          <div style={{ position: 'absolute', left: 464, top: 45, width: 506, height: 238, background: `url(${A('banner-top.png')}) center / contain no-repeat`, zIndex: 2 }} />
-          <div style={{ position: 'absolute', left: 641, top: 70, width: 156, height: 128, background: `url(${A('moon-emblem.png')}) center / contain no-repeat`, zIndex: 2 }} />
-
-          {/* illus-night.png — Screen 2 position */}
-          {victoryPhase !== 'in' && <Illus src={A('illus-night.png')} bgSize="center / contain" wipeOut={victoryPhase === 'out'} />}
-
-          {/* Headline — left:302, top:376, 96px gold */}
-          {headline && (
-            <span style={{ position: 'absolute', left: 302, top: 376, width: 836, height: 126, fontFamily: "'Jaini', serif", fontSize: 96, lineHeight: '100%', textAlign: 'center', color: 'rgb(230,183,109)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
-              {headline}
-            </span>
-          )}
-
-          {/* Divider — left:596, top:491 */}
-          <div style={{ position: 'absolute', left: 596, top: 491, width: 247, height: 42, background: `url(${A('divider.png')}) center / contain no-repeat`, zIndex: 2 }} />
-
-          {/* Two-line role call: instruction (32px gray) + role name (64px red) */}
-          {nightRole ? (
-            <>
-              <span style={{ position: 'absolute', left: 302, top: 546, width: 836, height: 42, fontFamily: "'Jaini', serif", fontSize: 32, lineHeight: '100%', textAlign: 'center', color: 'rgb(217,217,217)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
-                {nightRole.instruction}
-              </span>
-              <span style={{ position: 'absolute', left: 302, top: 594, width: 836, height: 84, fontFamily: "'Jaini', serif", fontSize: 64, lineHeight: '100%', textAlign: 'center', color: 'rgb(242,94,91)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
-                {nightRole.label}
-              </span>
-            </>
-          ) : narration ? (
-            <span style={{ position: 'absolute', left: 302, top: 546, width: 836, fontFamily: "'Jaini', serif", fontSize: 32, lineHeight: 1.4, textAlign: 'center', color: 'rgb(217,217,217)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
-              {narration}
-            </span>
-          ) : null}
-        </>
+      {/* illus layers stay full-size */}
+      {isNight && pub.phase !== 'role-assignment' && victoryPhase !== 'in' && (
+        <Illus src={A('illus-night.png')} bgSize="center / contain" wipeOut={victoryPhase === 'out'} />
+      )}
+      {!isNight && victoryPhase !== 'in' && (
+        <Illus src={A('illus-day.png')} bgSize="bottom center / 100% 188.5%" wipeOut={victoryPhase === 'out'} />
       )}
 
-      {/* role-assignment: night bg, text only, player grid below */}
-      {pub.phase === 'role-assignment' && (
-        <>
-          {headline && (
-            <span style={{ position: 'absolute', left: 302, top: 376, width: 836, fontFamily: "'Jaini', serif", fontSize: 96, lineHeight: '100%', textAlign: 'center', color: 'rgb(230,183,109)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
-              {headline}
-            </span>
-          )}
-          <div style={{ position: 'absolute', left: 596, top: 491, width: 247, height: 42, background: `url(${A('divider.png')}) center / contain no-repeat`, zIndex: 2 }} />
-          {narration && (
-            <span style={{ position: 'absolute', left: 302, top: 546, width: 836, fontFamily: "'Jaini', serif", fontSize: 32, lineHeight: 1.4, textAlign: 'center', color: 'rgb(217,217,217)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
-              {narration}
-            </span>
-          )}
-        </>
-      )}
+      <ForegroundScale>
+        {/* ── SCREEN 2 — Night stage ─────────────────────────────── */}
+        {isNight && pub.phase !== 'role-assignment' && (
+          <>
+            <div style={{ position: 'absolute', left: 464, top: 45, width: 506, height: 238, background: `url(${A('banner-top.png')}) center / contain no-repeat`, zIndex: 2 }} />
+            <div style={{ position: 'absolute', left: 641, top: 70, width: 156, height: 128, background: `url(${A('moon-emblem.png')}) center / contain no-repeat`, zIndex: 2 }} />
 
-      {/* ── SCREENS 3 & 4 — Day stage ──────────────────────────── */}
-      {!isNight && (
-        <>
-          {/* Banner — Screen 3 exact: overflow:hidden wrapper with banner-top + banner-emblem */}
-          <div style={{ position: 'absolute', left: 489, top: 51, width: 462, height: 218, overflow: 'hidden', zIndex: 2 }}>
-            <div style={{ position: 'absolute', left: 0, top: 0, width: 462, height: 218, background: `url(${A('banner-top.png')}) center / cover no-repeat` }} />
-            <div style={{ position: 'absolute', left: 162, top: 7, width: 142, height: 142, background: `url(${A('banner-emblem.png')}) center / contain no-repeat` }} />
-          </div>
+            {headline && (
+              <span style={{ position: 'absolute', left: 302, top: 376, width: 836, height: 126, fontFamily: "'Jaini', serif", fontSize: 96, lineHeight: '100%', textAlign: 'center', color: 'rgb(230,183,109)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
+                {headline}
+              </span>
+            )}
 
-          {/* Headline block — left:302, top:213, overflow:hidden */}
-          <div style={{ position: 'absolute', left: 302, top: 213, width: 836, height: 165, overflow: 'hidden', zIndex: 2 }}>
-            <span style={{ position: 'absolute', left: 0, top: 0, width: 836, height: 126, fontFamily: "'Jaini', serif", fontSize: 96, lineHeight: '100%', textAlign: 'center', color: 'rgb(153,132,99)', textShadow: '0 3px 1px rgba(0,0,0,.46)' }}>
-              {headline}
-            </span>
-            {subtitle && (
-              <span style={{ position: 'absolute', left: 0, top: 123, width: 836, height: 42, fontFamily: "'Jaini', serif", fontSize: 32, lineHeight: '100%', textAlign: 'center', color: 'rgb(186,151,96)', textShadow: '0 3px 1px rgba(0,0,0,.46)' }}>
+            <div style={{ position: 'absolute', left: 596, top: 491, width: 247, height: 42, background: `url(${A('divider.png')}) center / contain no-repeat`, zIndex: 2 }} />
+
+            {nightRole ? (
+              <>
+                <span style={{ position: 'absolute', left: 302, top: 546, width: 836, height: 42, fontFamily: "'Jaini', serif", fontSize: 32, lineHeight: '100%', textAlign: 'center', color: 'rgb(217,217,217)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
+                  {nightRole.instruction}
+                </span>
+                <span style={{ position: 'absolute', left: 302, top: 594, width: 836, height: 84, fontFamily: "'Jaini', serif", fontSize: 64, lineHeight: '100%', textAlign: 'center', color: 'rgb(242,94,91)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
+                  {nightRole.label}
+                </span>
+              </>
+            ) : narration ? (
+              <span style={{ position: 'absolute', left: 302, top: 546, width: 836, fontFamily: "'Jaini', serif", fontSize: 32, lineHeight: 1.4, textAlign: 'center', color: 'rgb(217,217,217)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
+                {narration}
+              </span>
+            ) : null}
+          </>
+        )}
+
+        {pub.phase === 'role-assignment' && (
+          <>
+            {headline && (
+              <span style={{ position: 'absolute', left: 302, top: 376, width: 836, fontFamily: "'Jaini', serif", fontSize: 96, lineHeight: '100%', textAlign: 'center', color: 'rgb(230,183,109)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
+                {headline}
+              </span>
+            )}
+            <div style={{ position: 'absolute', left: 596, top: 491, width: 247, height: 42, background: `url(${A('divider.png')}) center / contain no-repeat`, zIndex: 2 }} />
+            {narration && (
+              <span style={{ position: 'absolute', left: 302, top: 546, width: 836, fontFamily: "'Jaini', serif", fontSize: 32, lineHeight: 1.4, textAlign: 'center', color: 'rgb(217,217,217)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
+                {narration}
+              </span>
+            )}
+          </>
+        )}
+
+        {!isNight && (
+          <>
+            <div style={{ position: 'absolute', left: 489, top: 51, width: 462, height: 218, overflow: 'hidden', zIndex: 2 }}>
+              <div style={{ position: 'absolute', left: 0, top: 0, width: 462, height: 218, background: `url(${A('banner-top.png')}) center / cover no-repeat` }} />
+              <div style={{ position: 'absolute', left: 162, top: 7, width: 142, height: 142, background: `url(${A('banner-emblem.png')}) center / contain no-repeat` }} />
+            </div>
+
+            <div style={{ position: 'absolute', left: 302, top: 213, width: 836, height: 126, zIndex: 2 }}>
+              <span style={{ position: 'absolute', left: 0, top: 0, width: 836, height: 126, fontFamily: "'Jaini', serif", fontSize: 96, lineHeight: '100%', textAlign: 'center', color: 'rgb(153,132,99)', textShadow: '0 3px 1px rgba(0,0,0,.46)' }}>
+                {headline}
+              </span>
+            </div>
+
+            {hasDayEventTitle && (
+              <span style={{ position: 'absolute', left: 302, top: DAY_EVENT_TOP + 213, width: 836, height: 42, fontFamily: "'Jaini', serif", fontSize: 32, lineHeight: '100%', textAlign: 'center', color: 'rgb(186,151,96)', textShadow: '0 3px 1px rgba(0,0,0,.46)', zIndex: 2 }}>
                 {subtitle}
               </span>
             )}
+
+            <div style={{ position: 'absolute', left: 596, top: hasDayEventTitle ? DAY_DIVIDER_TOP : DAY_DIVIDER_TOP - 56, width: 247, height: 42, background: `url(${A('divider.png')}) center / contain no-repeat`, zIndex: 2 }} />
+
+            {pub.phase !== 'fate-card-reveal' && narration && (
+              <span style={{ position: 'absolute', left: 302, top: hasDayEventTitle ? DAY_NARRATION_TOP : DAY_NARRATION_TOP - 56, width: 836, fontFamily: "'Jaini', serif", fontSize: 26, lineHeight: 1.4, textAlign: 'center', color: 'rgb(186,151,96)', textShadow: '0 2px 1px rgba(0,0,0,.3)', zIndex: 2 }}>
+                {narration}
+              </span>
+            )}
+
+            {pub.phase === 'fate-card-reveal' && pub.fateCard && (
+              <ArcanaCard fateCard={pub.fateCard} cardStage={cardStage} />
+            )}
+          </>
+        )}
+
+        {showGrid && (
+          <div style={{ position: 'absolute', left: gridLeft, top: gridTop, width: 858, height: 334, display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', rowGap: 34, columnGap: 0, zIndex: 3 }}>
+            {pub.seats.map(seat => (
+              <AvatarBubble
+                key={seat.id}
+                nickname={seat.nickname}
+                alive={seat.alive}
+                isSpeaking={seat.isSpeaking || seat.isActiveStep}
+              />
+            ))}
           </div>
-
-          {/* Divider — left:596, top:386 */}
-          <div style={{ position: 'absolute', left: 596, top: 386, width: 247, height: 42, background: `url(${A('divider.png')}) center / contain no-repeat`, zIndex: 2 }} />
-
-          {/* Director narration (non-arcana phases) */}
-          {pub.phase !== 'fate-card-reveal' && narration && (
-            <span style={{ position: 'absolute', left: 302, top: 408, width: 836, fontFamily: "'Jaini', serif", fontSize: 26, lineHeight: 1.4, textAlign: 'center', color: 'rgb(186,151,96)', textShadow: '0 2px 1px rgba(0,0,0,.3)', zIndex: 2 }}>
-              {narration}
-            </span>
-          )}
-
-          {/* Arcana card animation (Screen 4) */}
-          {pub.phase === 'fate-card-reveal' && pub.fateCard && (
-            <ArcanaCard fateCard={pub.fateCard} cardStage={cardStage} />
-          )}
-
-          {/* illus-day.png — Screen 3 position */}
-          {victoryPhase !== 'in' && <Illus src={A('illus-day.png')} bgSize="bottom center / 100% 188.5%" wipeOut={victoryPhase === 'out'} />}
-        </>
-      )}
-
-      {/* ── Player grid — Screen 1/3 positions ───────────────────── */}
-      {showGrid && (
-        <div style={{ position: 'absolute', left: gridLeft, top: gridTop, width: 858, height: 334, display: 'flex', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'flex-start', rowGap: 34, columnGap: 0, zIndex: 3 }}>
-          {pub.seats.map(seat => (
-            <AvatarBubble
-              key={seat.id}
-              nickname={seat.nickname}
-              alive={seat.alive}
-              isSpeaking={seat.isSpeaking || seat.isActiveStep}
-            />
-          ))}
-        </div>
-      )}
+        )}
+      </ForegroundScale>
 
       {/* ── Victory overlay — shows after wipe-out completes ────── */}
       {pub.victory && victoryPhase === 'in' && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 20 }}>
           {/* Dark background */}
           <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,.72)' }} />
-          {/* Title + body centered in upper area (above illustration) */}
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 417, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-            <div style={{ fontFamily: "'Jaini', serif", fontSize: 80, lineHeight: '100%', textAlign: 'center', color: 'rgb(230,183,109)', textShadow: '0 3px 1px rgba(0,0,0,.46)' }}>{pub.victory.title}</div>
-            <div style={{ fontFamily: "'Jaini', serif", fontSize: 36, lineHeight: '100%', textAlign: 'center', color: 'rgba(255,255,255,.75)', textShadow: '0 2px 1px rgba(0,0,0,.46)' }}>{pub.victory.body}</div>
-          </div>
+          <ForegroundScale zIndex={21}>
+            <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 417, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+              <div style={{ fontFamily: "'Jaini', serif", fontSize: 80, lineHeight: '100%', textAlign: 'center', color: 'rgb(230,183,109)', textShadow: '0 3px 1px rgba(0,0,0,.46)' }}>{pub.victory.title}</div>
+              <div style={{ fontFamily: "'Jaini', serif", fontSize: 36, lineHeight: '100%', textAlign: 'center', color: 'rgba(255,255,255,.75)', textShadow: '0 2px 1px rgba(0,0,0,.46)' }}>{pub.victory.body}</div>
+            </div>
+          </ForegroundScale>
           {/* Victory illustration wipes in from bottom */}
-          <div className="ww-illus" style={{ position: 'absolute', left: 35, bottom: 0, width: 1369, height: 393, background: `url(${VICTORY_ILLUS[pub.victory.winner] ?? ''}) center / cover no-repeat`, pointerEvents: 'none' }} />
+          <div className="ww-illus" style={{ position: 'absolute', left: getBottomIllustrationLayout().left, bottom: getBottomIllustrationLayout().bottom, width: getBottomIllustrationLayout().width, height: getBottomIllustrationLayout().height, background: `url(${VICTORY_ILLUS[pub.victory.winner] ?? ''}) center / cover no-repeat`, pointerEvents: 'none' }} />
         </div>
       )}
     </div>
@@ -365,20 +430,26 @@ function WerewolfBoard({ pub }: { pub: WerewolfPublicState }) {
 // ── Scaled to any viewport ────────────────────────────────────────────────────
 function ScaledBoard({ children }: { children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(1)
+  const [fit, setFit] = useState({ scale: 1, top: 0, left: 0 })
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const obs = new ResizeObserver(([entry]) => {
-      const { width, height } = entry.contentRect
-      setScale(Math.min(width / 1440, height / 810))
+      const { width: W, height: H } = entry.contentRect
+      const safePad = 16
+      const scale = Math.min((W - safePad * 2) / 1440, (H - safePad * 2) / 810)
+      setFit({
+        scale,
+        top: (H - 810 * scale) / 2,
+        left: (W - 1440 * scale) / 2,
+      })
     })
     obs.observe(el)
     return () => obs.disconnect()
   }, [])
   return (
-    <div ref={ref} style={{ width: '100%', height: '100%', background: '#211c18', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-      <div style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+    <div ref={ref} style={{ position: 'fixed', top: 52, left: 0, right: 0, bottom: 0, background: '#211c18', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', width: 1440, height: 810, transform: `scale(${fit.scale})`, transformOrigin: 'top left', top: fit.top, left: fit.left }}>
         {children}
       </div>
     </div>

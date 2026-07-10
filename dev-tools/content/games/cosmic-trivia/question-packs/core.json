@@ -1,0 +1,1365 @@
+{
+  "id": "core",
+  "title": "Core Trivia",
+  "roundSize": 8,
+  "questions": [
+    {
+      "id": "core-space-001",
+      "category": "space",
+      "tags": [
+        "planets"
+      ],
+      "difficulty": "easy",
+      "question": "Which planet has the tallest known volcano in the Solar System?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Mars"
+        },
+        {
+          "id": "b",
+          "text": "Venus"
+        },
+        {
+          "id": "c",
+          "text": "Jupiter"
+        },
+        {
+          "id": "d",
+          "text": "Mercury"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "Olympus Mons on Mars is about three times taller than Mount Everest.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-001-question.mp3"
+    },
+    {
+      "id": "core-space-002",
+      "category": "space",
+      "tags": [
+        "planets"
+      ],
+      "difficulty": "medium",
+      "question": "Which planet is famous for its large ring system?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Saturn"
+        },
+        {
+          "id": "b",
+          "text": "Mars"
+        },
+        {
+          "id": "c",
+          "text": "Mercury"
+        },
+        {
+          "id": "d",
+          "text": "Earth"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "Saturn's rings are made mostly of ice particles with bits of rock and dust.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-002-question.mp3"
+    },
+    {
+      "id": "core-science-001",
+      "category": "science",
+      "tags": [
+        "ai"
+      ],
+      "difficulty": "easy",
+      "question": "What does the abbreviation AI usually stand for?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Analog Interface"
+        },
+        {
+          "id": "b",
+          "text": "Artificial Intelligence"
+        },
+        {
+          "id": "c",
+          "text": "Asteroid Index"
+        },
+        {
+          "id": "d",
+          "text": "Audio Input"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Artificial intelligence is the field behind machines that can reason, learn, and generate.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-001-question.mp3"
+    },
+    {
+      "id": "core-science-002",
+      "category": "science",
+      "tags": [
+        "light"
+      ],
+      "difficulty": "medium",
+      "question": "Which color of visible light has the shortest wavelength?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Red"
+        },
+        {
+          "id": "b",
+          "text": "Green"
+        },
+        {
+          "id": "c",
+          "text": "Yellow"
+        },
+        {
+          "id": "d",
+          "text": "Violet"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Violet light sits at the short-wavelength end of the visible spectrum.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-002-question.mp3"
+    },
+    {
+      "id": "core-science-003",
+      "category": "science",
+      "tags": [
+        "inventions"
+      ],
+      "difficulty": "medium",
+      "question": "What invention is Johannes Gutenberg most famous for in Europe?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Telescope"
+        },
+        {
+          "id": "b",
+          "text": "Printing press"
+        },
+        {
+          "id": "c",
+          "text": "Steam engine"
+        },
+        {
+          "id": "d",
+          "text": "Compass"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Gutenberg's movable-type printing press helped books spread much faster in Europe.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-science-003-question.mp3"
+    },
+    {
+      "id": "core-general-001",
+      "category": "general",
+      "tags": [
+        "cards"
+      ],
+      "difficulty": "easy",
+      "question": "In a standard deck of cards, how many queens are there?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "2"
+        },
+        {
+          "id": "b",
+          "text": "4"
+        },
+        {
+          "id": "c",
+          "text": "6"
+        },
+        {
+          "id": "d",
+          "text": "8"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "There is one queen in each suit.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-general-001-question.mp3"
+    },
+    {
+      "id": "core-general-002",
+      "category": "general",
+      "tags": [
+        "language"
+      ],
+      "difficulty": "easy",
+      "question": "Which language has the most native speakers worldwide?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "English"
+        },
+        {
+          "id": "b",
+          "text": "Spanish"
+        },
+        {
+          "id": "c",
+          "text": "Mandarin Chinese"
+        },
+        {
+          "id": "d",
+          "text": "Hindi"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "Mandarin Chinese has the largest number of native speakers.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-general-002-question.mp3"
+    },
+    {
+      "id": "core-history-001",
+      "category": "history",
+      "tags": [
+        "history"
+      ],
+      "difficulty": "easy",
+      "question": "Which ancient civilization built the pyramids at Giza?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Romans"
+        },
+        {
+          "id": "b",
+          "text": "Ancient Egyptians"
+        },
+        {
+          "id": "c",
+          "text": "Vikings"
+        },
+        {
+          "id": "d",
+          "text": "Aztecs"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "The Great Pyramid of Giza was built during Egypt's Old Kingdom.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-history-001-question.mp3"
+    },
+    {
+      "id": "core-geography-001",
+      "category": "geography",
+      "tags": [
+        "geography",
+        "oceans"
+      ],
+      "difficulty": "medium",
+      "question": "Which country has the most time zones, including overseas territories?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Russia"
+        },
+        {
+          "id": "b",
+          "text": "United States"
+        },
+        {
+          "id": "c",
+          "text": "France"
+        },
+        {
+          "id": "d",
+          "text": "China"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "France spans many time zones because of territories in the Pacific, Indian Ocean, Caribbean, and elsewhere.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-geography-001-question.mp3"
+    },
+    {
+      "id": "core-nature-001",
+      "category": "nature",
+      "tags": [
+        "animals"
+      ],
+      "difficulty": "easy",
+      "question": "What is the fastest land animal?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Lion"
+        },
+        {
+          "id": "b",
+          "text": "Cheetah"
+        },
+        {
+          "id": "c",
+          "text": "Horse"
+        },
+        {
+          "id": "d",
+          "text": "Kangaroo"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Cheetahs can sprint faster than 100 km/h in short bursts.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-nature-001-question.mp3"
+    },
+    {
+      "id": "core-movies-001",
+      "category": "movies",
+      "tags": [
+        "movies"
+      ],
+      "difficulty": "easy",
+      "question": "In Finding Nemo, what kind of fish is Nemo?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Clownfish"
+        },
+        {
+          "id": "b",
+          "text": "Goldfish"
+        },
+        {
+          "id": "c",
+          "text": "Tuna"
+        },
+        {
+          "id": "d",
+          "text": "Angelfish"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "Nemo and Marlin are clownfish, known for living among sea anemones.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-movies-001-question.mp3"
+    },
+    {
+      "id": "core-sports-001",
+      "category": "sports",
+      "tags": [
+        "sports"
+      ],
+      "difficulty": "easy",
+      "question": "How many players are on the field for one soccer team during normal play?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "9"
+        },
+        {
+          "id": "b",
+          "text": "10"
+        },
+        {
+          "id": "c",
+          "text": "11"
+        },
+        {
+          "id": "d",
+          "text": "12"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "A soccer team fields 11 players, including the goalkeeper.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-sports-001-question.mp3"
+    },
+    {
+      "id": "core-books-001",
+      "category": "general",
+      "tags": [
+        "books"
+      ],
+      "difficulty": "medium",
+      "question": "Who wrote the novel Frankenstein?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Jane Austen"
+        },
+        {
+          "id": "b",
+          "text": "Mary Shelley"
+        },
+        {
+          "id": "c",
+          "text": "Charlotte Bronte"
+        },
+        {
+          "id": "d",
+          "text": "Virginia Woolf"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Mary Shelley published Frankenstein in 1818.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-books-001-question.mp3"
+    },
+    {
+      "id": "core-games-001",
+      "category": "general",
+      "tags": [
+        "games"
+      ],
+      "difficulty": "easy",
+      "question": "In chess, which piece can move in an L shape?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Bishop"
+        },
+        {
+          "id": "b",
+          "text": "Rook"
+        },
+        {
+          "id": "c",
+          "text": "Knight"
+        },
+        {
+          "id": "d",
+          "text": "Queen"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "The knight moves two squares in one direction and one square perpendicular to it.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-games-001-question.mp3"
+    },
+    {
+      "id": "core-earth-001",
+      "category": "science",
+      "tags": [
+        "earth"
+      ],
+      "difficulty": "easy",
+      "question": "Which ocean is the largest on Earth?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Atlantic"
+        },
+        {
+          "id": "b",
+          "text": "Indian"
+        },
+        {
+          "id": "c",
+          "text": "Pacific"
+        },
+        {
+          "id": "d",
+          "text": "Arctic"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "The Pacific covers more area than all land on Earth combined.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-earth-001-question.mp3"
+    },
+    {
+      "id": "core-earth-002",
+      "category": "science",
+      "tags": [
+        "earth"
+      ],
+      "difficulty": "medium",
+      "question": "What layer of Earth lies directly beneath the crust?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Inner core"
+        },
+        {
+          "id": "b",
+          "text": "Mantle"
+        },
+        {
+          "id": "c",
+          "text": "Outer core"
+        },
+        {
+          "id": "d",
+          "text": "Atmosphere"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "The mantle is the thick layer between Earth's crust and core.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-earth-002-question.mp3"
+    },
+    {
+      "id": "core-food-001",
+      "category": "general",
+      "tags": [
+        "food"
+      ],
+      "difficulty": "easy",
+      "question": "What fruit is traditionally used to make guacamole?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Avocado"
+        },
+        {
+          "id": "b",
+          "text": "Banana"
+        },
+        {
+          "id": "c",
+          "text": "Apple"
+        },
+        {
+          "id": "d",
+          "text": "Lime"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "Guacamole is an avocado-based dip that originated in Mexico.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-food-001-question.mp3"
+    },
+    {
+      "id": "core-music-001",
+      "category": "general",
+      "tags": [
+        "music"
+      ],
+      "difficulty": "medium",
+      "question": "Which instrument has 88 keys in its standard modern form?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Piano"
+        },
+        {
+          "id": "b",
+          "text": "Violin"
+        },
+        {
+          "id": "c",
+          "text": "Flute"
+        },
+        {
+          "id": "d",
+          "text": "Drum kit"
+        }
+      ],
+      "correctAnswer": "a",
+      "fact": "A modern full-size piano usually has 52 white keys and 36 black keys.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-music-001-question.mp3"
+    },
+    {
+      "id": "core-plants-001",
+      "category": "science",
+      "tags": [
+        "plants"
+      ],
+      "difficulty": "easy",
+      "question": "What is the main gas plants absorb from the air?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Oxygen"
+        },
+        {
+          "id": "b",
+          "text": "Carbon dioxide"
+        },
+        {
+          "id": "c",
+          "text": "Hydrogen"
+        },
+        {
+          "id": "d",
+          "text": "Neon"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Plants use carbon dioxide during photosynthesis.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-plants-001-question.mp3"
+    },
+    {
+      "id": "core-weather-001",
+      "category": "science",
+      "tags": [
+        "weather"
+      ],
+      "difficulty": "easy",
+      "question": "What instrument is used to measure air pressure?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Thermometer"
+        },
+        {
+          "id": "b",
+          "text": "Barometer"
+        },
+        {
+          "id": "c",
+          "text": "Ruler"
+        },
+        {
+          "id": "d",
+          "text": "Anemometer"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "A barometer measures atmospheric pressure, which helps forecast weather changes.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-weather-001-question.mp3"
+    },
+    {
+      "id": "core-history-002",
+      "category": "history",
+      "tags": [
+        "ancient",
+        "rome",
+        "architecture"
+      ],
+      "difficulty": "easy",
+      "question": "Which ancient civilization built the Colosseum in Rome?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Ancient Greece"
+        },
+        {
+          "id": "b",
+          "text": "The Byzantine Empire"
+        },
+        {
+          "id": "c",
+          "text": "Ancient Rome"
+        },
+        {
+          "id": "d",
+          "text": "The Ottoman Empire"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "The Colosseum was completed around 80 AD under Emperor Titus and could hold up to 80,000 spectators for gladiatorial contests and public spectacles.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-history-002-question.mp3"
+    },
+    {
+      "id": "core-history-003",
+      "category": "history",
+      "tags": [
+        "modern",
+        "cold war",
+        "europe"
+      ],
+      "difficulty": "easy",
+      "question": "In what year did the Berlin Wall fall?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "1985"
+        },
+        {
+          "id": "b",
+          "text": "1987"
+        },
+        {
+          "id": "c",
+          "text": "1991"
+        },
+        {
+          "id": "d",
+          "text": "1989"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "The Berlin Wall fell on November 9, 1989, after 28 years of dividing East and West Germany — one of the most iconic moments of the Cold War's end.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-history-003-question.mp3"
+    },
+    {
+      "id": "core-history-004",
+      "category": "history",
+      "tags": [
+        "science",
+        "women",
+        "nobel"
+      ],
+      "difficulty": "medium",
+      "question": "Who was the first woman to win a Nobel Prize?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Rosalind Franklin"
+        },
+        {
+          "id": "b",
+          "text": "Marie Curie"
+        },
+        {
+          "id": "c",
+          "text": "Ada Lovelace"
+        },
+        {
+          "id": "d",
+          "text": "Florence Nightingale"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Marie Curie won the Nobel Prize in Physics in 1903, and again in Chemistry in 1911 — making her the only person ever to win Nobel Prizes in two different sciences.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-history-004-question.mp3"
+    },
+    {
+      "id": "core-history-005",
+      "category": "history",
+      "tags": [
+        "politics",
+        "women",
+        "voting"
+      ],
+      "difficulty": "medium",
+      "question": "Which country was the first to give women the right to vote in a national election?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "United States"
+        },
+        {
+          "id": "b",
+          "text": "France"
+        },
+        {
+          "id": "c",
+          "text": "New Zealand"
+        },
+        {
+          "id": "d",
+          "text": "Sweden"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "New Zealand granted women the right to vote in 1893, making it the first self-governing country to do so — over 25 years before the United States followed in 1920.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-history-005-question.mp3"
+    },
+    {
+      "id": "core-history-006",
+      "category": "history",
+      "tags": [
+        "american",
+        "colonial",
+        "ships"
+      ],
+      "difficulty": "easy",
+      "question": "What was the name of the ship that brought the Pilgrims to America in 1620?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "The Santa Maria"
+        },
+        {
+          "id": "b",
+          "text": "The Endeavour"
+        },
+        {
+          "id": "c",
+          "text": "The Discovery"
+        },
+        {
+          "id": "d",
+          "text": "The Mayflower"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "The Mayflower carried 102 passengers on a 66-day journey across the Atlantic. The settlers landed at Plymouth, Massachusetts, where they established one of the first permanent English colonies.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-history-006-question.mp3"
+    },
+    {
+      "id": "core-space-003",
+      "category": "space",
+      "tags": [
+        "moon",
+        "tidal-locking"
+      ],
+      "difficulty": "easy",
+      "question": "Why do we always see the same side of the Moon from Earth?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Earth's magnetic field locks the Moon in place"
+        },
+        {
+          "id": "b",
+          "text": "The Moon rotates once for every orbit around Earth"
+        },
+        {
+          "id": "c",
+          "text": "The Moon does not rotate at all"
+        },
+        {
+          "id": "d",
+          "text": "The Moon's far side is permanently facing the Sun"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "This phenomenon is called tidal locking — the Moon's rotation period and orbital period are both about 27.3 days, so the same face is always turned toward Earth.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-003-question.mp3"
+    },
+    {
+      "id": "core-space-004",
+      "category": "space",
+      "tags": [
+        "jupiter",
+        "planets"
+      ],
+      "difficulty": "medium",
+      "question": "Jupiter's Great Red Spot is best described as what?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "A massive volcano"
+        },
+        {
+          "id": "b",
+          "text": "A giant impact crater"
+        },
+        {
+          "id": "c",
+          "text": "A long-lived storm system"
+        },
+        {
+          "id": "d",
+          "text": "A desert of red iron oxide"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "The Great Red Spot is a storm wider than Earth that has raged on Jupiter for at least 350 years, though it has been slowly shrinking over the past century.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-004-question.mp3"
+    },
+    {
+      "id": "core-space-005",
+      "category": "space",
+      "tags": [
+        "voyager",
+        "spacecraft",
+        "solar-system"
+      ],
+      "difficulty": "medium",
+      "question": "Which spacecraft was the first human-made object to leave the Solar System?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Apollo 11"
+        },
+        {
+          "id": "b",
+          "text": "Voyager 1"
+        },
+        {
+          "id": "c",
+          "text": "New Horizons"
+        },
+        {
+          "id": "d",
+          "text": "Cassini"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "Launched in 1977, Voyager 1 crossed into interstellar space in 2012 and continues transmitting data from over 23 billion kilometers away.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-space-005-question.mp3"
+    },
+    {
+      "id": "core-geography-002",
+      "category": "geography",
+      "tags": [
+        "countries",
+        "land-area"
+      ],
+      "difficulty": "easy",
+      "question": "What is the largest country in the world by land area?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Canada"
+        },
+        {
+          "id": "b",
+          "text": "China"
+        },
+        {
+          "id": "c",
+          "text": "United States"
+        },
+        {
+          "id": "d",
+          "text": "Russia"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Russia covers about 17.1 million square kilometers — more than twice the size of Canada, the second-largest country.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-geography-002-question.mp3"
+    },
+    {
+      "id": "core-geography-003",
+      "category": "geography",
+      "tags": [
+        "amazon",
+        "rainforest",
+        "continents"
+      ],
+      "difficulty": "easy",
+      "question": "On which continent is the Amazon rainforest primarily located?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Africa"
+        },
+        {
+          "id": "b",
+          "text": "South America"
+        },
+        {
+          "id": "c",
+          "text": "Asia"
+        },
+        {
+          "id": "d",
+          "text": "North America"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "The Amazon spans 5.5 million square kilometers, mostly in Brazil, and is home to roughly 10 percent of all species on Earth.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-geography-003-question.mp3"
+    },
+    {
+      "id": "core-geography-004",
+      "category": "geography",
+      "tags": [
+        "australia",
+        "capitals"
+      ],
+      "difficulty": "medium",
+      "question": "What is the capital city of Australia?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Sydney"
+        },
+        {
+          "id": "b",
+          "text": "Melbourne"
+        },
+        {
+          "id": "c",
+          "text": "Canberra"
+        },
+        {
+          "id": "d",
+          "text": "Brisbane"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "Canberra was purpose-built as the capital in 1913 as a compromise between Sydney and Melbourne, which both wanted the title.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-geography-004-question.mp3"
+    },
+    {
+      "id": "core-geography-005",
+      "category": "geography",
+      "tags": [
+        "africa",
+        "hemispheres",
+        "continents"
+      ],
+      "difficulty": "medium",
+      "question": "Which is the only continent that lies in all four hemispheres — north, south, east, and west?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Asia"
+        },
+        {
+          "id": "b",
+          "text": "South America"
+        },
+        {
+          "id": "c",
+          "text": "Africa"
+        },
+        {
+          "id": "d",
+          "text": "Australia"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "Africa straddles both the equator and the prime meridian, making it uniquely positioned across all four hemispheres.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-geography-005-question.mp3"
+    },
+    {
+      "id": "core-movies-002",
+      "category": "movies",
+      "tags": [
+        "lion-king",
+        "disney",
+        "animation"
+      ],
+      "difficulty": "easy",
+      "question": "In The Lion King, what is the name of Simba's father?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Rafiki"
+        },
+        {
+          "id": "b",
+          "text": "Scar"
+        },
+        {
+          "id": "c",
+          "text": "Pumba"
+        },
+        {
+          "id": "d",
+          "text": "Mufasa"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Mufasa is voiced by James Earl Jones in both the 1994 animated original and the 2019 remake — one of cinema's most iconic father figures.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-movies-002-question.mp3"
+    },
+    {
+      "id": "core-movies-003",
+      "category": "movies",
+      "tags": [
+        "matrix",
+        "sci-fi"
+      ],
+      "difficulty": "easy",
+      "question": "What color pill does Neo choose in The Matrix?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Blue"
+        },
+        {
+          "id": "b",
+          "text": "White"
+        },
+        {
+          "id": "c",
+          "text": "Red"
+        },
+        {
+          "id": "d",
+          "text": "Green"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "The red pill represents truth and reality; the blue pill, comfortable ignorance. The choice has become one of cinema's most enduring metaphors.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-movies-003-question.mp3"
+    },
+    {
+      "id": "core-movies-004",
+      "category": "movies",
+      "tags": [
+        "directors",
+        "spielberg"
+      ],
+      "difficulty": "medium",
+      "question": "Which director made Jurassic Park, Schindler's List, and E.T.?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "James Cameron"
+        },
+        {
+          "id": "b",
+          "text": "George Lucas"
+        },
+        {
+          "id": "c",
+          "text": "Christopher Nolan"
+        },
+        {
+          "id": "d",
+          "text": "Steven Spielberg"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Spielberg has been making blockbusters for over five decades, winning multiple Academy Awards and directing some of the highest-grossing films ever made.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-movies-004-question.mp3"
+    },
+    {
+      "id": "core-movies-005",
+      "category": "movies",
+      "tags": [
+        "quotes",
+        "jack-nicholson"
+      ],
+      "difficulty": "medium",
+      "question": "In which film does the line \"You can't handle the truth!\" appear?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "The Shawshank Redemption"
+        },
+        {
+          "id": "b",
+          "text": "A Few Good Men"
+        },
+        {
+          "id": "c",
+          "text": "Jerry Maguire"
+        },
+        {
+          "id": "d",
+          "text": "Gladiator"
+        }
+      ],
+      "correctAnswer": "b",
+      "fact": "The line is delivered by Jack Nicholson in this 1992 courtroom drama, and consistently ranks among the most quoted lines in movie history.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-movies-005-question.mp3"
+    },
+    {
+      "id": "core-nature-002",
+      "category": "nature",
+      "tags": [
+        "spiders",
+        "arachnids",
+        "anatomy"
+      ],
+      "difficulty": "easy",
+      "question": "How many legs does a spider have?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Six"
+        },
+        {
+          "id": "b",
+          "text": "Ten"
+        },
+        {
+          "id": "c",
+          "text": "Eight"
+        },
+        {
+          "id": "d",
+          "text": "Twelve"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "Eight legs is the defining trait of arachnids. Insects have six legs — so if you count eight, it's an arachnid, not a bug.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-nature-002-question.mp3"
+    },
+    {
+      "id": "core-nature-003",
+      "category": "nature",
+      "tags": [
+        "bats",
+        "mammals",
+        "flight"
+      ],
+      "difficulty": "easy",
+      "question": "What is the only mammal capable of true powered flight?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Flying squirrel"
+        },
+        {
+          "id": "b",
+          "text": "Sugar glider"
+        },
+        {
+          "id": "c",
+          "text": "Flying lemur"
+        },
+        {
+          "id": "d",
+          "text": "Bat"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Flying squirrels and gliders can only glide downward, but bats use elongated finger bones covered by a wing membrane to achieve genuine sustained flight.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-nature-003-question.mp3"
+    },
+    {
+      "id": "core-nature-004",
+      "category": "nature",
+      "tags": [
+        "minerals",
+        "diamond",
+        "hardness"
+      ],
+      "difficulty": "medium",
+      "question": "What is the hardest natural substance found on Earth?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Quartz"
+        },
+        {
+          "id": "b",
+          "text": "Titanium"
+        },
+        {
+          "id": "c",
+          "text": "Iron"
+        },
+        {
+          "id": "d",
+          "text": "Diamond"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Diamond scores 10 on the Mohs hardness scale — the maximum. Its hardness comes from carbon atoms bonded in an extremely tight crystal structure.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-nature-004-question.mp3"
+    },
+    {
+      "id": "core-nature-005",
+      "category": "nature",
+      "tags": [
+        "starfish",
+        "regeneration",
+        "ocean"
+      ],
+      "difficulty": "medium",
+      "question": "Which ocean creature can regrow a lost arm — and in some species regenerate an entire new body from a single severed limb?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Octopus"
+        },
+        {
+          "id": "b",
+          "text": "Jellyfish"
+        },
+        {
+          "id": "c",
+          "text": "Starfish"
+        },
+        {
+          "id": "d",
+          "text": "Crab"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "Sea stars can regenerate lost arms, and some species can regrow an entirely new body from a single severed arm, as long as part of the central disc remains.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-nature-005-question.mp3"
+    },
+    {
+      "id": "core-sports-002",
+      "category": "sports",
+      "tags": [
+        "basketball",
+        "scoring"
+      ],
+      "difficulty": "easy",
+      "question": "In basketball, how many points is a free throw worth?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Two"
+        },
+        {
+          "id": "b",
+          "text": "Three"
+        },
+        {
+          "id": "c",
+          "text": "Half a point"
+        },
+        {
+          "id": "d",
+          "text": "One"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Free throws are taken from 4.6 meters away and are worth one point each. They are awarded after certain fouls, giving players an uncontested shot at the basket.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-sports-002-question.mp3"
+    },
+    {
+      "id": "core-sports-003",
+      "category": "sports",
+      "tags": [
+        "olympics",
+        "symbols"
+      ],
+      "difficulty": "easy",
+      "question": "How many rings appear on the Olympic flag?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Four"
+        },
+        {
+          "id": "b",
+          "text": "Six"
+        },
+        {
+          "id": "c",
+          "text": "Five"
+        },
+        {
+          "id": "d",
+          "text": "Seven"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "The five interlocking rings represent the five continents — Africa, the Americas, Asia, Europe, and Oceania — united through sport.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-sports-003-question.mp3"
+    },
+    {
+      "id": "core-sports-004",
+      "category": "sports",
+      "tags": [
+        "badminton",
+        "equipment"
+      ],
+      "difficulty": "medium",
+      "question": "In which sport would a player use a shuttlecock?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Squash"
+        },
+        {
+          "id": "b",
+          "text": "Racquetball"
+        },
+        {
+          "id": "c",
+          "text": "Badminton"
+        },
+        {
+          "id": "d",
+          "text": "Lacrosse"
+        }
+      ],
+      "correctAnswer": "c",
+      "fact": "A shuttlecock can travel over 400 kilometers per hour when smashed by a professional badminton player, making it one of the fastest projectiles in any racket sport.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-sports-004-question.mp3"
+    },
+    {
+      "id": "core-sports-005",
+      "category": "sports",
+      "tags": [
+        "tennis",
+        "scoring"
+      ],
+      "difficulty": "medium",
+      "question": "What is the term used in tennis when both players are tied at 40 to 40?",
+      "answers": [
+        {
+          "id": "a",
+          "text": "Tiebreak"
+        },
+        {
+          "id": "b",
+          "text": "Set point"
+        },
+        {
+          "id": "c",
+          "text": "Love"
+        },
+        {
+          "id": "d",
+          "text": "Deuce"
+        }
+      ],
+      "correctAnswer": "d",
+      "fact": "Deuce comes from the French word for two. From deuce, a player must win two consecutive points to claim the game.",
+      "questionAudio": "/games/cosmic-trivia/audio/core-sports-005-question.mp3"
+    }
+  ]
+}

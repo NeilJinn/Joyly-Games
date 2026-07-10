@@ -113,7 +113,7 @@ export default function LobbyPage() {
       <NavBar />
 
       {room.status === "playing" ? (
-        <div style={{ height: "calc(100vh - 52px)", overflow: "hidden" }}>
+        <div style={{ position: "fixed", top: 52, left: 0, right: 0, bottom: 0, overflow: "hidden" }}>
           {room.selectedGame?.id === "cosmic-trivia" ? (
             <CosmicTriviaHost room={room} code={code!} />
           ) : room.selectedGame?.id === "fate-werewolf" ? (
