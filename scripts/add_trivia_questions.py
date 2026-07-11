@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Add new trivia questions to questions.xlsx and register them in the voice library.
+Add new trivia questions to the SQLite questions table and register them in the voice library.
 
 Usage:
   python3 scripts/add_trivia_questions.py --input path/to/new_questions.json
@@ -29,32 +29,22 @@ import argparse
 import hashlib
 import json
 import re
+import sqlite3
 import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).parent.parent
-XLSX_PATH = PROJECT_ROOT / "content" / "games" / "cosmic-trivia" / "authoring" / "questions.xlsx"
 SQLITE_PATH = PROJECT_ROOT / "content" / "voice-library" / "voice-library.sqlite"
 GAME_ID = "cosmic-trivia"
-
-EXCEL_HEADERS = [
-    "id", "category", "tags", "difficulty", "question",
-    "answerA", "answerB", "answerC", "answerD", "correctAnswer",
-    "fact", "questionAudio", "answerAudio", "enabled",
-]
 
 
 # ── ID management ─────────────────────────────────────────────────────────────
 
-def get_existing_ids(ws) -> set[str]:
-    ids = set()
-    for row in ws.iter_rows(min_row=2, values_only=True):
-        cell_id = str(row[0] or "").strip()
-        if cell_id:
-            ids.add(cell_id)
-    return ids
+def get_existing_ids(conn: sqlite3.Connection) -> set[str]:
+    rows = conn.execute("SELECT id FROM questions WHERE game_id = ?", (GAME_ID,)).fetchall()
+    return {row[0] for row in rows}
 
 
 def next_id_for_category(category: str, existing_ids: set[str]) -> str:
@@ -86,36 +76,38 @@ def validate_question(q: dict, index: int) -> list[str]:
     return errors
 
 
-# ── Excel append ──────────────────────────────────────────────────────────────
+# ── SQLite questions insert ────────────────────────────────────────────────────
 
-def append_to_excel(questions: list[dict], dry_run: bool) -> None:
-    import openpyxl
-    wb = openpyxl.load_workbook(XLSX_PATH)
-    ws = wb.active
-
+def insert_into_sqlite(questions: list[dict], conn: sqlite3.Connection, dry_run: bool) -> None:
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    added = 0
     for q in questions:
-        ws.append([
-            q["id"],
-            q["category"],
-            ", ".join(q["tags"]),
-            q["difficulty"],
-            q["question"],
-            q["answerA"],
-            q["answerB"],
-            q["answerC"],
-            q["answerD"],
-            q["correctAnswer"].lower(),
-            q["fact"],
-            q["questionAudio"],
-            q.get("answerAudio", ""),
-            True,
-        ])
+        if dry_run:
+            print(f"  [dry-run] Would insert question: {q['id']}")
+            added += 1
+            continue
+        conn.execute(
+            """INSERT OR IGNORE INTO questions
+               (id, game_id, category, tags_json, difficulty, question,
+                answer_a, answer_b, answer_c, answer_d, correct_answer,
+                fact, question_audio, answer_audio, enabled, created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                q["id"], GAME_ID, q["category"],
+                json.dumps(q.get("tags", [])), q["difficulty"], q["question"],
+                q["answerA"], q["answerB"], q["answerC"], q["answerD"],
+                q["correctAnswer"].lower(), q["fact"], q["questionAudio"],
+                q.get("answerAudio", ""), 1, now, now,
+            ),
+        )
+        if conn.execute("SELECT changes()").fetchone()[0]:
+            added += 1
 
     if not dry_run:
-        wb.save(XLSX_PATH)
-        print(f"  Saved {len(questions)} new row(s) to {XLSX_PATH.name}")
+        conn.commit()
+        print(f"  Inserted {added} new question(s) into SQLite questions table")
     else:
-        print(f"  [dry-run] Would append {len(questions)} row(s) to {XLSX_PATH.name}")
+        print(f"  [dry-run] Would insert {added} question(s) into SQLite questions table")
 
 
 # ── Build ─────────────────────────────────────────────────────────────────────
@@ -146,69 +138,68 @@ def text_hash(text: str) -> str:
     return hashlib.sha256(str(text or "").encode("utf-8")).hexdigest()
 
 
-def register_in_sqlite(questions: list[dict], dry_run: bool) -> None:
-    import sqlite3
-
+def register_in_sqlite(questions: list[dict], conn: sqlite3.Connection, dry_run: bool) -> None:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
     added = 0
     skipped = 0
 
-    with sqlite3.connect(SQLITE_PATH) as conn:
-        conn.row_factory = sqlite3.Row
-        for q in questions:
-            qid = q["id"]
-            cue_key = f"question.{qid}.read"
-            line_id = f"{qid}-line-01"
+    for q in questions:
+        qid = q["id"]
+        cue_key = f"question.{qid}.read"
+        line_id = f"{qid}-line-01"
 
-            # Skip if already registered
-            exists = conn.execute(
-                "SELECT 1 FROM voice_cues WHERE cue_key = ?", (cue_key,)
-            ).fetchone()
-            if exists:
-                skipped += 1
-                continue
+        # Skip if already registered
+        exists = conn.execute(
+            "SELECT 1 FROM voice_cues WHERE cue_key = ?", (cue_key,)
+        ).fetchone()
+        if exists:
+            skipped += 1
+            continue
 
-            if dry_run:
-                print(f"  [dry-run] Would register: {cue_key}")
-                added += 1
-                continue
-
-            category = q["category"]
-            short_title = q["question"][:60] + ("…" if len(q["question"]) > 60 else "")
-            source_text = q["question"]
-            audio_path = q["questionAudio"]
-            file_name = Path(audio_path).name
-            event_path = json.dumps([qid])
-
-            conn.execute(
-                """INSERT INTO voice_cues
-                   (cue_key, game_id, project_title, group_id, title, scope, domain,
-                    event_path_json, updated_at, director_triggered)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (cue_key, GAME_ID, "题目朗读", f"questions.{category}",
-                 short_title, "question", "read", event_path, now, 0),
-            )
-            conn.execute(
-                """INSERT INTO voice_lines
-                   (line_id, cue_key, game_id, kind, file_name, audio_path, source_text,
-                    source_text_hash, tone, audience, visibility, active, updated_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (line_id, cue_key, GAME_ID, "line", file_name, audio_path,
-                 source_text, text_hash(source_text), "neutral", "all", "public", 1, now),
-            )
-            conn.execute(
-                """INSERT INTO voice_review_state
-                   (line_id, status, tags_json, transcript, updated_at)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (line_id, "unreviewed", "[]", "", now),
-            )
-            conn.execute(
-                """INSERT INTO voice_assets
-                   (line_id, audio_path, file_hash, file_size, text_hash, asset_status, checked_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (line_id, audio_path, None, None, text_hash(source_text), "missing", now),
-            )
+        if dry_run:
+            print(f"  [dry-run] Would register: {cue_key}")
             added += 1
+            continue
+
+        category = q["category"]
+        short_title = q["question"][:60] + ("…" if len(q["question"]) > 60 else "")
+        source_text = q["question"]
+        audio_path = q["questionAudio"]
+        file_name = Path(audio_path).name
+        event_path = json.dumps([qid])
+
+        conn.execute(
+            """INSERT INTO voice_cues
+               (cue_key, game_id, project_title, group_id, title, scope, domain,
+                event_path_json, updated_at, director_triggered)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (cue_key, GAME_ID, "题目朗读", f"questions.{category}",
+             short_title, "question", "read", event_path, now, 0),
+        )
+        conn.execute(
+            """INSERT INTO voice_lines
+               (line_id, cue_key, game_id, kind, file_name, audio_path, source_text,
+                source_text_hash, tone, audience, visibility, active, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (line_id, cue_key, GAME_ID, "line", file_name, audio_path,
+             source_text, text_hash(source_text), "neutral", "all", "public", 1, now),
+        )
+        conn.execute(
+            """INSERT INTO voice_review_state
+               (line_id, status, tags_json, transcript, updated_at)
+               VALUES (?, ?, ?, ?, ?)""",
+            (line_id, "unreviewed", "[]", "", now),
+        )
+        conn.execute(
+            """INSERT INTO voice_assets
+               (line_id, audio_path, file_hash, file_size, text_hash, asset_status, checked_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (line_id, audio_path, None, None, text_hash(source_text), "missing", now),
+        )
+        added += 1
+
+    if not dry_run:
+        conn.commit()
 
     if dry_run:
         if skipped:
@@ -221,7 +212,7 @@ def register_in_sqlite(questions: list[dict], dry_run: bool) -> None:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="Add trivia questions to xlsx + voice library")
+    parser = argparse.ArgumentParser(description="Add trivia questions to SQLite + voice library")
     parser.add_argument("--input", required=True, help="Path to JSON file with new questions")
     parser.add_argument("--dry-run", action="store_true", help="Preview changes without writing")
     args = parser.parse_args()
@@ -248,32 +239,31 @@ def main():
             print(f"  {e}")
         sys.exit(1)
 
-    # Read existing IDs from xlsx
-    import openpyxl
-    wb = openpyxl.load_workbook(XLSX_PATH)
-    ws = wb.active
-    existing_ids = get_existing_ids(ws)
+    # Read existing IDs from SQLite questions table
+    with sqlite3.connect(SQLITE_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        existing_ids = get_existing_ids(conn)
 
-    # Assign IDs and audio paths
-    for q in raw:
-        if not q.get("id"):
-            q["id"] = next_id_for_category(q["category"], existing_ids)
-        existing_ids.add(q["id"])
-        if not q.get("questionAudio"):
-            q["questionAudio"] = f"/games/cosmic-trivia/audio/{q['id']}-question.mp3"
+        # Assign IDs and audio paths
+        for q in raw:
+            if not q.get("id"):
+                q["id"] = next_id_for_category(q["category"], existing_ids)
+            existing_ids.add(q["id"])
+            if not q.get("questionAudio"):
+                q["questionAudio"] = f"/games/cosmic-trivia/audio/{q['id']}-question.mp3"
 
-    print(f"\nAdding {len(raw)} question(s):")
-    for q in raw:
-        print(f"  {q['id']}  [{q['category']}]  {q['question'][:55]}…")
+        print(f"\nAdding {len(raw)} question(s):")
+        for q in raw:
+            print(f"  {q['id']}  [{q['category']}]  {q['question'][:55]}…")
 
-    print("\n1. Appending to Excel…")
-    append_to_excel(raw, args.dry_run)
+        print("\n1. Inserting into SQLite questions table…")
+        insert_into_sqlite(raw, conn, args.dry_run)
 
-    print("\n2. Building core.json…")
-    run_build(args.dry_run)
+        print("\n2. Building core.json…")
+        run_build(args.dry_run)
 
-    print("\n3. Syncing to voice library…")
-    register_in_sqlite(raw, args.dry_run)
+        print("\n3. Syncing to voice library…")
+        register_in_sqlite(raw, conn, args.dry_run)
 
     print(f"\n{'[dry-run] ' if args.dry_run else ''}Done. " +
           ("" if args.dry_run else "Open the voice software to generate TTS for new questions."))
