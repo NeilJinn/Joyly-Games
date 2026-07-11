@@ -165,34 +165,37 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
   const [restartingGame, setRestartingGame] = useState(false);
   const [revealedQuestionId, setRevealedQuestionId] = useState<string | null>(null);
   const [displayQuestion, setDisplayQuestion] = useState<CosmicTriviaState["currentQuestion"]>(null);
+  const [activeTransitionKey, setActiveTransitionKey] = useState<string | null>(null);
   const seenTransitionKeyRef = useRef<string | null>(null);
 
   const director = useCosmicTriviaDirector(room, code);
   const phase = trivia?.phase;
   const q = trivia?.currentQuestion;
-  const transitionKey = getQuestionTransitionKey({
+  const requestedTransitionKey = getQuestionTransitionKey({
     phase: phase ?? "",
     questionId: q?.id ?? "",
   });
 
   useEffect(() => {
-    if (!transitionKey || seenTransitionKeyRef.current === transitionKey) return;
-    seenTransitionKeyRef.current = transitionKey;
+    if (!requestedTransitionKey || seenTransitionKeyRef.current === requestedTransitionKey) return;
+    seenTransitionKeyRef.current = requestedTransitionKey;
+    setActiveTransitionKey(requestedTransitionKey);
     setRevealedQuestionId(null);
-  }, [transitionKey]);
+  }, [requestedTransitionKey]);
 
-  const transitionActive = Boolean(trivia && transitionKey && revealedQuestionId !== q?.id);
+  const transitionRunKey = activeTransitionKey ?? requestedTransitionKey;
+  const transitionActive = Boolean(trivia && transitionRunKey && revealedQuestionId !== q?.id);
   useEffect(() => {
     if (!q || transitionActive) return;
     setDisplayQuestion(q);
   }, [q, transitionActive]);
 
   const handleTransitionComplete = useCallback(() => {
-    if (q?.id && transitionKey) {
+    if (q?.id && transitionRunKey) {
       setDisplayQuestion(q);
       setRevealedQuestionId(q.id);
     }
-  }, [q?.id, transitionKey]);
+  }, [q?.id, transitionRunKey]);
 
   if (!trivia) {
     return (
@@ -358,7 +361,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
 
     const showQuestionAfterTransition =
       Boolean(q) &&
-      (phase === "question-read" || revealedQuestionId === q?.id);
+      (revealedQuestionId === q?.id || !transitionRunKey);
 
     mainContent = showQuestionAfterTransition ? (
       <div
@@ -460,7 +463,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
       )}
       <ShaderLinesTransition
         active={transitionActive}
-        runKey={transitionKey}
+        runKey={transitionRunKey}
         readyToReveal={phase === "question-read"}
         durationMs={4_000}
         enterMs={2_000}
