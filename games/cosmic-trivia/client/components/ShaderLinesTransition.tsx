@@ -7,6 +7,7 @@ export interface ShaderLinesTransitionProps {
   readyToReveal: boolean;
   onComplete: () => void;
   durationMs?: number;
+  enterMs?: number;
   fadeOutMs?: number;
   reducedMotion?: boolean;
 }
@@ -126,6 +127,7 @@ export default function ShaderLinesTransition({
   readyToReveal,
   onComplete,
   durationMs = 2_400,
+  enterMs = 2_000,
   fadeOutMs = 700,
   reducedMotion = false,
 }: ShaderLinesTransitionProps) {
@@ -141,6 +143,7 @@ export default function ShaderLinesTransition({
   readyToRevealRef.current = readyToReveal;
   const motionReduced = reducedMotion || isReducedMotion();
   const effectiveDurationMs = motionReduced ? Math.min(durationMs, 220) : durationMs;
+  const effectiveEnterMs = motionReduced ? Math.min(enterMs, 120) : enterMs;
   const effectiveFadeOutMs = motionReduced ? Math.min(fadeOutMs, 120) : fadeOutMs;
 
   useEffect(() => {
@@ -208,7 +211,7 @@ export default function ShaderLinesTransition({
         pointerEvents: "none",
         background: "#000",
         opacity: leavingKey === runKey ? 0 : enteredKey === runKey ? 1 : 0,
-        transition: `opacity ${effectiveFadeOutMs}ms ease-out`,
+        transition: `opacity ${leavingKey === runKey ? effectiveFadeOutMs : effectiveEnterMs}ms ease-out`,
       }}
     >
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />

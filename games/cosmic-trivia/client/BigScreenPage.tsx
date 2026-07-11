@@ -363,7 +363,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
     mainContent = showQuestionAfterTransition ? (
       <div
         className="max-w-[720px] w-full text-center grid gap-[12px]"
-        style={{ animation: "cosmic-trivia-question-in 680ms ease both" }}
+        style={{ animation: "cosmic-trivia-question-in 2000ms ease both" }}
       >
         <p className="text-[var(--muted)] text-[14px] m-0">
           Question {trivia.questionIndex + 1} / {trivia.questionCount}
@@ -430,7 +430,13 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
         to { opacity: 1; transform: translateY(0); }
       }`}</style>
       <div className="flex items-center gap-[32px] p-[32px] h-full">
-        <div className="flex-1 flex items-center justify-center min-h-0">
+        <div
+          className="flex-1 flex items-center justify-center min-h-0"
+          style={{
+            opacity: transitionActive ? 0 : 1,
+            transition: "opacity 2000ms ease-out",
+          }}
+        >
           {mainContent}
         </div>
         <Sidebar
@@ -457,6 +463,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
         runKey={transitionKey}
         readyToReveal={phase === "question-read"}
         durationMs={4_000}
+        enterMs={2_000}
         onComplete={handleTransitionComplete}
       />
     </>
