@@ -164,6 +164,7 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
   const [settingUp, setSettingUp] = useState(false);
   const [restartingGame, setRestartingGame] = useState(false);
   const [revealedQuestionId, setRevealedQuestionId] = useState<string | null>(null);
+  const [displayQuestion, setDisplayQuestion] = useState<CosmicTriviaState["currentQuestion"]>(null);
   const seenTransitionKeyRef = useRef<string | null>(null);
 
   const director = useCosmicTriviaDirector(room, code);
@@ -181,8 +182,16 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
   }, [transitionKey]);
 
   const transitionActive = Boolean(trivia && transitionKey && revealedQuestionId !== q?.id);
+  useEffect(() => {
+    if (!q || transitionActive) return;
+    setDisplayQuestion(q);
+  }, [q, transitionActive]);
+
   const handleTransitionComplete = useCallback(() => {
-    if (q?.id && transitionKey) setRevealedQuestionId(q.id);
+    if (q?.id && transitionKey) {
+      setDisplayQuestion(q);
+      setRevealedQuestionId(q.id);
+    }
   }, [q?.id, transitionKey]);
 
   if (!trivia) {
@@ -372,6 +381,9 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
       </div>
     );
   } else {
+    const questionToRender = transitionActive && phase === "between-questions"
+      ? (displayQuestion ?? q)
+      : q;
     mainContent = (
       <div className="w-full grid gap-[16px]">
         <div className="flex items-center justify-between">
@@ -382,19 +394,19 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
             {trivia.answeredPlayerIds.length} / {trivia.expectedAnswerCount} answered
           </span>
         </div>
-        {q && (
+        {questionToRender && (
           <>
             <h2 className="text-[var(--ink)] text-[24px] font-[800] m-0 leading-snug">
-              {q.question}
+              {questionToRender.question}
             </h2>
             <AnswerGrid
-              answers={q.answers}
-              correctId={isRevealPhase ? q.correctAnswer : null}
+              answers={questionToRender.answers}
+              correctId={isRevealPhase ? questionToRender.correctAnswer : null}
               variant="big-screen"
             />
-            {isRevealPhase && q.fact && (
+            {isRevealPhase && questionToRender.fact && (
               <p className="text-[var(--muted)] text-[14px] m-0 border-l-[3px] border-[rgba(120,212,94,.4)] pl-[12px]">
-                {q.fact}
+                {questionToRender.fact}
               </p>
             )}
           </>
@@ -443,6 +455,8 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
       <ShaderLinesTransition
         active={transitionActive}
         runKey={transitionKey}
+        readyToReveal={phase === "question-read"}
+        durationMs={4_000}
         onComplete={handleTransitionComplete}
       />
     </>

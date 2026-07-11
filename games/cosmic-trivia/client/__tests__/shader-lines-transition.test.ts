@@ -9,13 +9,18 @@ describe("getQuestionTransitionKey", () => {
 
   it("returns a stable key for a question intro", () => {
     const snapshot = { phase: "question-intro", questionId: "q-1" } as const;
-    expect(getQuestionTransitionKey(snapshot)).toBe("question-intro:q-1");
+    expect(getQuestionTransitionKey(snapshot)).toBe("question-transition:q-1");
     expect(getQuestionTransitionKey(snapshot)).toBe(getQuestionTransitionKey(snapshot));
   });
 
   it("changes when the question id changes", () => {
     expect(getQuestionTransitionKey({ phase: "next-question", questionId: "q-1" }))
       .not.toBe(getQuestionTransitionKey({ phase: "next-question", questionId: "q-2" }));
+  });
+
+  it("keeps one key across between-questions and question-intro", () => {
+    expect(getQuestionTransitionKey({ phase: "between-questions", questionId: "q-2" }))
+      .toBe(getQuestionTransitionKey({ phase: "question-intro", questionId: "q-2" }));
   });
 
   it("requires a question id", () => {

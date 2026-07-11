@@ -4,8 +4,10 @@ import * as THREE from "three";
 export interface ShaderLinesTransitionProps {
   active: boolean;
   runKey: string | null;
+  readyToReveal: boolean;
   onComplete: () => void;
   durationMs?: number;
+  fadeOutMs?: number;
   reducedMotion?: boolean;
 }
 
@@ -121,55 +123,76 @@ function createRuntime(container: HTMLDivElement): Runtime {
 export default function ShaderLinesTransition({
   active,
   runKey,
+  readyToReveal,
   onComplete,
   durationMs = 2_400,
+  fadeOutMs = 700,
   reducedMotion = false,
 }: ShaderLinesTransitionProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const runtimeRef = useRef<Runtime | null>(null);
   const onCompleteRef = useRef(onComplete);
   const completedKeyRef = useRef<string | null>(null);
+  const readyToRevealRef = useRef(readyToReveal);
   const [leavingKey, setLeavingKey] = useState<string | null>(null);
+  const [enteredKey, setEnteredKey] = useState<string | null>(null);
 
   onCompleteRef.current = onComplete;
+  readyToRevealRef.current = readyToReveal;
   const motionReduced = reducedMotion || isReducedMotion();
   const effectiveDurationMs = motionReduced ? Math.min(durationMs, 220) : durationMs;
+  const effectiveFadeOutMs = motionReduced ? Math.min(fadeOutMs, 120) : fadeOutMs;
 
   useEffect(() => {
     if (!active || !runKey || completedKeyRef.current === runKey) return;
     let cancelled = false;
-    const fadeOutMs = Math.min(780, Math.round(effectiveDurationMs * 0.32));
-    const leaveTimer = window.setTimeout(() => {
-      if (!cancelled) setLeavingKey(runKey);
-    }, Math.max(0, effectiveDurationMs - fadeOutMs));
-    const completeTimer = window.setTimeout(() => {
-      if (cancelled) return;
-      completedKeyRef.current = runKey;
-      disposeRuntime(runtimeRef.current);
-      runtimeRef.current = null;
+    let completionTimer: number | null = null;
+    let revealTimer: number | null = null;
+    let enterFrame: number | null = null;
+    let fadeStarted = false;
+
+    setLeavingKey(null);
+    setEnteredKey(null);
+
+    const finishWhenReady = () => {
+      if (cancelled || fadeStarted) return;
+      if (!readyToRevealRef.current) {
+        completionTimer = window.setTimeout(finishWhenReady, 50);
+        return;
+      }
+      fadeStarted = true;
       setLeavingKey(runKey);
-      onCompleteRef.current();
-    }, effectiveDurationMs);
+      revealTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        completedKeyRef.current = runKey;
+        disposeRuntime(runtimeRef.current);
+        runtimeRef.current = null;
+        onCompleteRef.current();
+      }, effectiveFadeOutMs);
+    };
+
+    completionTimer = window.setTimeout(finishWhenReady, effectiveDurationMs);
+    enterFrame = requestAnimationFrame(() => {
+      if (!cancelled) setEnteredKey(runKey);
+    });
 
     if (!motionReduced && containerRef.current) {
       try {
         runtimeRef.current = createRuntime(containerRef.current);
       } catch {
-        window.clearTimeout(leaveTimer);
-        window.clearTimeout(completeTimer);
-        completedKeyRef.current = runKey;
-        onCompleteRef.current();
+        runtimeRef.current = null;
       }
     }
 
     return () => {
       cancelled = true;
-      window.clearTimeout(leaveTimer);
-      window.clearTimeout(completeTimer);
+      if (completionTimer !== null) window.clearTimeout(completionTimer);
+      if (revealTimer !== null) window.clearTimeout(revealTimer);
+      if (enterFrame !== null) cancelAnimationFrame(enterFrame);
       disposeRuntime(runtimeRef.current);
       runtimeRef.current = null;
     };
-  }, [active, runKey, effectiveDurationMs, motionReduced]);
+  }, [active, runKey, effectiveDurationMs, effectiveFadeOutMs, motionReduced]);
 
   if (!active || !runKey || completedKeyRef.current === runKey) return null;
 
@@ -184,8 +207,8 @@ export default function ShaderLinesTransition({
         overflow: "hidden",
         pointerEvents: "none",
         background: "#000",
-        opacity: leavingKey === runKey ? 0 : 1,
-        transition: `opacity ${Math.min(780, Math.round(effectiveDurationMs * 0.32))}ms ease-out`,
+        opacity: leavingKey === runKey ? 0 : enteredKey === runKey ? 1 : 0,
+        transition: `opacity ${effectiveFadeOutMs}ms ease-out`,
       }}
     >
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
