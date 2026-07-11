@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import type { Room, Player } from "@types/room";
 import type { CosmicTriviaState } from "@types/cosmic-trivia";
 import AnswerGrid from "./components/AnswerGrid";
@@ -9,6 +9,8 @@ import { useCosmicTriviaDirector } from "./hooks/useCosmicTriviaDirector";
 import Joyly01Overlay from "./components/Joyly01Overlay";
 import ScoreBurstOverlay from "./components/ScoreBurstOverlay";
 import ConfettiRain from "./components/ConfettiRain";
+import ShaderLinesTransition from "./components/ShaderLinesTransition";
+import { getQuestionTransitionKey } from "./lib/shader-lines-transition";
 
 interface CosmicTriviaHostProps {
   room: Room;
@@ -161,8 +163,27 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
   const trivia = room.gameState as CosmicTriviaState | null;
   const [settingUp, setSettingUp] = useState(false);
   const [restartingGame, setRestartingGame] = useState(false);
+  const [revealedQuestionId, setRevealedQuestionId] = useState<string | null>(null);
+  const seenTransitionKeyRef = useRef<string | null>(null);
 
   const director = useCosmicTriviaDirector(room, code);
+  const phase = trivia?.phase;
+  const q = trivia?.currentQuestion;
+  const transitionKey = getQuestionTransitionKey({
+    phase: phase ?? "",
+    questionId: q?.id ?? "",
+  });
+
+  useEffect(() => {
+    if (!transitionKey || seenTransitionKeyRef.current === transitionKey) return;
+    seenTransitionKeyRef.current = transitionKey;
+    setRevealedQuestionId(null);
+  }, [transitionKey]);
+
+  const transitionActive = Boolean(trivia && transitionKey && revealedQuestionId !== q?.id);
+  const handleTransitionComplete = useCallback(() => {
+    if (q?.id && transitionKey) setRevealedQuestionId(q.id);
+  }, [q?.id, transitionKey]);
 
   if (!trivia) {
     return (
@@ -171,9 +192,6 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
       </div>
     );
   }
-
-  const phase = trivia.phase;
-  const q = trivia.currentQuestion;
 
   async function handleSetup(questionCount: number) {
     if (settingUp) return;
@@ -329,7 +347,21 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
       phase === "final-hype"      ? (trivia.finalHype?.current?.text ?? "Final results coming up…") :
       "And the results are…";
 
-    mainContent = (
+    const showQuestionAfterTransition =
+      Boolean(q) &&
+      (phase === "question-read" || revealedQuestionId === q?.id);
+
+    mainContent = showQuestionAfterTransition ? (
+      <div
+        className="max-w-[720px] w-full text-center grid gap-[12px]"
+        style={{ animation: "cosmic-trivia-question-in 680ms ease both" }}
+      >
+        <p className="text-[var(--muted)] text-[14px] m-0">
+          Question {trivia.questionIndex + 1} / {trivia.questionCount}
+        </p>
+        <h2 className="text-[var(--ink)] text-[32px] font-[800] m-0 leading-snug">{q?.question}</h2>
+      </div>
+    ) : (
       <div className="max-w-[500px] w-full text-center grid gap-[12px]">
         {(phase === "question-intro" || phase === "question-read") && (
           <p className="text-[var(--muted)] text-[14px] m-0">
@@ -381,6 +413,10 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
 
   return (
     <>
+      <style>{`@keyframes cosmic-trivia-question-in {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }`}</style>
       <div className="flex items-center gap-[32px] p-[32px] h-full">
         <div className="flex-1 flex items-center justify-center min-h-0">
           {mainContent}
@@ -402,6 +438,11 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
         onBurstReady={director.onScoreBurstReady}
         onPlayerHit={director.onScoreFlowerHit}
         onPlayerLeave={director.onScoreFlowerLeave}
+      />
+      <ShaderLinesTransition
+        active={transitionActive}
+        runKey={transitionKey}
+        onComplete={handleTransitionComplete}
       />
     </>
   );
