@@ -6,11 +6,11 @@ import CountdownBar from "./components/CountdownBar";
 import ScoreRow from "./components/ScoreRow";
 import WinnerBoard from "./components/WinnerBoard";
 import { useCosmicTriviaDirector } from "./hooks/useCosmicTriviaDirector";
-import Joyly01Overlay from "./components/Joyly01Overlay";
 import ScoreBurstOverlay from "./components/ScoreBurstOverlay";
 import ConfettiRain from "./components/ConfettiRain";
 import ShaderLinesTransition from "./components/ShaderLinesTransition";
 import { getQuestionTransitionKey } from "./lib/shader-lines-transition";
+import { shouldRenderScoreBurstOverlay } from "./lib/trivia-presentation";
 
 interface CosmicTriviaHostProps {
   room: Room;
@@ -431,14 +431,15 @@ export default function CosmicTriviaHost({ room, code }: CosmicTriviaHostProps) 
         />
         <DevPanel code={code} room={room} />
       </div>
-      <Joyly01Overlay preset={director.phaseBurstPreset} trigger={director.phaseBurstTrigger} />
-      <ScoreBurstOverlay
-        correctPlayerIds={director.scoreBurstWinnerIds}
-        trigger={director.scoreBurstTrigger}
-        onBurstReady={director.onScoreBurstReady}
-        onPlayerHit={director.onScoreFlowerHit}
-        onPlayerLeave={director.onScoreFlowerLeave}
-      />
+      {shouldRenderScoreBurstOverlay(phase) && (
+        <ScoreBurstOverlay
+          correctPlayerIds={director.scoreBurstWinnerIds}
+          trigger={director.scoreBurstTrigger}
+          onBurstReady={director.onScoreBurstReady}
+          onPlayerHit={director.onScoreFlowerHit}
+          onPlayerLeave={director.onScoreFlowerLeave}
+        />
+      )}
       <ShaderLinesTransition
         active={transitionActive}
         runKey={transitionKey}

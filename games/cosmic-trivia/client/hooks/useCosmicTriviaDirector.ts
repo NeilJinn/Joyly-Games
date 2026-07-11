@@ -376,9 +376,6 @@ function stopMusic() {
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export interface CosmicTriviaDirectorVisuals {
-  // Joyly01Overlay — 转场/庆祝花朵
-  phaseBurstTrigger: number
-  phaseBurstPreset:  'transition' | 'celebration'
   // ScoreBurstOverlay — 得分花朵飞向玩家条
   scoreBurstTrigger:    number
   scoreBurstWinnerIds:  string[]
@@ -409,9 +406,6 @@ export function useCosmicTriviaDirector(room: Room | null, code: string): Cosmic
 
   // ── Visual cue state ─────────────────────────────────────────
 
-  // 1. Joyly01 转场/庆祝花朵
-  const [phaseBurstTrigger, setPhaseBurstTrigger] = useState(0)
-  const [phaseBurstPreset,  setPhaseBurstPreset]  = useState<'transition' | 'celebration'>('transition')
   const prevPhaseRef         = useRef<string | null>(null)
   // 捕获 answer-lock 时的排名顺序（评分前），用于动画期间冻结
   const capturedOrderRef     = useRef<string[] | null>(null)
@@ -428,10 +422,6 @@ export function useCosmicTriviaDirector(room: Room | null, code: string): Cosmic
         .map(p => p.id)
     }
 
-    if (phase === 'between-questions' || phase === 'question-intro') {
-      setPhaseBurstPreset('transition')
-      setPhaseBurstTrigger(t => t + 1)
-    }
   }, [trivia?.phase])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // 2. 得分花朵 burst（ScoreBurstOverlay）
@@ -652,8 +642,6 @@ export function useCosmicTriviaDirector(room: Room | null, code: string): Cosmic
   }, [trivia?.phase, code])  // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
-    phaseBurstTrigger,
-    phaseBurstPreset,
     scoreBurstTrigger,
     scoreBurstWinnerIds,
     onScoreBurstReady,

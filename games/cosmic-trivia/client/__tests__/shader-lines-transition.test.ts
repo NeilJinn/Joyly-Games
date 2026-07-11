@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getQuestionTransitionKey } from "../lib/shader-lines-transition";
+import { shouldRenderScoreBurstOverlay } from "../lib/trivia-presentation";
 
 describe("getQuestionTransitionKey", () => {
   it("ignores phases that are not question transitions", () => {
@@ -19,5 +20,12 @@ describe("getQuestionTransitionKey", () => {
 
   it("requires a question id", () => {
     expect(getQuestionTransitionKey({ phase: "question-intro", questionId: "" })).toBeNull();
+  });
+
+  it("keeps score flowers out of question transitions", () => {
+    expect(shouldRenderScoreBurstOverlay("question-intro")).toBe(false);
+    expect(shouldRenderScoreBurstOverlay("between-questions")).toBe(false);
+    expect(shouldRenderScoreBurstOverlay("scoring")).toBe(true);
+    expect(shouldRenderScoreBurstOverlay("reveal")).toBe(true);
   });
 });
