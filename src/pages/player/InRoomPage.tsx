@@ -5,7 +5,7 @@ import PhoneLayout from "../../components/player/PhoneLayout";
 import { useSSE } from "../../hooks/useSSE";
 import { useRoomStore } from "../../stores/roomStore";
 import { useAuthStore } from "../../stores/authStore";
-import CosmicTriviaPhone from "../../../games/cosmic-trivia/client/PhonePage";
+import { GamePhoneRuntime } from "../../game-runtime/GameSurfaces";
 
 export default function InRoomPage() {
   const { code } = useParams<{ code: string }>();
@@ -42,26 +42,9 @@ export default function InRoomPage() {
     );
   }
 
-  if (room.selectedGame?.id === "cosmic-trivia") {
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-        <CosmicTriviaPhone room={room} code={code} />
-      </motion.div>
-    );
-  }
-
-  // Fallback for other games
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}>
-      <PhoneLayout>
-        <div className="phone-card grid gap-[12px] text-center">
-          <div className="text-[48px]" aria-hidden="true">🎮</div>
-          <h1 className="text-[var(--ink)] text-[22px] font-[800] m-0">
-            {room.selectedGame?.title ?? "Game"} is live
-          </h1>
-          <p className="text-[var(--muted)] text-[14px] m-0">Follow along on the big screen.</p>
-        </div>
-      </PhoneLayout>
+      <GamePhoneRuntime gameId={room.selectedGame?.id} room={room} code={code} />
     </motion.div>
   );
 }

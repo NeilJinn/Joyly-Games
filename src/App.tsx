@@ -13,8 +13,7 @@ import AvatarPage from "./pages/player/AvatarPage";
 import WaitingPage from "./pages/player/WaitingPage";
 import InRoomPage from "./pages/player/InRoomPage";
 import PairPhonePage from "./pages/player/PairPhonePage";
-import FateWerewolfBigScreen from "../games/werewolf/client/BigScreenPage";
-import FateWerewolfPhone from "../games/werewolf/client/PhonePage";
+import { GameBigScreenRouteSurface, GamePhoneRouteSurface } from "./game-runtime/GameSurfaces";
 import NotFoundPage from "./pages/NotFoundPage";
 
 function RoomCodeRedirect() {
@@ -55,8 +54,8 @@ function AnimatedRoutes() {
         <Route path="/pair/:token" element={<PairPhonePage />} />
 
         {/* Games */}
-        <Route path="/game/fate-werewolf/:code" element={<FateWerewolfBigScreen />} />
-        <Route path="/game/fate-werewolf/:code/phone" element={<FateWerewolfPhone />} />
+        <Route path="/game/fate-werewolf/:code" element={<GameBigScreenRouteSurface gameId="fate-werewolf" />} />
+        <Route path="/game/fate-werewolf/:code/phone" element={<GamePhoneRouteSurface gameId="fate-werewolf" />} />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

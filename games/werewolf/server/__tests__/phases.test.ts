@@ -31,24 +31,21 @@ describe('createWerewolfState', () => {
 })
 
 describe('advanceWerewolf — role-assignment → night', () => {
-  it('moves to night with guardian-action as first step', async () => {
+  it('starts a six-player night with the first role present in its deck', async () => {
     const room = mockRoom(6)
     await mod.createWerewolfState(room)
     await mod.advanceWerewolf(room)
     const pub = mod.publicWerewolfState(room)
     expect(pub.phase).toBe('night')
-    expect(pub.nightStep).toBe('guardian-action')
+    expect(pub.nightStep).toBe('wolf-action')
   })
 })
 
 describe('advanceWerewolf — nightStep progression', () => {
-  it('advances guardian → wolf → fate-weaver → oracle', async () => {
+  it('only advances through roles present in an eight-player deck', async () => {
     const room = mockRoom(8)
     await mod.createWerewolfState(room)
-    await mod.advanceWerewolf(room) // → night/guardian-action
-
-    await mod.advanceWerewolf(room)
-    expect(mod.publicWerewolfState(room).nightStep).toBe('wolf-action')
+    await mod.advanceWerewolf(room) // → night/wolf-action
 
     await mod.advanceWerewolf(room)
     expect(mod.publicWerewolfState(room).nightStep).toBe('fate-weaver-action')
@@ -58,7 +55,7 @@ describe('advanceWerewolf — nightStep progression', () => {
   })
 
   it('moves to fate-council after last night step', async () => {
-    const room = mockRoom(5)
+    const room = mockRoom(6)
     await mod.createWerewolfState(room)
     await mod.advanceWerewolf(room) // → night
     for (let i = 0; i < 10; i++) {
@@ -66,6 +63,23 @@ describe('advanceWerewolf — nightStep progression', () => {
       if (pub.phase !== 'night') break
       await mod.advanceWerewolf(room)
     }
+    expect(mod.publicWerewolfState(room).phase).toBe('fate-council')
+  })
+
+  it('does not queue steps for night roles that died before the next night', async () => {
+    const room = mockRoom(10)
+    await mod.createWerewolfState(room)
+    const state = room.gameState as Record<string, any>
+    const guardianId = Object.entries(state.players).find(([, player]) => player.role === 'guardian')?.[0]
+    const oracleId = Object.entries(state.players).find(([, player]) => player.role === 'oracle')?.[0]
+    state.players[guardianId!].alive = false
+    state.players[oracleId!].alive = false
+
+    await mod.advanceWerewolf(room)
+    expect(mod.publicWerewolfState(room).nightStep).toBe('wolf-action')
+    await mod.advanceWerewolf(room)
+    expect(mod.publicWerewolfState(room).nightStep).toBe('fate-weaver-action')
+    await mod.advanceWerewolf(room)
     expect(mod.publicWerewolfState(room).phase).toBe('fate-council')
   })
 })
@@ -90,13 +104,13 @@ describe('advanceWerewolf — day flow', () => {
     expect(mod.publicWerewolfState(room).phase).toBe('discussion-r1')
   })
 
-  it('discussion-r1 → discussion-r2 → voting', async () => {
+  it('advances each round-one speaker before entering round two, then closes an empty round two', async () => {
     const room = mockRoom(6)
     await mod.createWerewolfState(room)
     ;(room.gameState as Record<string, unknown>).phase = 'discussion-r1'
     ;(room.gameState as Record<string, unknown>).nightStep = null
 
-    await mod.advanceWerewolf(room)
+    for (let i = 0; i < 6; i++) await mod.advanceWerewolf(room)
     expect(mod.publicWerewolfState(room).phase).toBe('discussion-r2')
 
     await mod.advanceWerewolf(room)

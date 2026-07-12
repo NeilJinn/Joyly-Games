@@ -1273,10 +1273,6 @@ const server = http.createServer(async (req, res) => {
       if (result.status !== 200) return sendJson(res, result.status, { error: result.error });
       const actedPlayer = room.players.get(playerId);
       if (actedPlayer) touchPlayer(actedPlayer);
-      if (result.allSubmitted) {
-        await runtime.advance(room);
-        scheduleDirector(code);
-      }
       broadcast(code);
       sendJson(res, 200, {
         room: roomView(room),
@@ -1292,6 +1288,7 @@ const server = http.createServer(async (req, res) => {
       if (room.status !== "waiting") return sendJson(res, 409, { error: "Tester roles can only be changed before the game starts" });
       if (room.selectedGame?.id !== "fate-werewolf") return sendJson(res, 409, { error: "Tester roles are only available for Fate Werewolf" });
       const body = await getBody(req);
+      if (body.devWerewolf !== true) return sendJson(res, 403, { error: "Tester role setup requires explicit Fate Werewolf development mode" });
       const runtime = runtimeFor(room.selectedGame?.id);
       if (!runtime.testerRole) return sendJson(res, 404, { error: "This game does not support tester role setup" });
       const result = await runtime.testerRole(room, String(body.playerId || ""), String(body.roleId || ""));
@@ -1306,6 +1303,8 @@ const server = http.createServer(async (req, res) => {
       const room = rooms.get(code);
       if (!room) return sendJson(res, 404, { error: "Room not found" });
       if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      if (body.devWerewolf !== true) return sendJson(res, 403, { error: "Restart requires explicit Fate Werewolf development mode" });
       const runtime = runtimeFor(room.selectedGame?.id);
       if (!runtime.restart) return sendJson(res, 404, { error: "This game cannot restart" });
       clearDirector(code);
@@ -1316,13 +1315,33 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/werewolf\/test\/auto$/)) {
+      const code = url.pathname.split("/")[3];
+      const room = rooms.get(code);
+      if (!room) return sendJson(res, 404, { error: "Room not found" });
+      if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      if (room.selectedGame?.id !== "fate-werewolf") return sendJson(res, 409, { error: "Test auto-complete is only available for Fate Werewolf" });
+      const body = await getBody(req);
+      if (body.devWerewolf !== true) return sendJson(res, 403, { error: "Test auto-complete requires explicit Fate Werewolf development mode" });
+      const runtime = runtimeFor(room.selectedGame?.id);
+      if (!runtime.testAutoComplete) return sendJson(res, 404, { error: "This game does not support test auto-complete" });
+      await runtime.testAutoComplete(room);
+      await runtime.advance(room, { forceFateCouncil: room.gameState?.phase === "fate-council" });
+      scheduleDirector(code);
+      broadcast(code);
+      sendJson(res, 200, { werewolf: runtime.publicState(room), room: roomView(room) });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname.match(/^\/api\/rooms\/\d+\/werewolf\/next$/)) {
       const code = url.pathname.split("/")[3];
       const room = rooms.get(code);
       if (!room) return sendJson(res, 404, { error: "Room not found" });
       if (room.status !== "playing") return sendJson(res, 409, { error: "Game is not live" });
+      const body = await getBody(req);
+      if (body.devWerewolf !== true) return sendJson(res, 403, { error: "Advance requires explicit Fate Werewolf development mode" });
       const runtime = runtimeFor(room.selectedGame?.id);
-      await runtime.advance(room);
+      await runtime.advance(room, { forceFateCouncil: room.gameState?.phase === "fate-council" });
       scheduleDirector(code);
       broadcast(code);
       sendJson(res, 200, { room: roomView(room) });

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useParams } from 'react-router-dom'
-import { useSSE } from '../../../src/hooks/useSSE'
 import { useRoomStore } from '../../../src/stores/roomStore'
 import { useFateWerewolfDirector } from './hooks/useFateWerewolfDirector'
+import type { Room } from '../../../src/types/room'
 import type { WerewolfPublicState, WerewolfFateCard, WerewolfPrivateState } from '../shared/types'
 
 const A = (n: string) => `/games/fate-werewolf/assets/${n}`
@@ -82,10 +82,10 @@ export function getCornerDecorationLayout(boardWidth = 1440, boardHeight = 810) 
 
 export function getBottomIllustrationLayout() {
   const { bottomInset, innerBottomLineOffset } = getCornerDecorationLayout()
-  const downwardNudge = 20
   return {
     left: 35,
-    bottom: bottomInset + innerBottomLineOffset - downwardNudge,
+    // Align with the ornamental frame's inner baseline, not its outer edge.
+    bottom: bottomInset + innerBottomLineOffset,
     width: 1369,
     height: 393,
   }
@@ -304,7 +304,6 @@ function WerewolfBoard({ pub }: { pub: WerewolfPublicState }) {
       }
 
       <CornerDecs />
-
       {/* illus layers stay full-size */}
       {isNight && pub.phase !== 'role-assignment' && victoryPhase !== 'in' && (
         <Illus src={A('illus-night.png')} bgSize="center / contain" wipeOut={victoryPhase === 'out'} />
@@ -472,7 +471,7 @@ const ROLE_ICON: Record<string, string> = {
   witch:'🧙', hunter:'🏹', cupid:'💘', arsonist:'🔥', piper:'🎵', fateweaver:'🃏',
 }
 
-type PSel = { targetId: string; option: string; tendency: string }
+type PSel = { targetId: string; cardId: string; option: string; tendency: string }
 
 // Per-player inline action controls
 function PlayerActionRow({
@@ -499,11 +498,11 @@ function PlayerActionRow({
   async function submit() {
     if (!action) return
     await onSubmit(seat.id, {
-      type: action.type,
+      type: ('actionId' in action ? action.actionId : undefined) ?? action.type,
       targetId: sel.targetId || action.selectedTargetId || '',
       option: sel.option || 'kill',
       tendency: sel.tendency || action.selectedTendency || '',
-      cardId: sel.targetId || 'skip',
+      cardId: sel.cardId || ('selectedCardId' in action ? action.selectedCardId : '') || 'skip',
     })
   }
 
@@ -560,7 +559,7 @@ function PlayerActionRow({
           {/* Cards */}
           {action.cards && (
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              {action.cards.map(c => smallBtn(c.label, () => setSel({ targetId: c.id }), sel.targetId === c.id))}
+              {action.cards.map(c => smallBtn(c.label, () => setSel({ cardId: c.id }), sel.cardId === c.id))}
             </div>
           )}
           {/* Submit */}
@@ -581,7 +580,6 @@ function FloatingTestPanel({ code, pub }: { code: string; pub: WerewolfPublicSta
   const [selections, setSelections] = useState<Record<string, PSel>>({})
   const [busy,       setBusy]       = useState(false)
   const [log,        setLog]        = useState('')
-
   const phase = PHASE_ZH[pub.phase] ?? pub.phase
   const step  = pub.nightStep ? ` · ${STEP_ZH[pub.nightStep] ?? pub.nightStep}` : ''
 
@@ -600,7 +598,7 @@ function FloatingTestPanel({ code, pub }: { code: string; pub: WerewolfPublicSta
 
   useEffect(() => { if (open) void fetchPrivates() }, [open, fetchPrivates])
 
-  function sel(id: string): PSel { return selections[id] ?? { targetId: '', option: 'kill', tendency: '' } }
+  function sel(id: string): PSel { return selections[id] ?? { targetId: '', cardId: '', option: 'kill', tendency: '' } }
   function setSel(id: string, patch: Partial<PSel>) {
     setSelections(prev => ({ ...prev, [id]: { ...sel(id), ...patch } }))
   }
@@ -609,7 +607,10 @@ function FloatingTestPanel({ code, pub }: { code: string; pub: WerewolfPublicSta
     if (busy) return
     setBusy(true)
     try {
-      const res  = await fetch(`/api/rooms/${code}${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+      const res  = await fetch(`/api/rooms/${code}${path}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ devWerewolf: true }),
+      })
       const data = await res.json() as { phase?: string; error?: string }
       setLog(data.error ? `❌ ${label}` : `✅ ${label}${data.phase ? ' → ' + (PHASE_ZH[data.phase] ?? data.phase) : ''}`)
       await fetchPrivates()
@@ -653,13 +654,13 @@ function FloatingTestPanel({ code, pub }: { code: string; pub: WerewolfPublicSta
         }}>
           {/* Phase header */}
           <div style={{ marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 13, color: '#f25e5b', fontWeight: 700 }}>{phase}{step}</span>
+            <span style={{ fontSize: 13, color: '#f25e5b', fontWeight: 700 }}>开发模式 · {phase}{step}</span>
             <button onClick={fetchPrivates} style={{ marginLeft: 'auto', fontSize: 11, color: '#555', background: 'none', border: 'none', cursor: 'pointer' }}>↻ 刷新</button>
           </div>
 
           {/* Bulk controls */}
           <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
-            {bulkBtn('⚡ 自动填充+推进', '/werewolf/test/auto', '#2a6e3a')}
+            {bulkBtn('⚡ 自动填充并推进', '/werewolf/test/auto', '#2a6e3a')}
             {bulkBtn('▶ 强制推进', '/werewolf/next', '#1a4a8a')}
             {bulkBtn('↺ 重启', '/werewolf/restart', '#6a1a1a')}
           </div>
@@ -698,10 +699,17 @@ function FloatingTestPanel({ code, pub }: { code: string; pub: WerewolfPublicSta
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
-export default function FateWerewolfBigScreen() {
-  const { code } = useParams<{ code: string }>()
-  useSSE(code ?? null)
-  const room = useRoomStore(s => s.room)
+export interface FateWerewolfBigScreenProps {
+  /** Runtime props are supplied by Joyly; route params remain a direct-link fallback. */
+  room?: Room
+  code?: string
+}
+
+export default function FateWerewolfBigScreen(props: FateWerewolfBigScreenProps = {}) {
+  const { code: routeCode } = useParams<{ code: string }>()
+  const code = props.code ?? routeCode
+  const storedRoom = useRoomStore(s => s.room)
+  const room = storedRoom ?? props.room ?? null
   const pub  = room?.gameState as WerewolfPublicState | null
 
   if (!pub) {
@@ -714,7 +722,16 @@ export default function FateWerewolfBigScreen() {
   return (
     <>
       <ScaledBoard><WerewolfBoard pub={pub} /></ScaledBoard>
-      {code && <FloatingTestPanel code={code} pub={pub} />}
+      {code && canRenderDevWerewolfPanel(window.location.search) && <FloatingTestPanel code={code} pub={pub} />}
     </>
   )
+}
+
+/** Development controls intentionally require an explicit opt-in query flag. */
+export function shouldRenderDevWerewolfPanel(search: string) {
+  return new URLSearchParams(search).get('devWerewolf') === '1'
+}
+
+export function canRenderDevWerewolfPanel(search: string) {
+  return shouldRenderDevWerewolfPanel(search)
 }

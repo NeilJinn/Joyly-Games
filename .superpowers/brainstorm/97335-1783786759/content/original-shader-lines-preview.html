@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shader Lines · 原组件预览</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #090909; color: white; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
+      .stage { position: relative; display: flex; width: min(960px, 92vw); height: min(650px, 78vh); align-items: center; justify-content: center; overflow: hidden; border-radius: 12px; background: #000; }
+      #shader-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
+      #shader-lines canvas { width: 100% !important; height: 100% !important; display: block; }
+      .copy { pointer-events: none; position: relative; z-index: 1; margin: 0; text-align: center; font-size: clamp(48px, 8vw, 104px); line-height: 1; font-weight: 600; letter-spacing: -.055em; }
+      .note { position: fixed; bottom: 20px; color: rgba(255,255,255,.55); font-size: 12px; letter-spacing: .03em; }
+    </style>
+  </head>
+  <body>
+    <main class="stage">
+      <div id="shader-lines"></div>
+      <h1 class="copy">宇宙知识王</h1>
+    </main>
+    <p class="note">21st Shader Lines 原 shader · 将以全屏覆盖层用于题目转场</p>
+    <script>
+      // The WebGL setup and shaders below are copied verbatim from 21st's ShaderAnimation component.
+      const container = document.getElementById("shader-lines");
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/89/three.min.js";
+      script.onload = () => {
+        const THREE = window.THREE;
+        const camera = new THREE.Camera();
+        camera.position.z = 1;
+        const scene = new THREE.Scene();
+        const geometry = new THREE.PlaneBufferGeometry(2, 2);
+        const uniforms = {
+          time: { type: "f", value: 1.0 },
+          resolution: { type: "v2", value: new THREE.Vector2() },
+        };
+        const vertexShader = `
+          void main() {
+            gl_Position = vec4( position, 1.0 );
+          }
+        `;
+        const fragmentShader = `
+          #define TWO_PI 6.2831853072
+          #define PI 3.14159265359
+
+          precision highp float;
+          uniform vec2 resolution;
+          uniform float time;
+            
+          float random (in float x) {
+              return fract(sin(x)*1e4);
+          }
+          float random (vec2 st) {
+              return fract(sin(dot(st.xy,
+                                   vec2(12.9898,78.233)))*
+                  43758.5453123);
+          }
+          
+          varying vec2 vUv;
+
+          void main(void) {
+            vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+            
+            vec2 fMosaicScal = vec2(4.0, 2.0);
+            vec2 vScreenSize = vec2(256,256);
+            uv.x = floor(uv.x * vScreenSize.x / fMosaicScal.x) / (vScreenSize.x / fMosaicScal.x);
+            uv.y = floor(uv.y * vScreenSize.y / fMosaicScal.y) / (vScreenSize.y / fMosaicScal.y);       
+              
+            float t = time*0.06+random(uv.x)*0.4;
+            float lineWidth = 0.0008;
+
+            vec3 color = vec3(0.0);
+            for(int j = 0; j < 3; j++){
+              for(int i=0; i < 5; i++){
+                color[j] += lineWidth*float(i*i) / abs(fract(t - 0.01*float(j)+float(i)*0.01)*1.0 - length(uv));        
+              }
+            }
+
+            gl_FragColor = vec4(color[2],color[1],color[0],1.0);
+          }
+        `;
+        const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader });
+        scene.add(new THREE.Mesh(geometry, material));
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+        const resize = () => {
+          const rect = container.getBoundingClientRect();
+          renderer.setSize(rect.width, rect.height);
+          uniforms.resolution.value.x = renderer.domElement.width;
+          uniforms.resolution.value.y = renderer.domElement.height;
+        };
+        resize();
+        window.addEventListener("resize", resize, false);
+        const animate = () => {
+          requestAnimationFrame(animate);
+          uniforms.time.value += 0.05;
+          renderer.render(scene, camera);
+        };
+        animate();
+      };
+      document.head.appendChild(script);
+    </script>
+  </body>
+</html>

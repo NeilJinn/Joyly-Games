@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GamePickerModal from "./GamePickerModal";
 import AvatarStack from "../player/AvatarStack";
-import CosmicTriviaPhone from "../../../games/cosmic-trivia/client/PhonePage";
+import { GamePhoneRuntime } from "../../game-runtime/GameSurfaces";
 import { useAuthStore } from "../../stores/authStore";
 import { useConfig } from "../../hooks/useConfig";
 import { loadPlayerIdentity } from "../../types/player";
@@ -253,15 +253,7 @@ export default function HostPhoneLobbyView({ room, code, onRoomUpdate }: Props) 
           </>
         ) : room.status === "playing" && hasJoined ? (
           /* Player tab — game in progress, render game UI inline */
-          room.selectedGame?.id === "cosmic-trivia" ? (
-            <CosmicTriviaPhone room={room} code={code} embedded isHost />
-          ) : (
-            <section className="phone-card grid gap-[10px] text-center">
-              <div className="text-[40px]" aria-hidden="true">🎮</div>
-              <h2 className="text-[var(--ink)] text-[18px] font-[800] m-0">{room.selectedGame?.title ?? "Game"} is live</h2>
-              <p className="text-[var(--muted)] text-[13px] m-0">Follow along on the big screen.</p>
-            </section>
-          )
+          <GamePhoneRuntime gameId={room.selectedGame?.id} room={room} code={code} embedded isHost />
         ) : hasJoined && currentPlayer ? (
           /* Player tab — waiting */
           <div className="phone-status">

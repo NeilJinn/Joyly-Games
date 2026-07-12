@@ -1,28 +1,14 @@
-// ── Night step sequence ────────────────────────────────────────
-// First night includes cupid (before guardian). Every night includes arsonist (after oracle).
-const FIRST_NIGHT_STEPS = [
-  { id: 'cupid-action',       requiredRole: 'cupid'      },
-  { id: 'guardian-action',    requiredRole: 'guardian'   },
-  { id: 'wolf-action',        requiredRole: 'werewolf'   },
-  { id: 'fate-weaver-action', requiredRole: 'fateweaver' },
-  { id: 'oracle-action',      requiredRole: 'oracle'     },
-  { id: 'arsonist-mark',      requiredRole: 'arsonist'   },
-]
-const REGULAR_NIGHT_STEPS = [
-  { id: 'guardian-action',    requiredRole: 'guardian'   },
-  { id: 'wolf-action',        requiredRole: 'werewolf'   },
-  { id: 'fate-weaver-action', requiredRole: 'fateweaver' },
-  { id: 'oracle-action',      requiredRole: 'oracle'     },
-  { id: 'arsonist-mark',      requiredRole: 'arsonist'   },
-]
+import { coreRoleIds, getRole, nightStepsForRoles, thirdPartyVictoryHooks } from './roles/registry.js'
+import { resolveNight as resolveNightOutcome } from './resolvers/night.js'
+import { resolveVictory } from './resolvers/victory.js'
+import { drawFateCard as selectFateCard } from './fate/cards.js'
 
 function stateOf(room) { return room.gameState }
 
 function nightStepsForRoom(room) {
   const state = stateOf(room)
-  const roles = new Set(Object.values(state.players || {}).map(p => p.role))
-  const template = state.round === 1 ? FIRST_NIGHT_STEPS : REGULAR_NIGHT_STEPS
-  return template.filter(s => roles.has(s.requiredRole)).map(s => s.id)
+  const livingRoles = Object.values(state.players || {}).filter(player => player.alive).map(player => player.role)
+  return nightStepsForRoles(livingRoles, { firstNight: state.round === 1 })
 }
 
 function firstNightStep(room) { return nightStepsForRoom(room)[0] ?? null }
@@ -42,44 +28,40 @@ function setPhase(room, phase) {
   stateOf(room).phaseStartedAt = Date.now()
 }
 
-// ── Role definitions ───────────────────────────────────────────
-const roleDefinitions = {
-  werewolf:   { id: 'werewolf',   name: '狼人',       team: 'wolf',  cardTitle: '狼人',       summary: '夜间选择击杀目标',                       accent: '#c0392b' },
-  guardian:   { id: 'guardian',   name: '守护者',     team: 'moon',  cardTitle: '守护者',     summary: '每夜守护一位玩家，不可连续守护',             accent: '#2980b9' },
-  oracle:     { id: 'oracle',     name: '神谕者',     team: 'moon',  cardTitle: '神谕者',     summary: '每夜收到一条阵营神谕提示',                   accent: '#8e44ad' },
-  fateweaver: { id: 'fateweaver', name: '命运编织者', team: 'moon',  cardTitle: '命运编织者', summary: '可用卡牌干预命运',                           accent: '#16a085' },
-  hunter:     { id: 'hunter',     name: '猎人',       team: 'moon',  cardTitle: '猎人',       summary: '死亡时可带走一名玩家殉葬',                   accent: '#d35400' },
-  cupid:      { id: 'cupid',      name: '丘比特',     team: 'third', cardTitle: '丘比特',     summary: '首夜指定两名恋人，恋人组成独立胜利条件',     accent: '#e91e8c' },
-  arsonist:   { id: 'arsonist',   name: '焚焰者',     team: 'third', cardTitle: '焚焰者',     summary: '每夜标记一名玩家，标记所有存活玩家即胜利',   accent: '#e67e22' },
-  villager:   { id: 'villager',   name: '村民',       team: 'moon',  cardTitle: '村民',       summary: '白天投票识破狼人',                           accent: '#7f8c8d' },
-}
-
-// Role deck per player count — derived from agreed configuration table
-// Roles enter in this order as count grows:
-//  5+  : oracle, fateweaver
-//  7+  : hunter
-//  8+  : 3rd wolf
-//  11+ : guardian
-//  12+ : 4th wolf
-//  13+ : cupid
-//  14+ : arsonist, 4th wolf stays (5th wolf from 15+, 6th from 18+)
-const roleDecksByCount = {
-  5:  ['werewolf',                                        'oracle', 'fateweaver',                                    'villager', 'villager'],
+// Core mode only: every core role appears by ten players.
+export const coreRoleDecksByCount = Object.freeze({
   6:  ['werewolf', 'werewolf',                            'oracle', 'fateweaver',                                    'villager', 'villager'],
   7:  ['werewolf', 'werewolf',                            'oracle', 'fateweaver', 'hunter',                          'villager', 'villager'],
   8:  ['werewolf', 'werewolf',                            'oracle', 'fateweaver', 'hunter',                          'villager', 'villager', 'villager'],
   9:  ['werewolf', 'werewolf', 'werewolf',                'oracle', 'fateweaver', 'hunter',                          'villager', 'villager', 'villager'],
-  10: ['werewolf', 'werewolf', 'werewolf',                'oracle', 'fateweaver', 'hunter',                          'villager', 'villager', 'villager', 'villager'],
-  11: ['werewolf', 'werewolf', 'werewolf',                'oracle', 'fateweaver', 'hunter', 'guardian',              'villager', 'villager', 'villager', 'villager'],
-  12: ['werewolf', 'werewolf', 'werewolf', 'werewolf',    'oracle', 'fateweaver', 'hunter', 'guardian',              'villager', 'villager', 'villager', 'villager'],
-  13: ['werewolf', 'werewolf', 'werewolf', 'werewolf',    'oracle', 'fateweaver', 'hunter', 'guardian', 'cupid',     'villager', 'villager', 'villager', 'villager'],
-  14: ['werewolf', 'werewolf', 'werewolf', 'werewolf',    'oracle', 'fateweaver', 'hunter', 'guardian', 'cupid', 'arsonist', 'villager', 'villager', 'villager', 'villager'],
-  15: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'oracle', 'fateweaver', 'hunter', 'guardian', 'cupid', 'arsonist', 'villager', 'villager', 'villager', 'villager'],
-  16: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'oracle', 'fateweaver', 'hunter', 'guardian', 'cupid', 'arsonist', 'villager', 'villager', 'villager', 'villager', 'villager'],
-  17: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'oracle', 'fateweaver', 'hunter', 'guardian', 'cupid', 'arsonist', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager'],
-  18: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'oracle', 'fateweaver', 'hunter', 'guardian', 'cupid', 'arsonist', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager'],
-  19: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'oracle', 'fateweaver', 'hunter', 'guardian', 'cupid', 'arsonist', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager'],
-  20: ['werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'werewolf', 'oracle', 'fateweaver', 'hunter', 'guardian', 'cupid', 'arsonist', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager', 'villager'],
+  10: ['werewolf', 'werewolf', 'werewolf',                'oracle', 'fateweaver', 'hunter', 'guardian',              'villager', 'villager', 'villager'],
+})
+
+/** Returns a fresh, validated core-mode deck for exactly 6–10 players. */
+export function getCoreRoleDeck(playerCount) {
+  const deck = coreRoleDecksByCount[playerCount]
+  if (!deck) throw new Error(`Core mode supports 6–10 players; received ${playerCount}`)
+  if (deck.length !== playerCount) throw new Error(`Invalid ${playerCount}-player core deck length`)
+  for (const roleId of deck) {
+    if (!coreRoleIds.includes(roleId)) throw new Error(`Invalid ${playerCount}-player core deck role: ${roleId}`)
+  }
+  return [...deck]
+}
+
+function validateRoleAssignments(room, deck) {
+  const assignments = room.fateWerewolfSetup?.roleAssignments ?? {}
+  const remaining = new Map()
+  for (const roleId of deck) remaining.set(roleId, (remaining.get(roleId) ?? 0) + 1)
+
+  for (const [playerId, roleId] of Object.entries(assignments)) {
+    if (!room.players.has(playerId)) throw new Error(`Role assignment references unknown player: ${playerId}`)
+    if (!coreRoleIds.includes(roleId)) throw new Error(`Role assignment is not a registered core role: ${roleId}`)
+    const available = remaining.get(roleId) ?? 0
+    if (available < 1) throw new Error(`Role assignment exceeds the ${deck.length}-player deck multiplicity: ${roleId}`)
+    remaining.set(roleId, available - 1)
+  }
+
+  return assignments
 }
 
 function shuffle(arr) {
@@ -125,33 +107,72 @@ function acknowledgedCount(room) {
   return Object.values(stateOf(room).players || {}).filter(p => p.roleAcknowledged).length
 }
 
+function discussionSpeakerIds(room) {
+  const state = stateOf(room)
+  if (state.phase === 'discussion-r1') return alivePlayers(room).map(player => player.id)
+  if (state.phase === 'discussion-r2') {
+    const optIns = state.day?.r2OptIns ?? []
+    return optIns.filter(id => roleState(room, id)?.alive)
+  }
+  return []
+}
+
+function nextDiscussionSpeaker(room) {
+  const state = stateOf(room)
+  const speakers = discussionSpeakerIds(room)
+  const index = state.day?.speakerIndex ?? 0
+  if (index + 1 < speakers.length) {
+    state.day.speakerIndex = index + 1
+    state.phaseStartedAt = Date.now()
+    return true
+  }
+  return false
+}
+
 // ── Fate cards ─────────────────────────────────────────────────
 const fateTendencies = {
-  omen:    { id: 'omen',    label: '凶兆', title: '投出凶兆' },
-  shelter: { id: 'shelter', label: '庇护', title: '投出庇护' },
-  chaos:   { id: 'chaos',   label: '混沌', title: '投出混沌' },
+  omen:    { id: 'omen',    label: '神谕', title: '投出神谕' },
+  shelter: { id: 'shelter', label: '守护', title: '投出守护' },
+  chaos:   { id: 'chaos',   label: '混乱', title: '投出混乱' },
   dark:    { id: 'dark',    label: '黑暗', title: '投出黑暗' },
 }
 
-const fateCards = [
-  { id: 'fc-omen-1',    title: '审判之眼', text: '今日投票，得票最少的玩家免于放逐。',           tendency: 'omen',    tendencyLabel: '凶兆' },
-  { id: 'fc-shelter-1', title: '庇护之盾', text: '本轮守护者可守护上一轮同一对象。',             tendency: 'shelter', tendencyLabel: '庇护' },
-  { id: 'fc-chaos-1',   title: '命运逆转', text: '得票最多的两位玩家对换投票结果。',             tendency: 'chaos',   tendencyLabel: '混沌' },
-  { id: 'fc-dark-1',    title: '黑暗契约', text: '本轮狼人可额外选择一个目标进行袭击。',         tendency: 'dark',    tendencyLabel: '黑暗' },
-]
-
-function drawFateCard(room) {
+function fateTriggers(room) {
   const state = stateOf(room)
-  const council = state.fateCouncil?.votes ?? {}
-  const tally = new Map()
-  for (const t of Object.values(council)) tally.set(t, (tally.get(t) || 0) + 1)
-  const winner = [...tally.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'chaos'
-  const matching = fateCards.filter(c => c.tendency === winner)
-  const pool = matching.length ? matching : fateCards
-  state.currentFateCard = pool[Math.floor(Math.random() * pool.length)]
+  state.fateMeta ||= { peacefulNightStreak: 0, consumedTriggers: {} }
+  state.fateMeta.consumedTriggers ||= {}
+  const consumed = state.fateMeta.consumedTriggers
+  const triggers = []
+  if (!consumed['first-wolf-death'] && Object.values(state.players).some(player => player.role === 'werewolf' && !player.alive)) {
+    triggers.push('first-wolf-death')
+  }
+  state.fateMeta.peacefulNightStreak = (state.nightDeaths?.length ?? 0) === 0
+    ? state.fateMeta.peacefulNightStreak + 1
+    : 0
+  if (!consumed['two-peaceful-nights'] && state.fateMeta.peacefulNightStreak === 2) triggers.push('two-peaceful-nights')
+  if (!consumed.endgame && alivePlayers(room).length <= 4) triggers.push('endgame')
+  return triggers
+}
+
+function drawFateCard(room, { closedReason = 'all-voted', abstentionCount = 0 } = {}) {
+  const state = stateOf(room)
+  const triggers = fateTriggers(room)
+  const card = selectFateCard({ votes: state.fateCouncil?.votes ?? {}, triggers })
+  for (const trigger of triggers) state.fateMeta.consumedTriggers[trigger] = true
+  // Placeholder cards deliberately resolve without mutating players, votes, or victory.
+  state.currentFateCard = card
   state.fateHistory = state.fateHistory ?? []
-  state.fateHistory.push(state.currentFateCard.id)
-  state.fateCouncil.votes = {}
+  state.fateHistory.push({
+    round: state.round,
+    cardId: card.id,
+    arcanaType: card.arcanaType,
+    tendency: card.tendency,
+    processed: true,
+    processedAt: Date.now(),
+    effectKey: card.effectKey,
+    closedReason,
+    abstentionCount,
+  })
 }
 
 function refreshOracleWhisper(room) {
@@ -162,35 +183,10 @@ function refreshOracleWhisper(room) {
   state.oracle.current = { playerId: pick.id, nickname: pick.nickname, team: roleState(room, pick.id)?.team ?? 'unknown' }
 }
 
-// ── Victory check — order: lovers → arsonist → wolves → village ──
+// ── Victory check ──────────────────────────────────────────────
 function checkVictory(room) {
-  const alive = alivePlayers(room)
   const state = stateOf(room)
-
-  // 1. Lovers third-party: mixed-faction couple are the last two survivors
-  const lovers = state.lovers ?? []
-  if (lovers.length === 2 && alive.length === 2 && lovers.every(id => roleState(room, id)?.alive)) {
-    const t1 = roleState(room, lovers[0])?.team
-    const t2 = roleState(room, lovers[1])?.team
-    if (t1 !== t2) return { winner: '恋人阵营', title: '恋人获胜！', body: '两位恋人成为了世界上最后的两人。' }
-  }
-
-  // 2. Arsonist: every other alive player is marked
-  const arsonist = alive.find(p => roleState(room, p.id)?.role === 'arsonist')
-  if (arsonist) {
-    const marked = state.arsonist?.marked ?? []
-    const others = alive.filter(p => p.id !== arsonist.id)
-    if (others.length > 0 && others.every(p => marked.includes(p.id))) {
-      return { winner: '焚焰者', title: '焚焰者获胜！', body: '所有玩家都已被标记，火焰即将燃起。' }
-    }
-  }
-
-  // 3. Wolf victory: wolves ≥ moon-faction survivors
-  const wolves   = alive.filter(p => roleState(room, p.id)?.role === 'werewolf')
-  const moonTeam = alive.filter(p => roleState(room, p.id)?.team === 'moon')
-  if (wolves.length === 0) return { winner: '村庄阵营', title: '村庄获胜！', body: '所有狼人已被放逐，村庄获得了最终的胜利。' }
-  if (wolves.length >= moonTeam.length) return { winner: '狼人阵营', title: '狼人获胜！', body: '狼人数量已超过平民，黑夜笼罩了村庄。' }
-  return null
+  return resolveVictory({ players: state.players, lovers: state.lovers, arsonist: state.arsonist }, thirdPartyVictoryHooks())
 }
 
 // ── Lover chain death ─────────────────────────────────────────
@@ -208,54 +204,37 @@ function triggerLoverChain(room) {
   return null
 }
 
+function resolveLoverChainSnapshot(state, players) {
+  const [firstId, secondId] = state.lovers ?? []
+  if (!firstId || !secondId) return []
+  const first = players[firstId]
+  const second = players[secondId]
+  if (!first || !second) return []
+  if (!first.alive && second.alive) {
+    second.alive = false
+    second.eliminationReason = 'heartbreak'
+    return [{ playerId: secondId, reason: 'heartbreak' }]
+  }
+  if (!second.alive && first.alive) {
+    first.alive = false
+    first.eliminationReason = 'heartbreak'
+    return [{ playerId: firstId, reason: 'heartbreak' }]
+  }
+  return []
+}
+
 // ── Night resolution ───────────────────────────────────────────
 function resolveNight(room) {
   const state = stateOf(room)
-  state.nightDeaths = []
-
-  // Wolf self-sacrifice: each wolf who voted __sacrifice__ dies
-  for (const [wolfId, vote] of Object.entries(state.night?.targets ?? {})) {
-    if (vote === '__sacrifice__') {
-      const rs = roleState(room, wolfId)
-      if (rs?.alive) { killPlayer(room, wolfId, 'sacrifice'); state.nightDeaths.push(wolfId) }
-    }
-  }
-
-  // Fateweaver kill card (bypasses guardian)
-  const fkTarget = state.night.fateweaverKill
-  if (fkTarget) {
-    const fkVictim = roleState(room, fkTarget)
-    if (fkVictim?.alive) { killPlayer(room, fkTarget, 'fateweaver-kill'); state.nightDeaths.push(fkTarget) }
-    state.night.fateweaverKill = null
-  }
-
-  // Wolf kill (blocked by guardian or fateweaver guard)
-  const targetId   = majorityTarget(state.night?.targets ?? {})
-  const shielded   = [state.night?.guardianTarget, state.night?.fateweaverGuard].filter(Boolean)
-  if (targetId && !shielded.includes(targetId)) {
-    const victim = roleState(room, targetId)
-    if (victim?.alive && victim.role !== 'werewolf') {
-      killPlayer(room, targetId, 'night')
-      state.nightDeaths.push(targetId)
-    }
-  }
-
-  state.night.lastGuardianTarget = state.night.guardianTarget
-  state.night.targets      = {}
-  state.night.guardianTarget  = null
-  state.night.fateweaverGuard = null
-
-  // Lover chain deaths
-  const heartbreak = triggerLoverChain(room)
-  if (heartbreak && !state.nightDeaths.includes(heartbreak)) state.nightDeaths.push(heartbreak)
-
-  // Flag hunter for revenge (any cause except fateweaver-kill card)
-  for (const deadId of state.nightDeaths) {
-    const rs = roleState(room, deadId)
-    if (rs?.role === 'hunter' && rs?.eliminationReason !== 'fateweaver-kill' && !state.pendingHunterRevenge) {
-      state.pendingHunterRevenge = { hunterId: deadId, nextPhase: null }
-    }
-  }
+  const outcome = resolveNightOutcome({ players: state.players, night: state.night, lovers: state.lovers }, {
+    resolveLoverChain: players => resolveLoverChainSnapshot(state, players),
+  })
+  state.players = outcome.players
+  state.nightDeaths = outcome.deaths.map(death => death.playerId)
+  state.nightHistory ??= []
+  state.nightHistory.push({ round: state.round ?? 1, deaths: [...state.nightDeaths] })
+  state.night = outcome.nextNight
+  state.pendingHunterRevenge = outcome.pendingHunterRevenge
 }
 
 // ── Voting resolution ──────────────────────────────────────────
@@ -289,8 +268,8 @@ function nightDeathsMessage(room) {
 export async function createWerewolfState(room) {
   const players = [...room.players.values()].sort((a, b) => a.joinedAt - b.joinedAt)
   const count = players.length
-  const assignments = room.fateWerewolfSetup?.roleAssignments ?? {}
-  const baseDeck = roleDecksByCount[count] ?? roleDecksByCount[6]
+  const baseDeck = getCoreRoleDeck(count)
+  const assignments = validateRoleAssignments(room, baseDeck)
   const pool = shuffle([...baseDeck])
   // Remove pre-assigned roles from the pool
   for (const roleId of Object.values(assignments)) {
@@ -306,15 +285,19 @@ export async function createWerewolfState(room) {
     phaseStartedAt: Date.now(),
     players: Object.fromEntries(players.map((player) => {
       const role = assignments[player.id] || pool[poolIndex++] || 'villager'
-      const base = { role, team: roleDefinitions[role]?.team || 'moon', alive: true, roleAcknowledged: false, eliminationReason: null }
+      const base = { role, team: getRole(role).team, alive: true, roleAcknowledged: false, eliminationReason: null }
       if (role === 'fateweaver') base.fateWeaverCards = { kill: true, save: true, guard: true }
       return [player.id, base]
     })),
     seatOrder: players.map(p => p.id),
-    night: { targets: {}, guardianTarget: null, lastGuardianTarget: null, fateweaverKill: null, fateweaverGuard: null },
+    night: { targets: {}, guardianTarget: null, lastGuardianTarget: null, fateweaverKill: null, fateweaverGuard: null, fateweaverCardSubmission: null },
     day: { votes: {}, pkCandidates: [], pkVotes: {}, speakerIndex: 0, r2OptIns: [] },
     fateCouncil: { votes: {} },
+    fateMeta: { peacefulNightStreak: 0, consumedTriggers: {} },
     fateHistory: [],
+    nightHistory: [],
+    voteHistory: [],
+    executionHistory: [],
     currentFateCard: null,
     oracle: { current: null },
     lovers: [],
@@ -334,6 +317,10 @@ export function publicWerewolfState(room) {
   const isDaytime = phaseTheme(state.phase) === 'day'
   const sorted = sortedPlayers(room)
   const speakerIndex = state.day?.speakerIndex ?? 0
+  const speakerIds = discussionSpeakerIds(room)
+  const speakerId = speakerIds[speakerIndex] ?? null
+  const isDiscussion = state.phase === 'discussion-r1' || state.phase === 'discussion-r2'
+  const pkEligibleVoters = alivePlayers(room).filter(player => !(state.day?.pkCandidates ?? []).includes(player.id))
 
   return {
     phase: state.phase,
@@ -344,15 +331,22 @@ export function publicWerewolfState(room) {
       id: player.id, nickname: player.nickname,
       alive: Boolean(roleState(room, player.id)?.alive),
       seatNumber: idx + 1,
-      isSpeaking: state.phase === 'discussion-r1' && speakerIndex === idx,
+      isSpeaking: isDiscussion && speakerId === player.id,
       isActiveStep: false,
     })),
     nightDeaths: isDaytime ? (state.nightDeaths ?? []) : [],
-    speakerNickname: state.phase === 'discussion-r1' ? (sorted[speakerIndex]?.nickname ?? null) : null,
+    speakerNickname: speakerId ? (room.players.get(speakerId)?.nickname ?? null) : null,
     fateCard: isDaytime ? (state.currentFateCard ?? null) : null,
-    voteProgress: ['voting', 'pk-voting'].includes(state.phase)
+    fateHistory: (state.fateHistory ?? []).map(({ round, cardId, arcanaType, tendency, processed, processedAt, effectKey }) =>
+      ({ round, cardId, arcanaType, tendency, processed: Boolean(processed), processedAt, effectKey })),
+    nightHistory: (state.nightHistory ?? []).map(({ round, deaths }) => ({ round, deaths: [...(deaths ?? [])] })),
+    voteHistory: (state.voteHistory ?? []).map(({ round, kind, cast, expected, outcome }) => ({ round, kind, cast, expected, outcome: outcome ?? null })),
+    executionHistory: (state.executionHistory ?? []).map(({ round, playerId }) => ({ round, playerId: playerId ?? null })),
+    voteProgress: state.phase === 'voting'
       ? { cast: Object.keys(state.day?.votes ?? {}).length, expected: alivePlayers(room).length }
-      : null,
+      : state.phase === 'pk-voting'
+        ? { cast: Object.keys(state.day?.pkVotes ?? {}).length, expected: pkEligibleVoters.length }
+        : null,
     pkCandidates: state.day?.pkCandidates ?? [],
     executedPlayerId: state.executedPlayerId ?? null,
     victory: state.victory ?? null,
@@ -373,11 +367,12 @@ export function privateWerewolfState(room, playerId) {
   const secret = roleState(room, playerId)
   if (!secret) return null
 
-  const roleDef = roleDefinitions[secret.role] || roleDefinitions.villager
-  const wolfAllies = secret.role === 'werewolf'
+  const roleDef = getRole(secret.role)
+  const isDeadNightObserver = !secret.alive && state.phase === 'night'
+  const wolfAllies = secret.role === 'werewolf' && !isDeadNightObserver
     ? alivePlayers(room).filter(p => p.id !== playerId && roleState(room, p.id)?.role === 'werewolf').map(p => ({ id: p.id, nickname: p.nickname }))
     : []
-  const oracleMsg = secret.role === 'oracle' && state.oracle?.current
+  const oracleMsg = secret.role === 'oracle' && !isDeadNightObserver && state.oracle?.current
     ? `神谕提示：玩家 ${state.oracle.current.nickname} 属于${state.oracle.current.team === 'wolf' ? '狼人' : '月光'}阵营。`
     : null
 
@@ -387,11 +382,11 @@ export function privateWerewolfState(room, playerId) {
   if (state.phase === 'role-assignment' && secret.alive) {
     action = { type: 'confirm-role', label: secret.roleAcknowledged ? '已确认角色' : '我已查看我的角色', disabled: secret.roleAcknowledged }
   } else if (state.phase === 'night' && ns === 'cupid-action' && secret.alive && secret.role === 'cupid') {
-    action = { type: 'cupid-bind', label: '选择两名玩家成为恋人（可以选择自己）',
+    action = { type: 'multi-target', actionId: 'cupid-bind', label: '选择两名玩家成为恋人（可以选择自己）', requiredTargetCount: 2,
       targets: alivePlayers(room).map(p => ({ id: p.id, nickname: p.nickname })),
       selectedTargetIds: state.night?.cupidTargets ?? [] }
   } else if (state.phase === 'night' && ns === 'guardian-action' && secret.alive && secret.role === 'guardian') {
-    action = { type: 'guardian-protect', label: '选择今晚守护的玩家', selectedTargetId: state.night?.guardianTarget || '',
+    action = { type: 'select-target', actionId: 'guardian-protect', label: '选择今晚守护的玩家', selectedTargetId: state.night?.guardianTarget || '',
       targets: alivePlayers(room).filter(p => p.id !== state.night?.lastGuardianTarget).map(p => ({ id: p.id, nickname: p.nickname })) }
   } else if (state.phase === 'night' && ns === 'wolf-action' && secret.alive && secret.role === 'werewolf') {
     action = { type: 'wolf-night-action', label: '选择今晚的行动', selectedTargetId: state.night?.targets?.[playerId] || '',
@@ -407,31 +402,37 @@ export function privateWerewolfState(room, playerId) {
       cards.guard ? { id: 'guard', label: '守护牌（保护指定玩家）',       requiresTarget: true  } : null,
       { id: 'skip', label: '本夜不使用', requiresTarget: false },
     ].filter(Boolean)
-    action = { type: 'fate-weaver-card',
+    const submitted = state.night?.fateweaverCardSubmission
+    action = { type: 'card-and-target', actionId: 'fate-weaver-card',
       label: wolfTargetName ? `${wolfTargetName}遭受袭击` : '今晚无人遭受袭击',
-      wolfTargetName, availableCards,
-      targets: alivePlayers(room).map(p => ({ id: p.id, nickname: p.nickname })) }
+      wolfTargetName, cards: availableCards,
+      targets: alivePlayers(room).map(p => ({ id: p.id, nickname: p.nickname })),
+      selectedCardId: submitted?.cardId,
+      selectedTargetId: submitted?.targetId,
+      disabled: Boolean(submitted) }
   } else if (state.phase === 'night' && ns === 'oracle-action' && secret.alive && secret.role === 'oracle') {
     action = { type: 'oracle-confirm', label: '我已收到神谕' }
   } else if (state.phase === 'night' && ns === 'arsonist-mark' && secret.alive && secret.role === 'arsonist') {
     const marked = state.arsonist?.marked ?? []
-    action = { type: 'arsonist-mark',
+    action = { type: 'select-target', actionId: 'arsonist-mark',
       label: `选择今晚标记的目标（已标记 ${marked.length} 人）`,
       targets: alivePlayers(room).filter(p => p.id !== playerId).map(p => ({ id: p.id, nickname: p.nickname, marked: marked.includes(p.id) })),
       markedCount: marked.length }
   } else if (state.phase === 'hunter-revenge' && playerId === state.pendingHunterRevenge?.hunterId) {
-    action = { type: 'hunter-revenge', label: '你已死亡，选择带走一名玩家殉葬（可跳过）',
+    action = { type: 'select-target', actionId: 'hunter-revenge', label: '你已死亡，选择带走一名玩家殉葬（可跳过）',
       targets: alivePlayers(room).map(p => ({ id: p.id, nickname: p.nickname })),
-      canSkip: true }
+      allowSkip: true }
   } else if (state.phase === 'voting' && secret.alive) {
-    action = { type: 'vote-target', label: '投票放逐', selectedTargetId: state.day?.votes?.[playerId] || '',
+    action = { type: 'select-target', actionId: 'vote-target', label: '投票放逐', selectedTargetId: state.day?.votes?.[playerId] || '',
       targets: alivePlayers(room).filter(p => p.id !== playerId).map(p => ({ id: p.id, nickname: p.nickname })) }
   } else if (state.phase === 'pk-voting' && secret.alive && !(state.day?.pkCandidates ?? []).includes(playerId)) {
-    action = { type: 'pk-vote', label: 'PK投票', selectedTargetId: state.day?.pkVotes?.[playerId] || '',
+    action = { type: 'select-target', actionId: 'pk-vote', label: 'PK投票', selectedTargetId: state.day?.pkVotes?.[playerId] || '',
       targets: (state.day?.pkCandidates ?? []).map(id => ({ id, nickname: room.players.get(id)?.nickname ?? id })) }
   } else if (!secret.alive && state.phase === 'fate-council') {
     action = { type: 'fate-vote', label: '投出命运选择', selectedTendency: state.fateCouncil?.votes?.[playerId] || '',
       tendencies: Object.values(fateTendencies) }
+  } else if (state.phase === 'discussion-r2' && secret.alive) {
+    action = { type: 'discussion-opt-in', label: (state.day?.r2OptIns ?? []).includes(playerId) ? '已报名第二轮发言' : '报名第二轮发言', selected: (state.day?.r2OptIns ?? []).includes(playerId), disabled: (state.day?.r2OptIns ?? []).includes(playerId) }
   }
 
   // Lover info: show partner identity to each lover
@@ -440,16 +441,16 @@ export function privateWerewolfState(room, playerId) {
     ? (() => {
         const otherId = lovers.find(id => id !== playerId)
         const otherRs = roleState(room, otherId)
-        const otherDef = roleDefinitions[otherRs?.role] ?? roleDefinitions.villager
+        const otherDef = getRole(otherRs?.role)
         return { partnerId: otherId, partnerNickname: room.players.get(otherId)?.nickname ?? '', partnerRole: otherDef.name }
       })()
     : null
 
-  return { playerId, nickname: player.nickname, alive: Boolean(secret.alive), phase: state.phase, role: roleDef, team: secret.team, wolfAllies, oracleMessage: oracleMsg, loverInfo, privateBlessing: '', tarotCards: [], action, promptTitle: '', promptBody: '' }
+  return { playerId, nickname: player.nickname, alive: Boolean(secret.alive), phase: state.phase, role: roleDef, team: secret.team, wolfAllies, oracleMessage: oracleMsg, loverInfo, privateBlessing: '', tarotCards: [], action, promptTitle: isDeadNightObserver ? '观察中' : '', promptBody: isDeadNightObserver ? '你正在观察夜晚，请保持沉默，勿向存活玩家传递信息。' : '' }
 }
 
 // ── Phase advance engine ───────────────────────────────────────
-export async function advanceWerewolf(room) {
+export async function advanceWerewolf(room, { forceFateCouncil = false } = {}) {
   const state = stateOf(room)
   if (!state) return
 
@@ -478,7 +479,7 @@ export async function advanceWerewolf(room) {
         state.lastOutcome = '夜晚结算后，猎人发动了陪葬。'
         return
       }
-      drawFateCard(room); refreshOracleWhisper(room)
+      state.currentFateCard = null
       setPhase(room, 'fate-council'); state.nightStep = null
       state.lastOutcome = '夜晚的秘密已经落定，命运议会开始。'
     }
@@ -489,7 +490,7 @@ export async function advanceWerewolf(room) {
     const nextPhase = state.pendingHunterRevenge?.nextPhase ?? 'fate-council'
     state.pendingHunterRevenge = null
     if (nextPhase === 'fate-council') {
-      drawFateCard(room); refreshOracleWhisper(room)
+      state.currentFateCard = null
       setPhase(room, 'fate-council')
       state.lastOutcome = '命运议会开始。'
     } else {
@@ -500,20 +501,45 @@ export async function advanceWerewolf(room) {
     return
   }
 
-  if (state.phase === 'fate-council') { setPhase(room, 'fate-card-reveal'); state.lastOutcome = state.currentFateCard ? `命运翻开了：${state.currentFateCard.title}` : '命运的牌面已翻开。'; return }
+  if (state.phase === 'fate-council') {
+    const eligible = deadPlayers(room)
+    const votedCount = eligible.filter(player => state.fateCouncil?.votes?.[player.id]).length
+    const allVoted = votedCount === eligible.length
+    if (!allVoted && !forceFateCouncil) return { advanced: false, reason: 'awaiting-fate-votes' }
+    drawFateCard(room, {
+      closedReason: allVoted ? 'all-voted' : 'host-close',
+      abstentionCount: eligible.length - votedCount,
+    })
+    refreshOracleWhisper(room)
+    setPhase(room, 'fate-card-reveal')
+    state.lastOutcome = `命运翻开了：${state.currentFateCard.title}`
+    return { advanced: true }
+  }
   if (state.phase === 'fate-card-reveal') { setPhase(room, 'fate-blessing'); state.lastOutcome = '命运眷顾了一位玩家。'; return }
   if (state.phase === 'fate-blessing') { setPhase(room, 'night-results'); state.lastOutcome = nightDeathsMessage(room); return }
   if (state.phase === 'night-results') { setPhase(room, 'discussion-r1'); state.day.speakerIndex = 0; state.lastOutcome = '请玩家依次发言。'; return }
-  if (state.phase === 'discussion-r1') { setPhase(room, 'discussion-r2'); state.day.r2OptIns = []; state.lastOutcome = '进入第二轮自愿发言。'; return }
-  if (state.phase === 'discussion-r2') { state.day.votes = {}; setPhase(room, 'voting'); state.lastOutcome = '发言结束，投票开始。'; return }
+  if (state.phase === 'discussion-r1') {
+    if (nextDiscussionSpeaker(room)) { state.lastOutcome = '请下一位玩家发言。'; return }
+    setPhase(room, 'discussion-r2'); state.day.r2OptIns = []; state.day.speakerIndex = 0; state.lastOutcome = '进入第二轮自愿发言。'; return
+  }
+  if (state.phase === 'discussion-r2') {
+    if (nextDiscussionSpeaker(room)) { state.lastOutcome = '请下一位报名玩家发言。'; return }
+    state.day.votes = {}; setPhase(room, 'voting'); state.lastOutcome = '发言结束，投票开始。'; return
+  }
 
   if (state.phase === 'voting') {
+    const cast = Object.keys(state.day?.votes ?? {}).length
+    const expected = alivePlayers(room).length
     const result = resolveVoting(room)
+    state.voteHistory ??= []
+    state.voteHistory.push({ round: state.round ?? 1, kind: 'vote', cast, expected, outcome: result.targetId ?? null })
     if (result.tied) {
       state.day.pkCandidates = result.candidates; state.day.pkVotes = {}
       setPhase(room, 'pk-discussion'); state.lastOutcome = '出现平票，进入PK环节。'
     } else {
       state.executedPlayerId = result.targetId ?? null
+      state.executionHistory ??= []
+      state.executionHistory.push({ round: state.round ?? 1, playerId: result.targetId ?? null })
       if (result.targetId) {
         killPlayer(room, result.targetId, 'vote')
         const heartbreak = triggerLoverChain(room)
@@ -536,8 +562,14 @@ export async function advanceWerewolf(room) {
   if (state.phase === 'pk-discussion') { state.day.pkVotes = {}; setPhase(room, 'pk-voting'); state.lastOutcome = '请非PK玩家投票。'; return }
 
   if (state.phase === 'pk-voting') {
+    const cast = Object.keys(state.day?.pkVotes ?? {}).length
+    const expected = alivePlayers(room).filter(player => !(state.day?.pkCandidates ?? []).includes(player.id)).length
     const pk = resolvePkVoting(room)
+    state.voteHistory ??= []
+    state.voteHistory.push({ round: state.round ?? 1, kind: 'pk', cast, expected, outcome: pk.targetId ?? null })
     state.executedPlayerId = pk.targetId ?? null
+    state.executionHistory ??= []
+    state.executionHistory.push({ round: state.round ?? 1, playerId: pk.targetId ?? null })
     if (pk.targetId) {
       killPlayer(room, pk.targetId, 'pk-vote')
       const heartbreak = triggerLoverChain(room)
@@ -574,7 +606,7 @@ export async function advanceWerewolf(room) {
     else {
       state.round = (state.round ?? 1) + 1
       state.nightDeaths = []; state.executedPlayerId = null; state.currentFateCard = null
-      state.night = { targets: {}, guardianTarget: null, lastGuardianTarget: state.night?.guardianTarget ?? null, fateweaverKill: null, fateweaverGuard: null }
+      state.night = { targets: {}, guardianTarget: null, lastGuardianTarget: state.night?.lastGuardianTarget ?? null, fateweaverKill: null, fateweaverGuard: null, fateweaverCardSubmission: null }
       state.day = { votes: {}, pkCandidates: [], pkVotes: {}, speakerIndex: 0, r2OptIns: [] }
       state.fateCouncil = { votes: {} }
       refreshOracleWhisper(room); setPhase(room, 'night'); state.nightStep = firstNightStep(room)
@@ -631,6 +663,13 @@ export function actionWerewolf(room, playerId, payload) {
   if (type === 'fate-weaver-card') {
     if (state.phase !== 'night' || state.nightStep !== 'fate-weaver-action') return { status: 409, error: 'Wrong phase/step' }
     if (!secret.alive || secret.role !== 'fateweaver') return { status: 403, error: 'Only living fateweaver' }
+    const priorSubmission = state.night?.fateweaverCardSubmission
+    if (priorSubmission) {
+      const sameSubmission = priorSubmission.cardId === payload.cardId
+        && priorSubmission.targetId === (targetId || null)
+      if (sameSubmission) return { status: 200, allSubmitted: true, private: privateWerewolfState(room, playerId) }
+      return { status: 409, error: 'Fate weaver action already submitted' }
+    }
     const cardId = String(payload.cardId)
     const cards = secret.fateWeaverCards ?? {}
     if (cardId === 'kill') {
@@ -641,19 +680,24 @@ export function actionWerewolf(room, playerId, payload) {
     } else if (cardId === 'save') {
       if (!cards.save) return { status: 400, error: 'Save card already used' }
       const wt = majorityTarget(state.night?.targets ?? {})
-      if (wt && !wt.startsWith('__')) state.night.targets = {}
+      if (wt && !wt.startsWith('__')) {
+        for (const [wolfId, choice] of Object.entries(state.night.targets ?? {})) {
+          if (choice === wt) state.night.targets[wolfId] = '__no_action__'
+        }
+      }
       secret.fateWeaverCards.save = false
     } else if (cardId === 'guard') {
       if (!cards.guard) return { status: 400, error: 'Guard card already used' }
       if (!targetId || !roleState(room, targetId)?.alive) return { status: 400, error: 'Invalid guard target' }
       state.night.fateweaverGuard = targetId
       secret.fateWeaverCards.guard = false
-    }
-    // 'skip': no cost
+    } else if (cardId !== 'skip') return { status: 400, error: 'Invalid fate weaver card' }
+    state.night.fateweaverCardSubmission = { cardId, targetId: targetId || null }
     return { status: 200, allSubmitted: true, private: privateWerewolfState(room, playerId) }
   }
   if (type === 'oracle-confirm') {
     if (state.phase !== 'night' || state.nightStep !== 'oracle-action') return { status: 409, error: 'Wrong phase/step' }
+    if (!secret.alive || secret.role !== 'oracle') return { status: 403, error: 'Only the living oracle can confirm' }
     return { status: 200, allSubmitted: true, private: privateWerewolfState(room, playerId) }
   }
   if (type === 'vote-target') {
@@ -671,6 +715,13 @@ export function actionWerewolf(room, playerId, payload) {
     state.day.pkVotes[playerId] = targetId
     const eligible = alivePlayers(room).filter(p => !(state.day.pkCandidates ?? []).includes(p.id))
     return { status: 200, allSubmitted: eligible.every(p => state.day.pkVotes[p.id]), private: privateWerewolfState(room, playerId) }
+  }
+  if (type === 'discussion-opt-in') {
+    if (state.phase !== 'discussion-r2') return { status: 409, error: 'Not discussion round two' }
+    if (!secret.alive) return { status: 403, error: 'Dead players cannot opt in' }
+    state.day.r2OptIns ||= []
+    if (!state.day.r2OptIns.includes(playerId)) state.day.r2OptIns.push(playerId)
+    return { status: 200, allSubmitted: false, private: privateWerewolfState(room, playerId) }
   }
   if (type === 'arsonist-mark') {
     if (state.phase !== 'night' || state.nightStep !== 'arsonist-mark') return { status: 409, error: 'Wrong phase/step' }
